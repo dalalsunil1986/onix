@@ -2,6 +2,7 @@ BUILD:= ../build
 SRC:=.
 BOOT:= $(SRC)/boot
 KERNEL:= $(SRC)/kernel
+TESTS:= $(SRC)/tests
 
 BOOT_INCLUDE:=$(SRC)/boot
 INCLUDE:=$(SRC)/include
@@ -22,10 +23,12 @@ CFLAGS = -I $(INCLUDE) -c -fno-builtin -m32 -fno-stack-protector \
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
 		$(DEBUG_FLAGS)
 
+TESTS_CFLAG = -I $(INCLUDE) -m32 -Wall $(DEBUG_FLAGS)
+
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 
 
-.PHONY: clean
+.PHONY: clean test
 
 $(BUILD)/boot.bin: $(BOOT)/boot.asm
 	$(ASM) -I $(BOOT_INCLUDE) $< -o $@
@@ -62,6 +65,15 @@ endif
 	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=20 seek=2 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ bs=512 seek=100 count=200 conv=notrunc
 
+$(BUILD)/test: $(TESTS)/test.c
+	$(CC) $(TESTS_CFLAG) -I $(KERNEL_INCLUDE) $< -o $@
+
+test: $(BUILD)/test
+	@-
+
+testrun:$(BUILD)/test
+	@$(BUILD)/test
+
 bochs: $(BUILD)/harddisk.img
 	@rm -rf $(BUILD)/harddisk.img.lock
 	cd $(BUILD) && $(BOCHS) -q  -f bochsrc
@@ -72,4 +84,5 @@ clean:
 	rm -rf $(BUILD)/kernel.bin
 	rm -rf $(BUILD)/*.o
 	rm -rf $(BUILD)/harddisk.img*
+	rm -rf $(BUILD)/test
 
