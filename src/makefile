@@ -2,12 +2,14 @@ BUILD:= ../build
 SRC:=.
 BOOT:= $(SRC)/boot
 
+BOOT_INCLUDE:=$(SRC)/boot
+
 ASM=nasm
 
 .PHONY: clean
 
 $(BUILD)/boot.bin: $(BOOT)/boot.asm
-	$(ASM) $< -o $@
+	$(ASM) -I $(BOOT_INCLUDE) $< -o $@
 
 $(BUILD)/harddisk.img: $(BUILD)/boot.bin
 

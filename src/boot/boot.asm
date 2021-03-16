@@ -1,8 +1,9 @@
-section boot vstart=0x7c00
+%include 'boot.inc'
+
+section boot vstart=BOOT_BASE_ADDR
 
     ;clean screen
-    mov ax, 3
-    int 0x10;
+    BIOS_CLEAR_SCREEN
 
     ;setup segment register
     mov ax, cs
@@ -10,29 +11,18 @@ section boot vstart=0x7c00
     mov es, ax
     mov ss, ax
     mov fs, ax
-    mov sp, 0x7c00
+    mov sp, BOOT_BASE_ADDR
 
     ;print message
     mov si, message
-    call print
+    call bios_print
 
 finish:
     sti ; open interrupt
     hlt ; halt cpu
     jmp finish
 
-print:
-    cld
-    .print_loop:
-        lodsb
-        or al, al
-        jz .print_done
-        mov ah, 0x0e;
-        int 0x10;
-        jmp .print_loop
-    .print_done:
-        ret
-
+BIOS_PRINT_FUNCTION
 
     message db "Hello Onix", 13, 10, 0
     times 510-($-$$) db 0
