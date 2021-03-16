@@ -11,6 +11,9 @@ PAGE_SIZE           equ 0x1000 ; 4K = 4096
 
 BASE_ADDRESS_LIMIT  equ 0x100000; 1M 的空间
 
+KERNEL_BASE_ADDR    equ 0xc0010000
+KERNEL_START_SECTOR equ 100
+
                                ;0_0_0_0_0000_0_00_0_0000b
                                ;G_D_L_A_LIMI_P_DP_S_TYPE
 
