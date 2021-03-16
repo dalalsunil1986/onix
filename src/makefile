@@ -16,8 +16,11 @@ ENTRYPOINT = 0xC0010000
 
 ASM_FLAGS= -f elf
 
+DEBUG_FLAGS = -D ONIX_DEBUG
+
 CFLAGS = -I $(INCLUDE) -c -fno-builtin -m32 -fno-stack-protector \
-		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra 
+		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
+		$(DEBUG_FLAGS)
 
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 

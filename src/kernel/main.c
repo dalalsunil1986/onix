@@ -1,9 +1,10 @@
 #include <onix/kernel/printk.h>
+#include <onix/kernel/debug.h>
 
 int main()
 {
-    // return;
-    // asm("xchg %ebx, %ebx");
+
+    BOCHS_MAGIC_BREAKPOINT;
 
     put_char('O');
     put_char('n');
@@ -12,7 +13,6 @@ int main()
 
     while (1)
     {
-
     }
     return 0;
 }
