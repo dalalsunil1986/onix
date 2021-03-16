@@ -6,7 +6,9 @@
     ],
 	"settings": {
 		"files.associations": {
-			"printk.h": "c"
+			"printk.h": "c",
+			"debug.h": "c",
+			"types.h": "c"
 		}
 	}
 }
