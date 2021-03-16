@@ -7,6 +7,6 @@ global _start
 extern main
 
 _start:
-    xchg bx, bx
+    ; xchg bx, bx
     call main
     jmp $

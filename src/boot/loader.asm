@@ -162,6 +162,7 @@ protect_mode_start:
     call load_kernel
     call init_kernel
 
+    mov esp, KERNEL_BASE_ADDR
     jmp SELECTOR_CODE: KERNEL_BASE_ADDR
 
 memcpy:
@@ -171,9 +172,9 @@ memcpy:
     mov ebp, esp
     push ecx
 
-    mov edi, [ebp + 8]
-    mov esi, [ebp + 12]
-    mov ecx, [ebp + 16]
+    mov edi, [ebp + 8]; dst
+    mov esi, [ebp + 12]; src
+    mov ecx, [ebp + 16]; count
     rep movsb
 
     pop ecx
@@ -187,24 +188,24 @@ init_kernel:
     xor ecx, ecx
     xor edx, edx
 
-    mov ax, [KERNEL_BASE_ADDR + ELF_HEADER_OFFSET_TYPE]
+    mov ax, [KERNEL_LOAD_ADDR + ELF_HEADER_OFFSET_TYPE]
     cmp ax, 2
     jne .failure ; invalid executable file
 
-    mov dx, [KERNEL_BASE_ADDR + ELF_HEADER_OFFSET_PHENTSIZE]
-    mov ebx, [KERNEL_BASE_ADDR + ELF_HEADER_OFFSET_PHOFF]
-    add ebx, KERNEL_BASE_ADDR
-    mov cx, [KERNEL_BASE_ADDR + ELF_HEADER_OFFSET_PHNUM]
+    mov dx, [KERNEL_LOAD_ADDR + ELF_HEADER_OFFSET_PHENTSIZE]
+    mov ebx, [KERNEL_LOAD_ADDR + ELF_HEADER_OFFSET_PHOFF]
+    add ebx, KERNEL_LOAD_ADDR
+    mov cx, [KERNEL_LOAD_ADDR + ELF_HEADER_OFFSET_PHNUM]
 
 .each_segment:
     cmp byte [ebx + 0], PT_NULL
     je .PT_NULL
 
-    push dword [ebx + ELF_PROGRAM_OFFSET_FILESZ]
+    push dword [ebx + ELF_PROGRAM_OFFSET_FILESZ]; count
     mov eax, [ebx + ELF_PROGRAM_OFFSET_OFFSET]
-    add eax, KERNEL_BASE_ADDR
-    push eax
-    push dword [ebx + ELF_PROGRAM_OFFSET_VADDR]
+    add eax, KERNEL_LOAD_ADDR
+    push eax; src
+    push dword [ebx + ELF_PROGRAM_OFFSET_VADDR]; dest
     call memcpy
     add esp, 12
 
@@ -224,7 +225,7 @@ init_kernel:
 
 load_kernel:
     mov eax, KERNEL_START_SECTOR
-    mov ebx, KERNEL_BASE_ADDR
+    mov ebx, KERNEL_LOAD_ADDR
     mov cx, 200 ; 100KB
     call read_disk
     ret

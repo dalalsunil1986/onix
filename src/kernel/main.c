@@ -1,7 +1,15 @@
+#include <onix/kernel/printk.h>
+
 int main()
 {
-    char *video = 0xb8000;
-    *video = 'A';
+    // return;
+    // asm("xchg %ebx, %ebx");
+
+    put_char('O');
+    put_char('n');
+    put_char('i');
+    put_char('x');
+
     while (1)
     {
 

@@ -5,6 +5,7 @@ KERNEL:= $(SRC)/kernel
 
 BOOT_INCLUDE:=$(SRC)/boot
 INCLUDE:=$(SRC)/include
+KERNEL_INCLUDE:=$(SRC)/kernel/include
 
 BOCHS=bochs
 ASM=nasm
@@ -33,9 +34,13 @@ $(BUILD)/start.o: $(KERNEL)/start.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
 
 $(BUILD)/main.o: $(KERNEL)/main.c
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
+$(BUILD)/printk.o: $(KERNEL)/printk.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
+	$(BUILD)/printk.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
