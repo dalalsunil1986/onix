@@ -128,7 +128,7 @@ start:
     mov cr0, eax
 
     ; xchg  bx, bx
-
+    ; jump to protect mode 32 bit code
     jmp dword SELECTOR_CODE:protect_mode_start
 
 .get_memory_failure:
@@ -148,16 +148,79 @@ message_prepare_protect_mode    db "Preparing protect mode...", 13, 10, 0
 [bits 32]
 
 protect_mode_start:
-    xchg bx, bx
+
     mov ax, SELECTOR_DATA
     mov ds, ax
     mov es, ax
     mov ss, ax
     mov esp, LOADER_STACK_TOP
     mov ax, SELECTOR_VIDEO
+    mov gs, ax
+
+    call setup_page
 
     xchg bx, bx
-    mov gs, ax
-    xchg ebx, ebx
 
+    mov byte [gs: 160], "V"
+
+    xchg bx, bx
     jmp $
+
+
+
+setup_page:
+    ; xchg bx, bx
+    mov ecx, PAGE_SIZE * 3
+    mov esi, 0
+
+.reset_page:
+    mov byte [PAGE_DIR_TABLE_ADDR + esi], 0
+    inc esi
+    loop .reset_page
+
+    ; xchg bx, bx
+
+.create_pde: ; PDE 页目录表，只有一个
+
+    ; 0000_0000_00b 对应的页表
+    ; 设置基础页目录，使前 1M 内存映射到自己
+    ; 使虚拟地址 3G 后的内存也映射到 1M 内存中
+
+    mov eax, PAGE_DIR_TABLE_ADDR + PAGE_SIZE;
+    or eax, PAGE_ATTRIBUTE
+    mov [PAGE_DIR_TABLE_ADDR + 0], eax
+    mov [PAGE_DIR_TABLE_ADDR + (0x300 * 4)], eax; 第 0x300 个目录项，每个目录项占四个字节
+
+    ; 使最高的目录指向自己，方便修改，这将浪费一个表项，使虚拟地址最高的 4M 无法访问，
+    ; 不过也没关系，一般程序不会用到那么高的地址
+
+    mov eax, PAGE_DIR_TABLE_ADDR
+    or eax, PAGE_ATTRIBUTE
+    mov [PAGE_DIR_TABLE_ADDR + (0x3ff * 4)], eax;
+    
+    ; 低端 1M 内存 / 4KB = 256
+
+    ; xchg bx, bx
+
+    mov ebx, PAGE_DIR_TABLE_ADDR + PAGE_SIZE;
+    mov ecx, (BASE_ADDRESS_LIMIT / PAGE_SIZE)  ; 256
+    mov esi, 0
+    mov edx, PAGE_ATTRIBUTE
+
+
+.create_pte:
+    mov [ebx + esi * 4], edx
+    add edx, PAGE_SIZE
+    inc esi
+    loop .create_pte
+
+    ; 设置 CR3 寄存器
+    mov eax, PAGE_DIR_TABLE_ADDR
+    mov cr3, eax
+
+    ; 打开分页功能 打开cr0的pg位(第31位)
+    mov eax, cr0
+    or eax, 10000000_00000000_00000000_00000000b
+    mov cr0, eax
+
+    ret

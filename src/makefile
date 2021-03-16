@@ -29,5 +29,6 @@ bochs: $(BUILD)/harddisk.img
 
 clean:
 	rm -rf $(BUILD)/boot.bin
+	rm -rf $(BUILD)/loader.bin
 	rm -rf $(BUILD)/harddisk.img*
 
