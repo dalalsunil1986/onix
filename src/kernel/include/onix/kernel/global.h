@@ -22,6 +22,7 @@ typedef struct Descriptor /* 共 8 个字节 */
     u8 read_write : 1;     // readable for code, writable for data
     u8 conform_expand : 1; //  conform for code, expand down for data
     u8 code : 1;           // 1 for code, 2 for data
+    u8 segment : 1;        // 1 for everything but TSS and LDT
     u8 DPL : 2;            // Descriptor Privilege Level
     u8 present : 1;        // Present bit, is in memory or disk
     u8 limit_high : 4;     // limit 16-19;
@@ -32,6 +33,28 @@ typedef struct Descriptor /* 共 8 个字节 */
     u8 base_high;          /* Base */
 } _packed Descriptor;
 
+typedef struct Selector
+{
+    u8 RPL : 2;
+    u8 TI : 1;
+    u16 index : 13;
+} Selector;
+
+typedef struct InterruptGate
+{
+    u16 offset0;
+    Selector selector;
+    u8 invalid : 5;
+    u8 accessed : 1;       // is accessed for cpu
+    u8 read_write : 1;     // readable for code, writable for data
+    u8 conform_expand : 1; //  conform for code, expand down for data
+    u8 code : 1;           // 1 for code, 2 for data
+    u8 segment : 1;        // 1 for everything but TSS and LDT
+    u8 DPL : 2;
+    u8 present : 1;
+    u16 offset1;
+} _packed InterruptGate;
+
 typedef struct Pointer
 {
     u16 limit;
@@ -40,7 +63,5 @@ typedef struct Pointer
 
 extern Pointer gdt_ptr;
 extern Descriptor gdt[GDT_SIZE];
-
-void load_gdt();
 
 #endif

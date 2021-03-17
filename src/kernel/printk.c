@@ -6,22 +6,24 @@
 
 static char buf[1024];
 
+extern int vsprintf(char *buf, const char *fmt, va_list args);
+
 int get_cursor()
 {
     int pos = 0;
-    io_outb(CRTC_ADDR_REG, CURSOR_L);
-    pos |= io_inb(CRTC_DATA_REG);
-    io_outb(CRTC_ADDR_REG, CURSOR_H);
-    pos |= ((u16)io_inb(CRTC_DATA_REG)) << 8;
+    outb(CRTC_ADDR_REG, CURSOR_L);
+    pos |= inb(CRTC_DATA_REG);
+    outb(CRTC_ADDR_REG, CURSOR_H);
+    pos |= ((u16)inb(CRTC_DATA_REG)) << 8;
     return pos;
 }
 
 void set_cursor(int pos)
 {
-    io_outb(CRTC_ADDR_REG, CURSOR_L);
-    io_outb(CRTC_DATA_REG, (u8)(pos & 0xFF));
-    io_outb(CRTC_ADDR_REG, CURSOR_H);
-    io_outb(CRTC_DATA_REG, (u8)((pos >> 8) & 0xFF));
+    outb(CRTC_ADDR_REG, CURSOR_L);
+    outb(CRTC_DATA_REG, (u8)(pos & 0xFF));
+    outb(CRTC_ADDR_REG, CURSOR_H);
+    outb(CRTC_DATA_REG, (u8)((pos >> 8) & 0xFF));
 }
 
 int get_x(int pos)
@@ -53,7 +55,6 @@ void clear()
 
 void scroll()
 {
-    int cpos = 0;
     char *dest = (char *)V_MEM_BASE;
     char *src = dest + (VGA_WIDTH * 2);
     memcpy(dest, src, (VGA_HEIGHT - 1) * (VGA_WIDTH * 2));

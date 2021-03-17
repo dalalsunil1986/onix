@@ -3,10 +3,10 @@
 bits 32
 [section .text]
 
-global io_outb
-global io_inb
+global outb
+global inb
 
-io_outb:
+outb:
     mov edx, [esp + 4];  port
     mov al, [esp + 8]; byte
     out dx, al
@@ -14,7 +14,7 @@ io_outb:
     nop; a little delay
     ret
 
-io_inb:
+inb:
     mov edx, [esp + 4]; port
     xor eax, eax
     in al, dx

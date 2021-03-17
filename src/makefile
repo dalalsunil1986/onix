@@ -27,8 +27,10 @@ TESTS_CFLAG = -I $(INCLUDE) -m32 -Wall $(DEBUG_FLAGS)
 
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 
+.PHONY: clean
 
-.PHONY: clean test
+kernel: $(BUILD)/kernel.bin
+	-
 
 $(BUILD)/boot.bin: $(BOOT)/boot.asm
 	$(ASM) -I $(BOOT_INCLUDE) $< -o $@
@@ -76,6 +78,9 @@ endif
 bochs: $(BUILD)/harddisk.img
 	@rm -rf $(BUILD)/harddisk.img.lock
 	cd $(BUILD) && $(BOCHS) -q  -f bochsrc
+
+image: $(BUILD)/harddisk.img
+	-
 
 clean:
 	rm -rf $(BUILD)/boot.bin
