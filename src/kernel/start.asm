@@ -4,9 +4,15 @@ bits 32
 [section .text]
 
 global _start
+
 extern main
+extern init_kernel
+extern gdt_ptr
 
 _start:
-    ; xchg bx, bx
+    sgdt [gdt_ptr]
+    call init_kernel
+    lgdt [gdt_ptr]
+
     call main
     jmp $

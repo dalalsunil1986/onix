@@ -12,7 +12,8 @@
 			"io.h": "c",
 			"*.tcc": "c",
 			"cstdio": "c",
-			"string.h": "c"
+			"string.h": "c",
+			"random": "cpp"
 		}
 	}
 }
