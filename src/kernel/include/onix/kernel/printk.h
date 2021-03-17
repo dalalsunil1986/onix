@@ -3,7 +3,8 @@
 
 #include <onix/types.h>
 
-#define VGA_WIDTH 80;
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 25
 
 /* VGA */
 #define CRTC_ADDR_REG 0x3D4 /* CRT Controller Registers - Addr Register */
@@ -18,6 +19,8 @@
 extern int get_cursor();
 extern void set_cursor(int pos);
 
+
+void clear();
 void put_char(char ch);
 int printk(const char *fmt, ...);
 

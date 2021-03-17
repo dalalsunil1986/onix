@@ -1,4 +1,5 @@
 #include <onix/stdarg.h>
+#include <onix/string.h>
 #include <onix/kernel/printk.h>
 #include <onix/kernel/io.h>
 #include <onix/kernel/debug.h>
@@ -38,10 +39,35 @@ int get_pos(int x, int y)
     return y * VGA_WIDTH + x;
 }
 
+void clear()
+{
+    int cpos = 0;
+    char *current = (char *)V_MEM_BASE;
+    while (cpos++ < VGA_HEIGHT * VGA_HEIGHT)
+    {
+        *current = ' ';
+        current += 2;
+    }
+    set_cursor(0);
+}
+
+void scroll()
+{
+    int cpos = 0;
+    char *dest = (char *)V_MEM_BASE;
+    char *src = dest + (VGA_WIDTH * 2);
+    memcpy(dest, src, (VGA_HEIGHT - 1) * (VGA_WIDTH * 2));
+}
+
 void put_char(char ch)
 {
     // BMB;
     int cpos = get_cursor();
+    if (cpos >= (VGA_HEIGHT - 1) * VGA_WIDTH)
+    {
+        scroll();
+        cpos -= VGA_WIDTH;
+    }
     char *current = (char *)V_MEM_BASE + cpos * 2;
 
     u16 x = get_x(cpos);
@@ -54,12 +80,17 @@ void put_char(char ch)
         *current = ' ';
         cpos = get_pos(x, y);
     case '\n':
-        cpos = get_pos(x, y + 1);
+        cpos = get_pos(0, y + 1);
         break;
     default:
         *current = ch;
         cpos++;
         break;
+    }
+    if (cpos > (VGA_HEIGHT - 1) * VGA_WIDTH)
+    {
+        scroll();
+        cpos -= VGA_WIDTH;
     }
     set_cursor(cpos);
 }
