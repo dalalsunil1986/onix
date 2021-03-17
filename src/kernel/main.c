@@ -4,9 +4,7 @@
 int main()
 {
     // BOCHS_MAGIC_BREAKPOINT;
-
-    printk("Onix.... %d", 123);
-
+    printk("Onix.... %d \n", 123);
     while (1)
     {
     }

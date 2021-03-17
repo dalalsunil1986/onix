@@ -23,18 +23,44 @@ void set_cursor(int pos)
     io_outb(CRTC_DATA_REG, (u8)((pos >> 8) & 0xFF));
 }
 
+int get_x(int pos)
+{
+    return pos % VGA_WIDTH;
+}
+
+int get_y(int pos)
+{
+    return pos / VGA_WIDTH;
+}
+
+int get_pos(int x, int y)
+{
+    return y * VGA_WIDTH + x;
+}
+
 void put_char(char ch)
 {
     // BMB;
-    auto cpos = get_cursor();
-
+    int cpos = get_cursor();
     char *current = (char *)V_MEM_BASE + cpos * 2;
 
-    // BOCHS_MAGIC_BREAKPOINT;
+    u16 x = get_x(cpos);
+    u16 y = get_y(cpos);
 
-    *current = ch;
-
-    cpos++;
+    switch (ch)
+    {
+    case '\b':
+        x = x >= 1 ? x - 1 : 0;
+        *current = ' ';
+        cpos = get_pos(x, y);
+    case '\n':
+        cpos = get_pos(x, y + 1);
+        break;
+    default:
+        *current = ch;
+        cpos++;
+        break;
+    }
     set_cursor(cpos);
 }
 
