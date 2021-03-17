@@ -6,6 +6,13 @@
 #define GDT_SIZE 128
 #define IDT_SIZE 256
 
+#define RPL0 0b0
+#define RPL1 0b1
+#define RPL2 0b10
+#define RPL3 0b11
+#define TI_GDT 0b000
+#define TI_LDT 0b100
+
 /* 存储段描述符/系统段描述符 */
 typedef struct GDTDescriptor /* 共 8 个字节 */
 {
