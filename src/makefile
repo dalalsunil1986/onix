@@ -48,9 +48,17 @@ $(BUILD)/main.o: $(KERNEL)/main.c
 $(BUILD)/printk.o: $(KERNEL)/printk.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/string.o: $(KERNEL)/string.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
+$(BUILD)/vsprintf.o: $(KERNEL)/vsprintf.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/system.o \
+	$(BUILD)/string.o \
 	$(BUILD)/printk.o \
+	$(BUILD)/vsprintf.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
@@ -64,15 +72,6 @@ endif
 	dd if=$(BUILD)/boot.bin of=$@ bs=512 count=1 conv=notrunc
 	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=20 seek=2 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ bs=512 seek=100 count=200 conv=notrunc
-
-$(BUILD)/test: $(TESTS)/test.c
-	$(CC) $(TESTS_CFLAG) -I $(KERNEL_INCLUDE) $< -o $@
-
-test: $(BUILD)/test
-	@-
-
-testrun:$(BUILD)/test
-	@$(BUILD)/test
 
 bochs: $(BUILD)/harddisk.img
 	@rm -rf $(BUILD)/harddisk.img.lock

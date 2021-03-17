@@ -15,11 +15,10 @@
 #define V_MEM_BASE 0xB8000  /* base of color video memory */
 #define V_MEM_SIZE 0x8000   /* 32K: B8000H -> BFFFFH */
 
-extern u16 get_cursor();
-extern u16 get_x();
-extern u16 get_y();
-extern void set_cursor(u16 x, u16 y);
+extern int get_cursor();
+extern void set_cursor(int pos);
 
 void put_char(char ch);
+int printk(const char *fmt, ...);
 
 #endif

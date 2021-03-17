@@ -7,4 +7,6 @@
 #define BOCHS_MAGIC_BREAKPOINT
 #endif
 
+#define BMB BOCHS_MAGIC_BREAKPOINT
+
 #endif
