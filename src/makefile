@@ -9,7 +9,6 @@ INCLUDE:=$(SRC)/include
 KERNEL_INCLUDE:=$(SRC)/kernel/include
 
 BOCHS=bochs
-BOCHS_GDB=bochs-gdb-a20
 ASM=nasm
 CC=gcc
 LD=ld
@@ -91,14 +90,14 @@ endif
 
 bochs: $(BUILD)/harddisk.img
 	@rm -rf $(BUILD)/harddisk.img.lock
+	@rm -rf $(BUILD)/bx_enh_dbg.ini
 	cd $(BUILD) && $(BOCHS) -q  -f bochsrc
-
-gdb: $(BUILD)/harddisk.img
-	@rm -rf $(BUILD)/harddisk.img.lock
-	cd $(BUILD) && $(BOCHS_GDB) -q  -f bochsrc-gdb
 
 image: $(BUILD)/harddisk.img
 	-
+
+win:
+	cd $(BUILD) && bochs -q -f bochsrc.bxrc
 
 clean:
 	rm -rf $(BUILD)/boot.bin

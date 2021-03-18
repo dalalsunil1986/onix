@@ -63,7 +63,7 @@ interrupt_entry_table:
 %macro INTERRUPT_HANDLER 2
 section .text
 interrupt_%1:
-
+    ; xchg bx, bx
     %2
     push ds
     push es
@@ -77,19 +77,8 @@ interrupt_%1:
 
     push %1
     call [handler_table + %1 * 4]
-
-
-    jmp interrupt_exit
-
-section .data
-    dd interrupt_%1
-%endmacro
-
-section .text
-
-global interrupt_exit:
-interrupt_exit:
     add esp, 4
+
     popad
     pop gs
     pop fs
@@ -97,6 +86,12 @@ interrupt_exit:
     pop ds
     add esp, 4
     iretd
+
+section .data
+    dd interrupt_%1
+%endmacro
+
+section .text
 
 INTERRUPT_HANDLER 0x00,PLACEHOLDER
 INTERRUPT_HANDLER 0x01,PLACEHOLDER
