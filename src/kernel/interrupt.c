@@ -20,8 +20,8 @@ static void init_pic()
     outb(PIC_S_DATA, ICW4_8086);             // ICW4: 8086模式, 正常EOI
 
     /* 打开主片上IR0,也就是目前只接受时钟产生的中断 */
-    outb(PIC_M_DATA, 0xfe);
-    outb(PIC_S_DATA, 0xff);
+    outb(PIC_M_DATA, 0b11111110);
+    outb(PIC_S_DATA, 0b11111111);
 }
 
 static void init_idt()
