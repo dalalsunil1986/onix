@@ -16,7 +16,7 @@ _start:
     call main
 
 halt:
-    ; sti
+    sti
     hlt
     ; xchg bx, bx
     jmp halt

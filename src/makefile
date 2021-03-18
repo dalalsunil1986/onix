@@ -66,6 +66,9 @@ $(BUILD)/assert.o: $(KERNEL)/assert.c
 $(BUILD)/interrupt.o: $(KERNEL)/interrupt.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/timer.o: $(KERNEL)/timer.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/global.o \
 	$(BUILD)/system.o \
@@ -74,6 +77,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/vsprintf.o \
 	$(BUILD)/assert.o \
 	$(BUILD)/interrupt.o \
+	$(BUILD)/timer.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 

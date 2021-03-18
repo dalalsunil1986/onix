@@ -2,12 +2,11 @@
 #include <onix/kernel/io.h>
 #include <onix/kernel/printk.h>
 #include <onix/kernel/assert.h>
+#include <onix/kernel/timer.h>
 
 InterruptGate idt[IDT_SIZE];
 Pointer idt_ptr;
 InterruptHandler handler_table[IDT_SIZE];
-
-u32 __clock_counter;
 
 static void init_pic()
 {
@@ -112,5 +111,6 @@ void init_interrupt()
     init_idt();
     init_exception();
     init_handler();
+    init_pit();
     printk("Initializing interrupt finished...\n");
 }

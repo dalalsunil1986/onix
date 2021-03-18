@@ -71,13 +71,13 @@ interrupt_%1:
     push gs
     pushad
 
-    mov al, 0x20 ; eoi command
-    out 0xa0, al ; slave pic chip
-    out 0x20, al ; master pic chip
-
     push %1
     call [handler_table + %1 * 4]
     add esp, 4
+
+    mov al, 0x20 ; eoi command
+    out 0xa0, al ; slave pic chip
+    out 0x20, al ; master pic chip
 
     popad
     pop gs
