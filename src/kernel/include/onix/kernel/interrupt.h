@@ -56,6 +56,11 @@ OCW2 用来设置中断结束方式和优先级模式。
 OCW3 用来设定特殊屏蔽方式及查询方式
 */
 
+/*
+for more information 
+http://www.brokenthorn.com/Resources/OSDevPic.html
+
+*/
 
 #ifndef ONIX_INTERRUPT_H
 #define ONIX_INTERRUPT_H
@@ -102,16 +107,20 @@ OCW3 用来设定特殊屏蔽方式及查询方式
 #define INT_VECTOR_PAGE_FAULT 0xE
 #define INT_VECTOR_COPROC_ERR 0x10
 
-#define CLOCK_IRQ 0     // 时钟
-#define KEYBOARD_IRQ 1  // 键盘
-#define CASCADE_IRQ 2   // 8259 从片控制器
-#define ETHER_IRQ 3     // COM2 / COM4
-#define SECONDARY_IRQ 3 /* RS232 interrupt vector for port 2 */
-#define RS232_IRQ 4     /* RS232 interrupt vector for port 1 */
-#define XT_WINI_IRQ 5   /* xt winchester */
-#define FLOPPY_IRQ 6    // 软盘控制器
-#define PRINTER_IRQ 7
-#define AT_WINI_IRQ 14 /* at winchester */
+#define IRQ_CLOCK 0    // 时钟
+#define IRQ_KEYBOARD 1 // 键盘
+#define IRQ_CASCADE 2  // 8259 从片控制器
+#define IRQ_SERIAL_2 3
+#define IRQ_SERIAL_1 4
+#define IRQ_HARD_DISK_2 5
+
+#define IRQ_FLOPPY 6 // 软盘控制器
+#define IRQ_PARALLEL_1 7
+#define IRQ_RTC 8
+
+#define IRQ_MOUSE 12
+#define IRQ_MATH 13
+#define IRQ_HARD_DISK_1 14
 
 #define PIC_EOI 0X20 /* End-of-interrupt command code */
 
