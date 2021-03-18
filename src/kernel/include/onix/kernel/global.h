@@ -6,12 +6,12 @@
 #define GDT_SIZE 128
 #define IDT_SIZE 256
 
-#define RPL0 0b0
-#define RPL1 0b1
-#define RPL2 0b10
-#define RPL3 0b11
-#define TI_GDT 0b000
-#define TI_LDT 0b100
+#define PL0 0b0
+#define PL1 0b1
+#define PL2 0b10
+#define PL3 0b11
+#define TI_GDT 0
+#define TI_LDT 1
 
 /* 存储段描述符/系统段描述符 */
 typedef struct Descriptor /* 共 8 个字节 */
@@ -40,21 +40,6 @@ typedef struct Selector
     u16 index : 13;
 } Selector;
 
-typedef struct InterruptGate
-{
-    u16 offset0;
-    Selector selector;
-    u8 invalid : 5;
-    u8 accessed : 1;       // is accessed for cpu
-    u8 read_write : 1;     // readable for code, writable for data
-    u8 conform_expand : 1; //  conform for code, expand down for data
-    u8 code : 1;           // 1 for code, 2 for data
-    u8 segment : 1;        // 1 for everything but TSS and LDT
-    u8 DPL : 2;
-    u8 present : 1;
-    u16 offset1;
-} _packed InterruptGate;
-
 typedef struct Pointer
 {
     u16 limit;
@@ -63,6 +48,14 @@ typedef struct Pointer
 
 extern Pointer gdt_ptr;
 extern Descriptor gdt[GDT_SIZE];
+
+
+static const Selector SELECTOR_KERNEL_CODE = {PL0, TI_GDT, 1};
+static const Selector SELECTOR_KERNEL_DATA = {PL0, TI_GDT, 2};
+static const Selector SELECTOR_KERNEL_VIDEO = {PL0, TI_GDT, 3};
+extern void load_gdt(Pointer *gdt_ptr);
+extern void load_idt(Pointer *idt_ptr);
+extern void save_gdt(Pointer *gdt_ptr);
 
 void init_gdt();
 

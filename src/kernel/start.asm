@@ -7,17 +7,16 @@ global _start
 global halt
 
 extern main
-extern init_kernel
+extern __init_kernel
 extern gdt_ptr
+extern idt_ptr
 
 _start:
-    sgdt [gdt_ptr]
-    call init_kernel
-    lgdt [gdt_ptr]
+    call __init_kernel
     call main
 
 halt:
     ; sti
     ; hlt
-    xchg bx, bx
+    ; xchg bx, bx
     jmp halt

@@ -13,7 +13,9 @@
 			"*.tcc": "c",
 			"cstdio": "c",
 			"string.h": "c",
-			"random": "cpp"
+			"random": "cpp",
+			"interrupt.h": "c",
+			"functional": "c"
 		}
 	}
 }
