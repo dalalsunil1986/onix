@@ -9,27 +9,29 @@ INCLUDE:=$(SRC)/include
 KERNEL_INCLUDE:=$(SRC)/kernel/include
 
 BOCHS=bochs
+BOCHS_GDB=bochs-gdb-a20
 ASM=nasm
 CC=gcc
 LD=ld
 
 ENTRYPOINT = 0xC0020000
 
-ASM_FLAGS= -f elf
+ASM_FLAGS= -f elf -g
 
 DEBUG_FLAGS = -D ONIX_DEBUG
 
-CFLAGS = -I $(INCLUDE) -c -fno-builtin -m32 -fno-stack-protector \
+CFLAGS = -I $(INCLUDE) -g  -c -fno-builtin -m32 -fno-stack-protector \
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
 		$(DEBUG_FLAGS)
 
 TESTS_CFLAG = -I $(INCLUDE) -m32 -Wall $(DEBUG_FLAGS)
 
-LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
+LDFLAGS = -m elf_i386 -Ttext $(ENTRYPOINT)
 
 .PHONY: clean
 
 kernel: $(BUILD)/kernel.bin
+	# ps -ef | grep bochsrc-gdb | grep -v grep | awk '{print $$2}' | xargs -r kill -9
 	-
 
 $(BUILD)/boot.bin: $(BOOT)/boot.asm
@@ -86,6 +88,10 @@ endif
 bochs: $(BUILD)/harddisk.img
 	@rm -rf $(BUILD)/harddisk.img.lock
 	cd $(BUILD) && $(BOCHS) -q  -f bochsrc
+
+gdb: $(BUILD)/harddisk.img
+	@rm -rf $(BUILD)/harddisk.img.lock
+	cd $(BUILD) && $(BOCHS_GDB) -q  -f bochsrc-gdb
 
 image: $(BUILD)/harddisk.img
 	-

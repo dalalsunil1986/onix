@@ -15,7 +15,8 @@
 			"string.h": "c",
 			"random": "cpp",
 			"interrupt.h": "c",
-			"functional": "c"
+			"functional": "c",
+			"mutex": "c"
 		}
 	}
 }
