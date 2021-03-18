@@ -107,10 +107,10 @@ void init_exception()
 void init_interrupt()
 {
     printk("Initializing interrupt...\n");
+    init_pit();
     init_pic();
     init_idt();
     init_exception();
     init_handler();
-    init_pit();
     printk("Initializing interrupt finished...\n");
 }
