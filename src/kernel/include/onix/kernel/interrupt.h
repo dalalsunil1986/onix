@@ -142,6 +142,8 @@ void init_interrupt();
 
 extern InterruptGate idt[IDT_SIZE];
 extern Pointer idt_ptr;
-extern InterruptHandler interrupt_table[IDT_SIZE];
+extern InterruptHandler interrupt_entry_table[IDT_SIZE];
+extern InterruptHandler handler_table[IDT_SIZE];
+extern u64 __clock_counter;
 
 #endif

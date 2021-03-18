@@ -51,38 +51,52 @@ inb:
 
 ; interrupt.........
 
-
 %define ERRORCODE nop
 %define PLACEHOLDER push 0
 
-extern printk
+extern handler_table
 
 section .data
-message_interrept db "interrupt occur 0x%X!", 10, 0
-
-global interrupt_table
-
-interrupt_table:
+global interrupt_entry_table
+interrupt_entry_table:
 
 %macro INTERRUPT_HANDLER 2
 section .text
 interrupt_%1:
+
     %2
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+
+    mov al, 0x20 ; eoi command
+    out 0xa0, al ; slave pic chip
+    out 0x20, al ; master pic chip
+
     push %1
-    push message_interrept
-    call printk
-    add esp, 8
+    call [handler_table + %1 * 4]
 
-    mov al, 0x20
-    out 0xa0, al
-    out 0x20, al
 
-    add esp, 4
-    iret
+    jmp interrupt_exit
 
 section .data
     dd interrupt_%1
 %endmacro
+
+section .text
+
+global interrupt_exit:
+interrupt_exit:
+    add esp, 4
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    add esp, 4
+    iretd
 
 INTERRUPT_HANDLER 0x00,PLACEHOLDER
 INTERRUPT_HANDLER 0x01,PLACEHOLDER

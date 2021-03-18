@@ -4,6 +4,9 @@
 
 InterruptGate idt[IDT_SIZE];
 Pointer idt_ptr;
+InterruptHandler handler_table[IDT_SIZE];
+
+u64 __clock_counter;
 
 static void init_pic()
 {
@@ -29,7 +32,7 @@ static void init_idt()
     for (size_t i = 0; i < IDT_SIZE; i++)
     {
         InterruptGate *gate = &idt[i];
-        InterruptHandler handler = interrupt_table[i];
+        InterruptHandler handler = interrupt_entry_table[i];
 
         gate->offset0 = (u32)handler & 0xffff;
         gate->offset1 = ((u32)handler & 0xffff0000) >> 16;
@@ -38,11 +41,66 @@ static void init_idt()
         gate->type = 0b1110;
         gate->DPL = PL0;
     }
-
     idt_ptr.base = (u32)&idt;
     idt_ptr.limit = sizeof(idt) - 1;
     load_idt(&idt_ptr);
     enable_int();
+}
+
+static void default_handler(int vector)
+{
+    printk("default interrupt handler 0x%X \n", vector);
+}
+
+static void exception_handler(int vector)
+{
+    char *messages[] = {
+        "#DE Divide Error\0",
+        "#DB RESERVED\0",
+        "--  NMI Interrupt\0",
+        "#BP Breakpoint\0",
+        "#OF Overflow\0",
+        "#BR BOUND Range Exceeded\0",
+        "#UD Invalid Opcode (Undefined Opcode)\0",
+        "#NM Device Not Available (No Math Coprocessor)\0",
+        "#DF Double Fault\0",
+        "    Coprocessor Segment Overrun (reserved)\0",
+        "#TS Invalid TSS\0",
+        "#NP Segment Not Present\0",
+        "#SS Stack-Segment Fault\0",
+        "#GP General Protection\0",
+        "#PF Page Fault\0",
+        "--  (Intel reserved. Do not use.)\0",
+        "#MF x87 FPU Floating-Point Error (Math Fault)\0",
+        "#AC Alignment Check\0",
+        "#MC Machine Check\0",
+        "#XF SIMD Floating-Point Exception\0"};
+    printk("Exception: %s \n Vector: %x \0", messages[vector], vector);
+    halt();
+}
+
+static void clock_handler(int vector)
+{
+    __clock_counter += 1;
+    printk("Clock interrupt counter %d \n", __clock_counter);
+}
+
+void init_handler()
+{
+
+    for (size_t i = 20; i < IDT_SIZE; i++)
+    {
+        handler_table[i] = &default_handler;
+    }
+    handler_table[0x20] = clock_handler;
+}
+
+void init_exception()
+{
+    for (size_t i = 0; i < 20; i++)
+    {
+        handler_table[i] = &exception_handler;
+    }
 }
 
 void init_interrupt()
@@ -50,4 +108,7 @@ void init_interrupt()
     printk("Initializing interrupt...\n");
     init_pic();
     init_idt();
+    init_exception();
+    init_handler();
+    printk("Initializing interrupt finished...\n");
 }
