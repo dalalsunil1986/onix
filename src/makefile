@@ -44,6 +44,9 @@ $(BUILD)/start.o: $(KERNEL)/start.asm
 $(BUILD)/system.o: $(KERNEL)/system.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
 
+$(BUILD)/global.o: $(KERNEL)/global.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/main.o: $(KERNEL)/main.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -57,6 +60,7 @@ $(BUILD)/vsprintf.o: $(KERNEL)/vsprintf.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
+	$(BUILD)/global.o \
 	$(BUILD)/system.o \
 	$(BUILD)/string.o \
 	$(BUILD)/printk.o \

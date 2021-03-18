@@ -64,4 +64,6 @@ typedef struct Pointer
 extern Pointer gdt_ptr;
 extern Descriptor gdt[GDT_SIZE];
 
+void init_gdt();
+
 #endif
