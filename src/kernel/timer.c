@@ -1,5 +1,6 @@
 #include <onix/kernel/timer.h>
 #include <onix/kernel/io.h>
+#include <onix/kernel/printk.h>
 
 u32 __clock_counter;
 
@@ -12,6 +13,7 @@ void set_frequency(u8 port, u8 number, u8 rwl, u8 mode, u16 value)
 
 void init_pit()
 {
+    printk("Initializing PIT...\n");
     set_frequency(
         COUNTER0_PORT,
         COUNTER0_NO,
