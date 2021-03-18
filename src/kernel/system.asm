@@ -21,6 +21,16 @@ load_idt:
     lidt [eax]
     ret
 
+global enable_int
+enable_int:
+    sti
+    ret
+
+global disable_int
+disable_int:
+    cli
+    ret
+
 global outb
 outb:
     mov edx, [esp + 4];  port

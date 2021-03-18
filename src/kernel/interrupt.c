@@ -42,7 +42,7 @@ static void init_idt()
     idt_ptr.base = (u32)&idt;
     idt_ptr.limit = sizeof(idt) - 1;
     load_idt(&idt_ptr);
-    asm("sti");
+    enable_int();
 }
 
 void init_interrupt()
