@@ -61,6 +61,9 @@ $(BUILD)/string.o: $(KERNEL)/string.c
 $(BUILD)/vsprintf.o: $(KERNEL)/vsprintf.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/assert.o: $(KERNEL)/assert.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/interrupt.o: $(KERNEL)/interrupt.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -70,6 +73,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/string.o \
 	$(BUILD)/printk.o \
 	$(BUILD)/vsprintf.o \
+	$(BUILD)/assert.o \
 	$(BUILD)/interrupt.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@

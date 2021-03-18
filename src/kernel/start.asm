@@ -17,6 +17,6 @@ _start:
 
 halt:
     ; sti
-    ; hlt
+    hlt
     ; xchg bx, bx
     jmp halt

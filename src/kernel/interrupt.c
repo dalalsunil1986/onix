@@ -1,12 +1,13 @@
 #include <onix/kernel/interrupt.h>
 #include <onix/kernel/io.h>
 #include <onix/kernel/printk.h>
+#include <onix/kernel/assert.h>
 
 InterruptGate idt[IDT_SIZE];
 Pointer idt_ptr;
 InterruptHandler handler_table[IDT_SIZE];
 
-u64 __clock_counter;
+u32 __clock_counter;
 
 static void init_pic()
 {
@@ -81,8 +82,9 @@ static void exception_handler(int vector)
 
 static void clock_handler(int vector)
 {
-    __clock_counter += 1;
-    printk("Clock interrupt counter %d \n", __clock_counter);
+    assert(vector == 0x20);
+    __clock_counter++;
+    printk("Clock interrupt counter %i\n", __clock_counter);
 }
 
 void init_handler()
