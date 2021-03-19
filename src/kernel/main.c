@@ -7,8 +7,8 @@
 
 void __init_kernel()
 {
-    init_gdt();
     init_memory();
+    init_gdt();
     init_interrupt();
 }
 

@@ -162,7 +162,10 @@ protect_mode_start:
     call load_kernel
     call init_kernel
 
-    mov esp, KERNEL_STACK_TOP
+
+    push ards_buffer
+    push ards_count
+    push total_memory_bytes
     jmp SELECTOR_CODE: KERNEL_BASE_ADDR
 
 memcpy:
