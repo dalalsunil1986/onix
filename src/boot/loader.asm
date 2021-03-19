@@ -22,7 +22,7 @@ SELECTOR_VIDEO  equ (3 << 3) | TI_GDT | RPL0
 
 total_memory_bytes dd 0
 ards_count  dw 0
-ards_buffer times 128 - ($ - $$) db 0
+ards_buffer times 256 - ($ - $$) db 0
 
 start:
     ; xchg bx, bx
@@ -39,7 +39,8 @@ start:
     mov si, message_detect_momory_e820
     call bios_print
 
-    ; 内存检测可能会修改内存内容，待验证
+    ; 内存检测可能会修改内存内容
+    ; ards buffer 太小，导致被覆盖
 
 .check_memory_r820:
     mov eax, 0x0000e820
