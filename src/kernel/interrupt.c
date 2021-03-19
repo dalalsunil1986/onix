@@ -2,7 +2,7 @@
 #include <onix/kernel/io.h>
 #include <onix/kernel/printk.h>
 #include <onix/kernel/assert.h>
-#include <onix/kernel/timer.h>
+#include <onix/kernel/clock.h>
 
 InterruptGate idt[IDT_SIZE];
 Pointer idt_ptr;
@@ -79,12 +79,6 @@ static void exception_handler(int vector)
     halt();
 }
 
-static void clock_handler(int vector)
-{
-    assert(vector == 0x20);
-    __clock_counter++;
-    printk("Clock interrupt counter %i\n", __clock_counter);
-}
 
 void init_handler()
 {

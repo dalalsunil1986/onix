@@ -12,6 +12,7 @@ void __init_kernel()
 
 int main()
 {
+    clear();
     // printk("code selector 0x%X\n", *(short *)&SELECTOR_KERNEL_CODE);
     // printk("data selector 0x%X\n", *(short *)&SELECTOR_KERNEL_DATA);
     // printk("video selector 0x%X\n", *(short *)&SELECTOR_KERNEL_VIDEO);
