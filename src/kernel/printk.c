@@ -45,7 +45,7 @@ void clear()
 {
     int cpos = 0;
     char *current = (char *)V_MEM_BASE;
-    while (cpos++ < VGA_HEIGHT * VGA_HEIGHT)
+    while (cpos++ < VGA_HEIGHT * VGA_HEIGHT * 2)
     {
         *current = ' ';
         current += 2;
