@@ -16,7 +16,9 @@
 			"random": "cpp",
 			"interrupt.h": "c",
 			"functional": "c",
-			"mutex": "c"
+			"mutex": "c",
+			"assert.h": "c",
+			"global.h": "c"
 		}
 	}
 }

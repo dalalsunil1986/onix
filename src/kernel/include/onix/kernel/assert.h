@@ -1,8 +1,8 @@
 #ifndef ONIX_ASSERT_H
 #define ONIX_ASSERT_H
 
-static const MAG_CH_PANIC = '\002';
-static const MAG_CH_ASSERT = '\003';
+static const int MAG_CH_PANIC = '\002';
+static const int MAG_CH_ASSERT = '\003';
 
 void assertion_failure(char *exp, char *file, char *base_file, int line);
 #define assert(exp) \

@@ -2,6 +2,7 @@
 #define ONIX_PRINTK_H
 
 #include <onix/types.h>
+#include <onix/stdarg.h>
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
@@ -22,6 +23,8 @@ extern void set_cursor(int pos);
 
 void clear();
 void put_char(char ch);
+
+extern int vsprintf(char *buf, const char *fmt, va_list args);
 int printk(const char *fmt, ...);
 
 #endif

@@ -17,5 +17,8 @@ void clock_handler(int vector)
 {
     assert(vector == 0x20);
     __clock_counter++;
+
+    char * current = (char *)V_MEM_BASE + (VGA_WIDTH - 1) * 2;
+    *current = __clock_counter % 10 + 0x30;
     // printk("Clock interrupt counter %i\n", __clock_counter);
 }

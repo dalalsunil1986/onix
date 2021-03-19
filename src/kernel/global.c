@@ -1,4 +1,6 @@
 #include <onix/kernel/global.h>
+#include <onix/kernel/printk.h>
+#include <onix/string.h>
 
 Descriptor gdt[GDT_SIZE];
 Pointer gdt_ptr;

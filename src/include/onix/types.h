@@ -9,6 +9,8 @@ static const bool false = 0;
 static const bool true = 1;
 #endif
 
+#define NULL 0
+
 typedef unsigned int size_t;
 
 typedef char int8;
