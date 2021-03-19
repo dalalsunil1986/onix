@@ -18,7 +18,8 @@
 			"functional": "c",
 			"mutex": "c",
 			"assert.h": "c",
-			"global.h": "c"
+			"global.h": "c",
+			"memory.h": "c"
 		}
 	}
 }

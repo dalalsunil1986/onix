@@ -3,16 +3,18 @@
 #include <onix/kernel/printk.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/interrupt.h>
+#include <onix/kernel/memory.h>
 
 void __init_kernel()
 {
     init_gdt();
+    init_memory();
     init_interrupt();
 }
 
 int main()
 {
-    clear();
+    // clear();
     // printk("code selector 0x%X\n", *(short *)&SELECTOR_KERNEL_CODE);
     // printk("data selector 0x%X\n", *(short *)&SELECTOR_KERNEL_DATA);
     // printk("video selector 0x%X\n", *(short *)&SELECTOR_KERNEL_VIDEO);

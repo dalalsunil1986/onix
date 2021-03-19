@@ -72,6 +72,9 @@ $(BUILD)/clock.o: $(KERNEL)/clock.c
 $(BUILD)/bitmap.o: $(KERNEL)/bitmap.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/memory.o: $(KERNEL)/memory.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/global.o \
 	$(BUILD)/system.o \
@@ -81,6 +84,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/assert.o \
 	$(BUILD)/interrupt.o \
 	$(BUILD)/bitmap.o \
+	$(BUILD)/memory.o \
 	$(BUILD)/clock.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
