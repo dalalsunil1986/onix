@@ -1,54 +1,31 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <onix/types.h>
+#include <onix/bitmap.h>
 
-int vsprintfk(char *buf, const char *fmt, va_list args);
-
-typedef struct Test
-{
-    u8 g : 1;
-    u8 db : 1;
-    u8 l : 1;
-    u8 avl : 1;
-    u8 type : 4;
-} _packed Test;
-
-static char buf[1024];
-
-int printk(const char *fmt, ...)
-{
-    va_list args;
-    int i;
-
-    va_start(args, fmt);
-    i = vsprintfk(buf, fmt, args);
-    va_end(args);
-
-    printf(buf);
-    // int n = i;
-    // while (n-- > 0)
-    // {
-    //     put_char(buf[i - n - 1]);
-    // }
-    return i;
-}
-
+#define SIZE 1024
 
 int main()
 {
-    printf("Test is starting...\n");
-    printf("Test size: %d\n", sizeof(Test));
 
-    Test t;
-    u8 *value = (u8 *)(&t);
+    u8 bits[SIZE];
+    Bitmap map;
+    map.length = SIZE;
+    map.bits = bits;
 
-    t.g = 1;
-    t.type = 0b1101;
+    bitmap_init(&map);
 
-    printf("Test.g %d\n", t.g);
-    printf("Test %d\n", *value);
+    u32 turns = 100;
+    while (--turns)
+    {
+        u32 size = 5;
+        u32 start = bitmap_scan(&map, size);
 
-    printk("Hello printf %d", 123);
+        for (size_t i = start; i < start + size; i++)
+        {
+            bitmap_set(&map, i, 1);
+        }
+    }
 
     return 0;
 }

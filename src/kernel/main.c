@@ -20,5 +20,7 @@ int main()
     // printk("video selector 0x%X\n", *(short *)&SELECTOR_KERNEL_VIDEO);
     // printk("code descriptor segment %d\n", gdt[1].segment);
     printk("Onix, is running....\n");
+    Page page = palloc(5);
+    printk("palloc page 0x%X\n", page);
     return 0;
 }

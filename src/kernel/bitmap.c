@@ -35,11 +35,11 @@ int bitmap_scan(Bitmap *bitmap, u32 count)
     {
         if (counter == count)
         {
-            start = next_bit - count + 1;
+            start = next_bit - count;
             break;
         }
 
-        if (!(bitmap_scan(bitmap, next_bit)))
+        if (!(bitmap_test(bitmap, next_bit)))
             counter++;
         else
             count = 0;
