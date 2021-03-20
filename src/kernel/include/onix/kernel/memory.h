@@ -15,6 +15,10 @@
 #define PG_BASE 0x100
 #define BASE_ADDR_LIMIT 0x100000
 #define KERNEL_ADDR_MASK 0xC0000000
+#define KERNEL_MAP_ADDR 0xC00006000
+
+#define USER_KERNEL 0
+#define USER_USER 1
 
 #define ARDS_SIZE 32
 
@@ -53,6 +57,7 @@ extern u32 total_memory_bytes;
 extern u32 ards_count;
 extern ARDS ards_table[ARDS_SIZE];
 
-Page palloc(u32 size);
+extern u32 page_alloc(u32 user, u32 size);
+extern void page_free(u32 user, u32 page, u32 size);
 
 #endif

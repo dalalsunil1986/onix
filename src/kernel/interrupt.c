@@ -75,7 +75,7 @@ static void exception_handler(int vector)
         "#AC Alignment Check\0",
         "#MC Machine Check\0",
         "#XF SIMD Floating-Point Exception\0"};
-    printk("Exception: %s \n Vector: %x \0", messages[vector], vector);
+    printk("Exception: %s \n Vector: 0x%X \0", messages[vector], vector);
     halt();
 }
 

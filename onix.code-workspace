@@ -19,7 +19,8 @@
 			"mutex": "c",
 			"assert.h": "c",
 			"global.h": "c",
-			"memory.h": "c"
+			"memory.h": "c",
+			"variant": "c"
 		}
 	}
 }

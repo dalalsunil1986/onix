@@ -7,6 +7,7 @@
 
 void __init_kernel()
 {
+    BMB;
     init_memory();
     init_gdt();
     init_interrupt();
@@ -20,7 +21,7 @@ int main()
     // printk("video selector 0x%X\n", *(short *)&SELECTOR_KERNEL_VIDEO);
     // printk("code descriptor segment %d\n", gdt[1].segment);
     printk("Onix, is running....\n");
-    Page page = palloc(5);
+    Page page = page_alloc(USER_KERNEL, 5);
     printk("palloc page 0x%X\n", page);
     return 0;
 }

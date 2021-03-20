@@ -2,6 +2,8 @@
 #include <onix/kernel/printk.h>
 #include <onix/kernel/io.h>
 #include <onix/kernel/debug.h>
+#include <onix/kernel/assert.h>
+#include <onix/string.h>
 
 u32 total_memory_bytes;
 u32 ards_count;
@@ -14,7 +16,10 @@ static ARDS *ards = NULL;
 
 Page pde;
 
-Bitmap mmap;
+Bitmap pmap;
+Bitmap kmap;
+
+u32 physical_page_alloc(u32 size);
 
 static u32 get_pde_index(PageEntry *entry)
 {
@@ -26,37 +31,60 @@ static u32 get_pte_index(PageEntry *entry)
     return entry->index & 0b1111111111;
 }
 
-static Page get_pte_page(PageEntry *entry)
+u32 get_pte_page(u32 vaddress)
 {
+    BMB;
+    PageEntry *entry = &vaddress;
     u32 pde_idx = get_pde_index(entry);
+    printk("get pde index entry 0x%x 0x%X\n", entry->index, pde_idx);
     entry = &pde[pde_idx];
     if (!entry->present || entry->dirty)
-        return NULL;
-    Page page = entry->index << 12;
+    {
+        printk("get new pte entry 0x%x 0x%X\n", entry->index, pde_idx);
+        BMB;
+        assert(pmap.length);
+        u32 page = physical_page_alloc(1);
+
+        u32 store = 0;
+        PageEntry *mentry = &store;
+        PageEntry *pentry = &page;
+        mentry->present = 1;
+        mentry->write = 1;
+        mentry->index = pentry->index;
+        pde[pde_idx] = mentry;
+    }
+    u32 page = entry->index << 12;
     return page;
 }
 
-static Page get_page(Page pte, PageEntry *entry)
+void set_page(Page pte, u32 vaddress, u32 paddress)
 {
-}
-
-static void set_page(Page pte, u32 paddress)
-{
-    PageEntry *entry = &paddress;
     u32 store = 0;
     PageEntry *mentry = &store;
+    PageEntry *ventry = &vaddress;
+    PageEntry *pentry = &paddress;
+    printk("set page 0x%X vindex 0x%X pindex 0x%X idx 0x%X \n",
+           pte, ventry->index, pentry->index, get_pte_index(ventry));
+
     mentry->present = 1;
     mentry->write = 1;
-    mentry->index = entry->index;
-    pte[get_pte_index(entry)] = store;
+    mentry->index = pentry->index;
+
+    BMB;
+    pte[get_pte_index(ventry)] = store;
 }
 
-static void mmap_set(u32 paddress, u32 value)
+void mmap_set(u32 user, Bitmap *mmap, u32 address, u32 value)
 {
-    PageEntry *entry = (PageEntry *)&paddress;
-    u32 index = entry->index - PG_BASE;
-    printk("page index %d\n", index);
-    bitmap_set(&mmap, index, value);
+    PageEntry *entry = (PageEntry *)&address;
+    u32 index = entry->index;
+    if (user == USER_KERNEL)
+    {
+        index -= PG_BASE;
+        address &= ~KERNEL_ADDR_MASK;
+    }
+    printk("mmap set 0x%X page address 0x%X index %d\n", mmap->bits, address, index);
+    bitmap_set(mmap, index, value);
 }
 
 static void init_memory_map()
@@ -64,26 +92,47 @@ static void init_memory_map()
     available_memory_bytes = ards->size0;
     available_pages = available_memory_bytes / 0x1000; // 4k
     free_pages = available_pages;
-    mmap.length = available_pages / 8;
+    pmap.length = available_pages / 8;
+
+    printk("pmap length %d\n", pmap.length);
 
     PageEntry *entry = &ards->addr0;
     Page pte = get_pte_page(entry);
-    set_page(pte, ards->addr0);
-    mmap.bits = ards->addr0 | KERNEL_ADDR_MASK;
-    mmap_set(ards->addr0, 1);
+    assert(pte);
 
-    u32 pages = mmap.length / PG_SIZE;
-    u32 remain = mmap.length % PG_SIZE;
+    u32 paddress = ards->addr0;
+    u32 vaddress = paddress | KERNEL_ADDR_MASK;
+
+    printk("Set base pmap vaddr 0x%X paddr 0x%X \n", vaddress, paddress);
+    set_page(pte, vaddress, paddress);
+
+    pmap.bits = ards->addr0 | KERNEL_ADDR_MASK;
+
+    u32 pages = pmap.length / PG_SIZE + 1;
+    u32 remain = pmap.length % PG_SIZE;
     if (!remain) // 恰好整除的情况
         pages--;
-    for (size_t i = 1; i <= pages; i++)
+
+    printk("pmap pages %d \n", pages);
+    for (size_t i = 1; i < pages; i++)
     {
         u32 address = (ards->addr0 + PG_SIZE * i);
-        printk("additional mmap pages %d, address 0x%X\n", i, address);
-        set_page(pte, address);
-        mmap_set(address, 1);
+        printk("additional pmap pages %d, address 0x%X\n", i, address);
+        set_page(pte, address | KERNEL_ADDR_MASK, address);
     }
-    printk("Available memory pages %d\n", mmap.length);
+
+    kmap.bits = (u8 *)KERNEL_MAP_ADDR;
+    kmap.length = PG_SIZE;
+    bitmap_init(&kmap);
+    bitmap_init(&pmap);
+    for (size_t i = 0; i < pages; i++)
+    {
+        u32 address = (ards->addr0 + PG_SIZE * i);
+        mmap_set(USER_KERNEL, &pmap, address, 1);
+        mmap_set(USER_KERNEL, &kmap, address, 1);
+    }
+    printk("Available memory pages %d\n", available_pages);
+    BMB;
 }
 
 void init_memory()
@@ -126,14 +175,57 @@ void init_memory()
     init_memory_map();
 }
 
-Page palloc(u32 size)
+u32 scan_page(Bitmap *map, u32 size)
 {
-    u32 start = bitmap_scan(&mmap, size);
-    printk("get start page %d size %d\n", start, size);
+    u32 start = bitmap_scan(map, size);
     for (size_t i = start; i < start + size; i++)
     {
-        bitmap_set(&mmap, i, 1);
+        bitmap_set(map, i, 1);
         printk("page alloc address %d \n", i);
     }
-    return start;
+    return start * PG_SIZE;
+}
+
+u32 physical_page_alloc(u32 size)
+{
+    u32 start = scan_page(&pmap, size);
+    u32 page = (PG_BASE * PG_SIZE) + start;
+    printk("alloc physical page 0x%X size %d \n", start, size);
+    return page;
+}
+
+void physical_page_free(Page page, u32 size)
+{
+    for (size_t i = 0; i < size; i++)
+    {
+        mmap_set(USER_KERNEL, &pmap, page + i * PG_SIZE, 0);
+    }
+}
+
+u32 page_alloc(u32 user, u32 size)
+{
+    u32 pstart = physical_page_alloc(size);
+    printk("pstart page 0x%X\n", pstart);
+    u32 vstart = 0;
+    if (user == USER_KERNEL)
+    {
+        vstart = (scan_page(&kmap, size) + BASE_ADDR_LIMIT) | KERNEL_ADDR_MASK;
+        printk("vstart page 0x%X\n", vstart);
+        for (size_t i = 0; i < size; i++)
+        {
+            BMB;
+            u32 vaddress = vstart + i * PG_SIZE;
+            printk("staart 0x%X vaddress 0x%X i 0x%X \n", vstart, vaddress, i);
+            u32 pte = get_pte_page(vaddress);
+            printk("PTE %X \n", pte);
+            set_page(pte, vaddress, pstart + (i * PG_SIZE));
+            printk("set page finish %X\n", vaddress);
+        }
+    }
+    return vstart;
+}
+
+void page_free(u32 user, u32 page, u32 size)
+{
+    u32 vstart = page;
 }
