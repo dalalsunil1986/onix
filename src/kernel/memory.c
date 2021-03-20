@@ -10,143 +10,164 @@ u32 ards_count;
 u32 available_memory_bytes;
 u32 available_pages;
 u32 free_pages;
+u32 base_physical_pages;
 
 ARDS ards_table[ARDS_SIZE];
 static ARDS *ards = NULL;
 
-Page pde;
-
 Bitmap pmap;
-Bitmap kmap;
+Bitmap mmap;
 
-u32 physical_page_alloc(u32 size);
+extern Page get_pde();
 
-static u32 get_pde_index(PageEntry *entry)
+static u32 pde_idx(u32 idx)
 {
-    return entry->index >> 10;
+    return idx >> 10;
 }
 
-static u32 get_pte_index(PageEntry *entry)
+static u32 pte_idx(u32 address)
 {
-    return entry->index & 0b1111111111;
+    return address & 0b1111111111;
 }
 
-u32 get_pte_page(u32 vaddress)
+int scan_page(Bitmap *map, u32 size)
 {
-    // BMB;
-    PageEntry *entry = &vaddress;
-    u32 pde_idx = get_pde_index(entry);
-    DEBUGK("get pde index entry 0x%x 0x%X\n", entry->index, pde_idx);
-    entry = &pde[pde_idx];
-    if (!entry->present || entry->dirty)
+    int start = bitmap_scan(map, size);
+    assert(start != -1);
+    for (size_t i = start; i < start + size; i++)
     {
-        DEBUGK("get new pte entry 0x%x 0x%X\n", entry->index, pde_idx);
-        // BMB;
+        bitmap_set(map, i, 1);
+        // DEBUGK("page alloc address 0x%04X \n", i);
+    }
+    return start;
+}
+
+u32 scan_physical_page(u32 size)
+{
+    u32 page = scan_page(&pmap, size);
+    return page + base_physical_pages;
+}
+
+u32 get_pte(u32 idx)
+{
+    Page pde = get_pde();
+    u32 pidx = pde_idx(idx);
+    // DEBUGK("get pde index 0x%x pidx 0x%X\n", pde, pidx);
+    PageEntry *entry = &pde[pidx];
+    if (!entry->present)
+    {
+        // DEBUGK("create pte entry 0x%x 0x%X presnet %d\n", idx, pidx, entry->present);
+        // // BMB;
         assert(pmap.length);
-        u32 page = physical_page_alloc(1);
+        // scan_page(&mmap, 1);
+
+        u32 page = scan_physical_page(1);
+
+        // DEBUGK("get new page entry 0x%x\n", page);
+
+        free_pages--;
 
         u32 store = 0;
         PageEntry *mentry = &store;
-        PageEntry *pentry = &page;
         mentry->present = 1;
         mentry->write = 1;
-        mentry->index = pentry->index;
-        pde[pde_idx] = mentry;
+        // mentry->dirty = 0;
+        mentry->index = page;
+        // DEBUGK("set entry 0x%x \n", store);
+        pde[pidx] = mentry;
     }
-    u32 page = entry->index << 12;
-    return page;
+    return entry->index;
 }
 
-u32 set_page(Page pte, u32 vaddress, u32 paddress)
+void set_page(u32 vidx, u32 pidx)
 {
-    PageEntry *ventry = &vaddress;
+    u32 pte = get_pte(vidx);
     u32 store = 0;
     PageEntry *mentry = &store;
-    PageEntry *pentry = &paddress;
-    DEBUGK("set page 0x%X vindex 0x%X pindex 0x%X idx 0x%X \n",
-           pte, ventry->index, pentry->index, get_pte_index(ventry));
-
+    // DEBUGK("set page pte 0x%05X vaddr 0x%05X paddr 0x%05X idx 0x%05X \n",
+    //        pte, vidx, pidx, pte_idx(pidx));
     mentry->present = 1;
     mentry->write = 1;
-    mentry->index = pentry->index;
-    pte[get_pte_index(ventry)] = store;
-    return 0;
+    mentry->index = pidx;
+
+    Page page = pte << 12;
+    page[pte_idx(pidx)] = store;
 }
 
-u32 get_page(Page pte, u32 vaddress)
+u32 get_page(u32 vidx)
 {
-    PageEntry *ventry = &vaddress;
-    u32 page = pte[get_pte_index(ventry)];
+    // DEBUGK("get pte idx 0x%X\n", vidx);
+    Page pte = get_pte(vidx) << 12;
+    // DEBUGK("get pte idx 0x%X\n", pte);
+    u32 page = pte[pte_idx(vidx)];
     return page;
 }
 
-void mmap_set(u32 user, Bitmap *mmap, u32 address, u32 value)
+void mmap_free(u32 user, Bitmap *mmap, u32 idx)
 {
-    address &= ~KERNEL_ADDR_MASK;
-    PageEntry *entry = (PageEntry *)&address;
-    u32 index = entry->index;
-    if (user == USER_KERNEL)
-    {
-        index -= PG_BASE;
-    }
-    DEBUGK("mmap set 0x%X page address 0x%X index %d\n", mmap->bits, address, index);
-    bitmap_set(mmap, index, value);
+    // DEBUGK("mmap set 0x%X index 0x%X\n", mmap->bits, idx);
+    bitmap_set(mmap, idx, 0);
 }
 
 static void init_memory_map()
 {
+    base_physical_pages = ards->addr0 / 0x1000;
     available_memory_bytes = ards->size0;
     available_pages = available_memory_bytes / 0x1000; // 4k
     free_pages = available_pages;
-    pmap.length = available_pages / 8;
 
-    DEBUGK("pmap length %d\n", pmap.length);
+    pmap.bits = (u8 *)PREPARE_PMAP_ADDR;
+    pmap.length = PG_SIZE;
+    bitmap_init(&pmap);
 
-    PageEntry *entry = &ards->addr0;
-    Page pte = get_pte_page(entry);
-    assert(pte);
+    mmap.bits = (u8 *)KERNEL_MMAP_ADDR;
+    mmap.length = PG_SIZE;
+    bitmap_init(&mmap);
 
-    u32 paddress = ards->addr0;
-    u32 vaddress = paddress | KERNEL_ADDR_MASK;
+    // DEBUGK("pmap length %d\n", pmap.length);
 
-    DEBUGK("Set base pmap vaddr 0x%X paddr 0x%X \n", vaddress, paddress);
-    set_page(pte, vaddress, paddress);
-
-    pmap.bits = ards->addr0 | KERNEL_ADDR_MASK;
-
-    u32 pages = pmap.length / PG_SIZE + 1;
-    u32 remain = pmap.length % PG_SIZE;
+    u32 pages = available_pages / PG_SIZE + 1;
+    u32 remain = available_pages % PG_SIZE;
     if (!remain) // 恰好整除的情况
         pages--;
 
-    DEBUGK("pmap pages %d \n", pages);
-    for (size_t i = 1; i < pages; i++)
-    {
-        u32 address = (ards->addr0 + PG_SIZE * i);
-        DEBUGK("additional pmap pages %d, address 0x%X\n", i, address);
-        set_page(pte, address | KERNEL_ADDR_MASK, address);
-    }
+    u32 pstart = scan_physical_page(pages);
+    u32 vstart = scan_page(&mmap, pages) + KERNEL_BASE_PAGE_VIDX;
 
-    kmap.bits = (u8 *)KERNEL_MAP_ADDR;
-    kmap.length = PG_SIZE;
-    bitmap_init(&kmap);
-    bitmap_init(&pmap);
+    // BMB;
+
+    // DEBUGK("pmap pages %d \n", pages);
+    // DEBUGK("vaddr 0x%08X paddr 0x%08X pages %d \n",
+    //        vstart, pstart, pages);
+
     for (size_t i = 0; i < pages; i++)
     {
-        u32 address = (ards->addr0 + PG_SIZE * i);
-        mmap_set(USER_KERNEL, &pmap, address, 1);
-        mmap_set(USER_KERNEL, &kmap, address, 1);
+        u32 pidx = (pstart + i);
+        u32 vidx = (vstart + i);
+        // DEBUGK("physical map pages %d, vidx 0x%X pidx 0x%X\n", i, vidx, pidx);
+        set_page(vidx, pidx);
     }
-    DEBUGK("Available memory pages %d\n", available_pages);
+
+    Bitmap temp;
+    u32 vaddress = vstart * PG_SIZE;
+    temp.bits = vaddress;
+    temp.length = available_pages / 8;
+    bitmap_init(&temp);
+
+    memcpy(vaddress, pmap.bits, PG_SIZE);
+    mmap.length = (0x7000 - 0x3000);
+
+    pmap.bits = temp.bits;
+    pmap.length = temp.length;
+
+    // DEBUGK("Available start page idx 0x%X\n", base_physical_pages);
+    // DEBUGK("Available kernel bits 0x%X\n", mmap.length);
+    // DEBUGK("Available memory pages 0x%X\n", available_pages);
     // BMB;
 }
 
-void init_memory()
+static ARDS *get_valid_ards()
 {
-    printk("Initializing Memory...\n");
-    printk("Total Memory Size 0x%X B\n", total_memory_bytes);
-    DEBUGK("Total Memory Ards count %d\n", ards_count);
-
     u32 max_size = 0;
     u32 index;
     for (size_t i = 0; i < ards_count; i++)
@@ -172,81 +193,67 @@ void init_memory()
             ards->size0 -= 0x1000;
         }
     }
-    pde = (u32 *)PG_DIR_ADDRESS;
+    return ards;
+}
+
+u32 page_alloc(u32 user, u32 size)
+{
+    u32 pstart = scan_physical_page(size);
+    u32 vstart = 0;
+    if (user == USER_KERNEL)
+    {
+        vstart = (scan_page(&mmap, size) + KERNEL_BASE_PAGE_VIDX);
+        for (size_t i = 0; i < size; i++)
+        {
+            // BMB;
+            u32 pidx = pstart + i;
+            u32 vidx = vstart + i;
+            set_page(vidx, pidx);
+        }
+    }
+    free_pages -= size;
+    // DEBUGK("Available memory 0x%08X \n", free_pages);
+    return vstart;
+}
+
+void page_free(u32 user, u32 vidx, u32 size)
+{
+    u32 vstart = vidx;
+    if (user == USER_KERNEL)
+    {
+        // DEBUGK("free page vstart %X \n", vstart);
+        for (size_t i = 0; i < size; i++)
+        {
+            u32 vidx = (vstart + i) - KERNEL_BASE_PAGE_VIDX;
+            u32 pidx = (get_page(vidx) >> 12);
+            // DEBUGK("page free vidx 0x%X pidx 0x%X i 0x%X \n", vidx, pidx, i);
+            mmap_free(user, &mmap, vidx);
+            mmap_free(user, &pmap, pidx);
+            free_pages += 1;
+        }
+    }
+}
+
+void init_memory()
+{
+    printk("Initializing Memory...\n");
+    printk("Total Memory Size 0x%X B\n", total_memory_bytes);
+    DEBUGK("Total Memory Ards count %d\n", ards_count);
+    ards = get_valid_ards();
     if (ards->addr0 < BASE_ADDR_LIMIT)
     {
         DEBUGK("Memory size too small that can't run kernel, sorry about it!!!\n");
         halt();
     }
     init_memory_map();
-}
 
-u32 scan_page(Bitmap *map, u32 size)
-{
-    u32 start = bitmap_scan(map, size);
-    for (size_t i = start; i < start + size; i++)
-    {
-        bitmap_set(map, i, 1);
-        DEBUGK("page alloc address %d \n", i);
-    }
-    return start * PG_SIZE;
-}
-
-u32 physical_page_alloc(u32 size)
-{
-    u32 start = scan_page(&pmap, size);
-    u32 page = (PG_BASE * PG_SIZE) + start;
-    DEBUGK("alloc physical page 0x%X size %d \n", start, size);
-    return page;
-}
-
-// void physical_page_free(Page page, u32 size)
-// {
-//     for (size_t i = 0; i < size; i++)
-//     {
-//         mmap_set(USER_KERNEL, &pmap, page + i * PG_SIZE, 0);
-//     }
-// }
-
-u32 page_alloc(u32 user, u32 size)
-{
-    u32 pstart = physical_page_alloc(size);
-    DEBUGK("pstart page 0x%X\n", pstart);
-    u32 vstart = 0;
-    if (user == USER_KERNEL)
-    {
-        vstart = (scan_page(&kmap, size) + BASE_ADDR_LIMIT) | KERNEL_ADDR_MASK;
-        DEBUGK("vstart page 0x%X\n", vstart);
-        for (size_t i = 0; i < size; i++)
-        {
-            // BMB;
-            u32 vaddress = vstart + i * PG_SIZE;
-            DEBUGK("staart 0x%X vaddress 0x%X i 0x%X \n", vstart, vaddress, i);
-            u32 pte = get_pte_page(vaddress);
-            DEBUGK("PTE %X \n", pte);
-            set_page(pte, vaddress, pstart + (i * PG_SIZE));
-            DEBUGK("set page finish %X\n", vaddress);
-        }
-    }
-    return vstart;
-}
-
-void page_free(u32 user, u32 page, u32 size)
-{
-    u32 vstart = page;
-    if (user == USER_KERNEL)
-    {
-        DEBUGK("free page vstart %X \n", vstart);
-        for (size_t i = 0; i < size; i++)
-        {
-            u32 vaddress = vstart + i * PG_SIZE;
-            DEBUGK("start page free 0x%X vaddress 0x%X i 0x%X \n", vstart, vaddress, i);
-            u32 pte = get_pte_page(vaddress);
-            DEBUGK("PTE %X \n", pte);
-            u32 paddress = get_page(pte, vaddress);
-            mmap_set(user, &kmap, vaddress, 0);
-            mmap_set(user, &pmap, paddress, 0);
-            DEBUGK("set page finish %X\n", vaddress);
-        }
-    }
+    // u32 gap = 0x1;
+    // while (free_pages > gap)
+    // {
+    //     u32 vidx = page_alloc(USER_KERNEL, gap);
+    //     DEBUGK("Get vidx 0x%X\n", vidx);
+    //     // BMB;
+    //     page_free(USER_KERNEL, vidx, gap);
+    //     // BMB;
+    // }
 }

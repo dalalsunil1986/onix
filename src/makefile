@@ -98,7 +98,7 @@ ifeq ("$(wildcard $(BUILD)/harddisk.img)", "")
 	bximage -q -hd=16 -mode=create -sectsize=512 -imgmode=flat $@
 endif
 	dd if=$(BUILD)/boot.bin of=$@ bs=512 count=1 conv=notrunc
-	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=20 seek=2 conv=notrunc
+	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ bs=512 seek=100 count=200 conv=notrunc
 
 bochs: $(BUILD)/harddisk.img

@@ -18,6 +18,7 @@ section boot vstart=BOOT_BASE_ADDR
     call bios_print
 
     call load_loader
+    ; xchg bx, bx
     jmp 0:LOADER_BASE_ADDR
 
 finish:
@@ -28,7 +29,7 @@ finish:
 load_loader:
     mov eax, LOADER_START_SECTOR
     mov bx, LOADER_BASE_ADDR
-    mov cx, 20 ; 10KB
+    mov cx, LOADER_SECTOR_SIZE ; 2KB
     call read_disk
 
 READ_DISK_FUNCTION

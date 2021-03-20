@@ -3,10 +3,11 @@
 
 BOOT_BASE_ADDR      equ 0x7c00
 
-LOADER_BASE_ADDR    equ 0x900
+LOADER_BASE_ADDR    equ 0x6000
 LOADER_START_SECTOR equ 0x2
+LOADER_SECTOR_SIZE  equ 4
 
-PAGE_DIR_TABLE_ADDR equ 0x4000
+PAGE_DIR_TABLE_ADDR equ 0x1000
 PAGE_SIZE           equ 0x1000 ; 4K = 4096
 
 BASE_ADDRESS_LIMIT  equ 0x100000; 1M 的空间
@@ -167,14 +168,14 @@ read_disk:
         mul dx
         mov cx, ax
         mov dx, 0x1f0 ; 读取端口号
-
+        ; xchg bx, bx
     .readw:
         in ax,dx ; 读取输入
         mov [ebx], ax ; 转移到内存
         add ebx , 2; 一次读取两个字节
 
         loop .readw
-
+        ; xchg bx,bx 
         popa
 
         ret

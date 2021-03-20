@@ -7,10 +7,10 @@
 
 void __init_kernel()
 {
-    BMB;
-    init_memory();
+    // BMB;
     init_gdt();
     init_interrupt();
+    init_memory();
 }
 
 int main()
