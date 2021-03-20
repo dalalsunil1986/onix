@@ -20,7 +20,8 @@
 			"assert.h": "c",
 			"global.h": "c",
 			"memory.h": "c",
-			"variant": "c"
+			"variant": "c",
+			"clock.h": "c"
 		}
 	}
 }

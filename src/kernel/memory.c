@@ -33,7 +33,7 @@ static u32 get_pte_index(PageEntry *entry)
 
 u32 get_pte_page(u32 vaddress)
 {
-    BMB;
+    // BMB;
     PageEntry *entry = &vaddress;
     u32 pde_idx = get_pde_index(entry);
     DEBUGK("get pde index entry 0x%x 0x%X\n", entry->index, pde_idx);
@@ -41,7 +41,7 @@ u32 get_pte_page(u32 vaddress)
     if (!entry->present || entry->dirty)
     {
         DEBUGK("get new pte entry 0x%x 0x%X\n", entry->index, pde_idx);
-        BMB;
+        // BMB;
         assert(pmap.length);
         u32 page = physical_page_alloc(1);
 
@@ -57,11 +57,11 @@ u32 get_pte_page(u32 vaddress)
     return page;
 }
 
-void set_page(Page pte, u32 vaddress, u32 paddress)
+u32 set_page(Page pte, u32 vaddress, u32 paddress)
 {
+    PageEntry *ventry = &vaddress;
     u32 store = 0;
     PageEntry *mentry = &store;
-    PageEntry *ventry = &vaddress;
     PageEntry *pentry = &paddress;
     DEBUGK("set page 0x%X vindex 0x%X pindex 0x%X idx 0x%X \n",
            pte, ventry->index, pentry->index, get_pte_index(ventry));
@@ -69,19 +69,25 @@ void set_page(Page pte, u32 vaddress, u32 paddress)
     mentry->present = 1;
     mentry->write = 1;
     mentry->index = pentry->index;
-
-    BMB;
     pte[get_pte_index(ventry)] = store;
+    return 0;
+}
+
+u32 get_page(Page pte, u32 vaddress)
+{
+    PageEntry *ventry = &vaddress;
+    u32 page = pte[get_pte_index(ventry)];
+    return page;
 }
 
 void mmap_set(u32 user, Bitmap *mmap, u32 address, u32 value)
 {
+    address &= ~KERNEL_ADDR_MASK;
     PageEntry *entry = (PageEntry *)&address;
     u32 index = entry->index;
     if (user == USER_KERNEL)
     {
         index -= PG_BASE;
-        address &= ~KERNEL_ADDR_MASK;
     }
     DEBUGK("mmap set 0x%X page address 0x%X index %d\n", mmap->bits, address, index);
     bitmap_set(mmap, index, value);
@@ -132,7 +138,7 @@ static void init_memory_map()
         mmap_set(USER_KERNEL, &kmap, address, 1);
     }
     DEBUGK("Available memory pages %d\n", available_pages);
-    BMB;
+    // BMB;
 }
 
 void init_memory()
@@ -194,13 +200,13 @@ u32 physical_page_alloc(u32 size)
     return page;
 }
 
-void physical_page_free(Page page, u32 size)
-{
-    for (size_t i = 0; i < size; i++)
-    {
-        mmap_set(USER_KERNEL, &pmap, page + i * PG_SIZE, 0);
-    }
-}
+// void physical_page_free(Page page, u32 size)
+// {
+//     for (size_t i = 0; i < size; i++)
+//     {
+//         mmap_set(USER_KERNEL, &pmap, page + i * PG_SIZE, 0);
+//     }
+// }
 
 u32 page_alloc(u32 user, u32 size)
 {
@@ -213,7 +219,7 @@ u32 page_alloc(u32 user, u32 size)
         DEBUGK("vstart page 0x%X\n", vstart);
         for (size_t i = 0; i < size; i++)
         {
-            BMB;
+            // BMB;
             u32 vaddress = vstart + i * PG_SIZE;
             DEBUGK("staart 0x%X vaddress 0x%X i 0x%X \n", vstart, vaddress, i);
             u32 pte = get_pte_page(vaddress);
@@ -228,4 +234,19 @@ u32 page_alloc(u32 user, u32 size)
 void page_free(u32 user, u32 page, u32 size)
 {
     u32 vstart = page;
+    if (user == USER_KERNEL)
+    {
+        DEBUGK("free page vstart %X \n", vstart);
+        for (size_t i = 0; i < size; i++)
+        {
+            u32 vaddress = vstart + i * PG_SIZE;
+            DEBUGK("start page free 0x%X vaddress 0x%X i 0x%X \n", vstart, vaddress, i);
+            u32 pte = get_pte_page(vaddress);
+            DEBUGK("PTE %X \n", pte);
+            u32 paddress = get_page(pte, vaddress);
+            mmap_set(user, &kmap, vaddress, 0);
+            mmap_set(user, &pmap, paddress, 0);
+            DEBUGK("set page finish %X\n", vaddress);
+        }
+    }
 }

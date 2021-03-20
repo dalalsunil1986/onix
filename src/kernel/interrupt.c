@@ -3,6 +3,7 @@
 #include <onix/kernel/printk.h>
 #include <onix/kernel/assert.h>
 #include <onix/kernel/clock.h>
+#include <onix/kernel/debug.h>
 
 InterruptGate idt[IDT_SIZE];
 Pointer idt_ptr;
@@ -75,6 +76,7 @@ static void exception_handler(int vector)
         "#AC Alignment Check\0",
         "#MC Machine Check\0",
         "#XF SIMD Floating-Point Exception\0"};
+    BMB;
     printk("Exception: %s \n Vector: 0x%X \0", messages[vector], vector);
     halt();
 }
