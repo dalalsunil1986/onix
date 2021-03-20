@@ -18,6 +18,7 @@ ENTRYPOINT = 0xC0020000
 ASM_FLAGS= -f elf -g
 
 DEBUG_FLAGS = -D ONIX_DEBUG
+# DEBUG_FLAGS =
 
 CFLAGS = -I $(INCLUDE) -g  -c -fno-builtin -m32 -fno-stack-protector \
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \

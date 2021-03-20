@@ -36,11 +36,11 @@ u32 get_pte_page(u32 vaddress)
     BMB;
     PageEntry *entry = &vaddress;
     u32 pde_idx = get_pde_index(entry);
-    printk("get pde index entry 0x%x 0x%X\n", entry->index, pde_idx);
+    DEBUGK("get pde index entry 0x%x 0x%X\n", entry->index, pde_idx);
     entry = &pde[pde_idx];
     if (!entry->present || entry->dirty)
     {
-        printk("get new pte entry 0x%x 0x%X\n", entry->index, pde_idx);
+        DEBUGK("get new pte entry 0x%x 0x%X\n", entry->index, pde_idx);
         BMB;
         assert(pmap.length);
         u32 page = physical_page_alloc(1);
@@ -63,7 +63,7 @@ void set_page(Page pte, u32 vaddress, u32 paddress)
     PageEntry *mentry = &store;
     PageEntry *ventry = &vaddress;
     PageEntry *pentry = &paddress;
-    printk("set page 0x%X vindex 0x%X pindex 0x%X idx 0x%X \n",
+    DEBUGK("set page 0x%X vindex 0x%X pindex 0x%X idx 0x%X \n",
            pte, ventry->index, pentry->index, get_pte_index(ventry));
 
     mentry->present = 1;
@@ -83,7 +83,7 @@ void mmap_set(u32 user, Bitmap *mmap, u32 address, u32 value)
         index -= PG_BASE;
         address &= ~KERNEL_ADDR_MASK;
     }
-    printk("mmap set 0x%X page address 0x%X index %d\n", mmap->bits, address, index);
+    DEBUGK("mmap set 0x%X page address 0x%X index %d\n", mmap->bits, address, index);
     bitmap_set(mmap, index, value);
 }
 
@@ -94,7 +94,7 @@ static void init_memory_map()
     free_pages = available_pages;
     pmap.length = available_pages / 8;
 
-    printk("pmap length %d\n", pmap.length);
+    DEBUGK("pmap length %d\n", pmap.length);
 
     PageEntry *entry = &ards->addr0;
     Page pte = get_pte_page(entry);
@@ -103,7 +103,7 @@ static void init_memory_map()
     u32 paddress = ards->addr0;
     u32 vaddress = paddress | KERNEL_ADDR_MASK;
 
-    printk("Set base pmap vaddr 0x%X paddr 0x%X \n", vaddress, paddress);
+    DEBUGK("Set base pmap vaddr 0x%X paddr 0x%X \n", vaddress, paddress);
     set_page(pte, vaddress, paddress);
 
     pmap.bits = ards->addr0 | KERNEL_ADDR_MASK;
@@ -113,11 +113,11 @@ static void init_memory_map()
     if (!remain) // 恰好整除的情况
         pages--;
 
-    printk("pmap pages %d \n", pages);
+    DEBUGK("pmap pages %d \n", pages);
     for (size_t i = 1; i < pages; i++)
     {
         u32 address = (ards->addr0 + PG_SIZE * i);
-        printk("additional pmap pages %d, address 0x%X\n", i, address);
+        DEBUGK("additional pmap pages %d, address 0x%X\n", i, address);
         set_page(pte, address | KERNEL_ADDR_MASK, address);
     }
 
@@ -131,7 +131,7 @@ static void init_memory_map()
         mmap_set(USER_KERNEL, &pmap, address, 1);
         mmap_set(USER_KERNEL, &kmap, address, 1);
     }
-    printk("Available memory pages %d\n", available_pages);
+    DEBUGK("Available memory pages %d\n", available_pages);
     BMB;
 }
 
@@ -139,7 +139,7 @@ void init_memory()
 {
     printk("Initializing Memory...\n");
     printk("Total Memory Size 0x%X B\n", total_memory_bytes);
-    printk("Total Memory Ards count %d\n", ards_count);
+    DEBUGK("Total Memory Ards count %d\n", ards_count);
 
     u32 max_size = 0;
     u32 index;
@@ -157,7 +157,7 @@ void init_memory()
     if (max_size != 0)
     {
         ards = &ards_table[index];
-        printk("ARDS 0x%08X Addr 0x%08X Size 0x%08X Type %d \n",
+        DEBUGK("ARDS 0x%08X Addr 0x%08X Size 0x%08X Type %d \n",
                ards, ards->addr0, ards->size0, ards->type);
         if (ards->addr0 % 0x1000 != 0)
         {
@@ -169,7 +169,7 @@ void init_memory()
     pde = (u32 *)PG_DIR_ADDRESS;
     if (ards->addr0 < BASE_ADDR_LIMIT)
     {
-        printk("Memory size too small that can't run kernel, sorry about it!!!\n");
+        DEBUGK("Memory size too small that can't run kernel, sorry about it!!!\n");
         halt();
     }
     init_memory_map();
@@ -181,7 +181,7 @@ u32 scan_page(Bitmap *map, u32 size)
     for (size_t i = start; i < start + size; i++)
     {
         bitmap_set(map, i, 1);
-        printk("page alloc address %d \n", i);
+        DEBUGK("page alloc address %d \n", i);
     }
     return start * PG_SIZE;
 }
@@ -190,7 +190,7 @@ u32 physical_page_alloc(u32 size)
 {
     u32 start = scan_page(&pmap, size);
     u32 page = (PG_BASE * PG_SIZE) + start;
-    printk("alloc physical page 0x%X size %d \n", start, size);
+    DEBUGK("alloc physical page 0x%X size %d \n", start, size);
     return page;
 }
 
@@ -205,21 +205,21 @@ void physical_page_free(Page page, u32 size)
 u32 page_alloc(u32 user, u32 size)
 {
     u32 pstart = physical_page_alloc(size);
-    printk("pstart page 0x%X\n", pstart);
+    DEBUGK("pstart page 0x%X\n", pstart);
     u32 vstart = 0;
     if (user == USER_KERNEL)
     {
         vstart = (scan_page(&kmap, size) + BASE_ADDR_LIMIT) | KERNEL_ADDR_MASK;
-        printk("vstart page 0x%X\n", vstart);
+        DEBUGK("vstart page 0x%X\n", vstart);
         for (size_t i = 0; i < size; i++)
         {
             BMB;
             u32 vaddress = vstart + i * PG_SIZE;
-            printk("staart 0x%X vaddress 0x%X i 0x%X \n", vstart, vaddress, i);
+            DEBUGK("staart 0x%X vaddress 0x%X i 0x%X \n", vstart, vaddress, i);
             u32 pte = get_pte_page(vaddress);
-            printk("PTE %X \n", pte);
+            DEBUGK("PTE %X \n", pte);
             set_page(pte, vaddress, pstart + (i * PG_SIZE));
-            printk("set page finish %X\n", vaddress);
+            DEBUGK("set page finish %X\n", vaddress);
         }
     }
     return vstart;
