@@ -70,6 +70,9 @@ $(BUILD)/interrupt.o: $(KERNEL)/interrupt.c
 $(BUILD)/clock.o: $(KERNEL)/clock.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/keyboard.o: $(KERNEL)/keyboard.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/bitmap.o: $(KERNEL)/bitmap.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -87,6 +90,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/bitmap.o \
 	$(BUILD)/memory.o \
 	$(BUILD)/clock.o \
+	$(BUILD)/keyboard.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 

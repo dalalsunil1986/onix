@@ -13,6 +13,7 @@ static const int PIT_CONTROL_PORT = 0x43;
 extern u32 __clock_counter;
 
 void init_pit();
+void init_clock();
 
 void clock_handler(int vector);
 

@@ -3,6 +3,7 @@
 #include <onix/kernel/printk.h>
 #include <onix/kernel/assert.h>
 #include <onix/kernel/clock.h>
+#include <onix/kernel/keyboard.h>
 #include <onix/kernel/debug.h>
 
 InterruptGate idt[IDT_SIZE];
@@ -23,8 +24,7 @@ static void init_pic()
     outb(PIC_S_DATA, 2);                     // ICW3: 设置从片连接到主片的IR2引脚
     outb(PIC_S_DATA, ICW4_8086);             // ICW4: 8086模式, 正常EOI
 
-    /* 打开主片上IR0,也就是目前只接受时钟产生的中断 */
-    outb(PIC_M_DATA, 0b11111110);
+    outb(PIC_M_DATA, 0b11111101); // 打开键盘中断
     outb(PIC_S_DATA, 0b11111111);
 }
 
@@ -81,7 +81,6 @@ static void exception_handler(int vector)
     halt();
 }
 
-
 void init_handler()
 {
 
@@ -89,7 +88,6 @@ void init_handler()
     {
         handler_table[i] = &default_handler;
     }
-    handler_table[0x20] = clock_handler;
 }
 
 void init_exception()
@@ -108,5 +106,7 @@ void init_interrupt()
     init_idt();
     init_exception();
     init_handler();
+    init_clock();
+    init_keyboard();
     printk("Initializing interrupt finished...\n");
 }
