@@ -59,6 +59,7 @@ void init_memory();
 extern u32 total_memory_bytes;
 extern u32 ards_count;
 extern ARDS ards_table[ARDS_SIZE];
+extern u32 free_pages;
 
 extern u32 page_alloc(u32 user, u32 size);
 extern void page_free(u32 user, u32 page, u32 size);

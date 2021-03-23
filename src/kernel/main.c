@@ -6,6 +6,10 @@
 #include <onix/kernel/memory.h>
 #include <onix/kernel/task.h>
 #include <onix/kernel/process.h>
+#include <onix/queue.h>
+
+#define DEBUGP DEBUGK
+// #define DEBUGP(fmt, args...)
 
 void __init_kernel()
 {
@@ -25,9 +29,28 @@ int main()
     // printk("video selector 0x%X\n", *(short *)&SELECTOR_KERNEL_VIDEO);
     // printk("code descriptor segment %d\n", gdt[1].segment);
     u32 counter = 0;
+    char *queue = page_alloc(USER_KERNEL, 1);
+    queue_init(queue);
+    char buffer[32];
+
     while (++counter)
     {
+        memset(buffer, 0, 32);
         show_char(counter % 10 + 0x30, 77, 0);
+        DEBUGP("free pages 0x%X\n\0", free_pages);
+
+        char *node = page_alloc(USER_KERNEL, 1);
+        queue_push(queue, node);
+        if (free_pages < 3)
+            break;
     }
+
+    while (!queue_empty(queue))
+    {
+        DEBUGP("free pages 0x%X\n\0", free_pages);
+        Node * node = queue_pop(queue);
+        page_free(USER_KERNEL, node, 1);
+    }
+
     return 0;
 }

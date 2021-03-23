@@ -5,6 +5,9 @@
 #include <onix/kernel/assert.h>
 #include <onix/string.h>
 
+// #define DEBUGP DEBUGK
+#define DEBUGP(fmt, args...)
+
 u32 total_memory_bytes;
 u32 ards_count;
 u32 available_memory_bytes;
@@ -37,7 +40,7 @@ int scan_page(Bitmap *map, u32 size)
     for (size_t i = start; i < start + size; i++)
     {
         bitmap_set(map, i, 1);
-        DEBUGK("page alloc address 0x%04X \n", i);
+        DEBUGP("page alloc address 0x%04X \n", i);
     }
     return start;
 }
@@ -52,18 +55,18 @@ u32 get_pte(u32 idx)
 {
     Page pde = get_pde();
     u32 pidx = pde_idx(idx);
-    DEBUGK("get pde index 0x%x pidx 0x%X\n", pde, pidx);
+    DEBUGP("get pde index 0x%x pidx 0x%X\n", pde, pidx);
     PageEntry *entry = &pde[pidx];
     if (!entry->present)
     {
-        DEBUGK("create pte entry 0x%x 0x%X presnet %d\n", idx, pidx, entry->present);
+        DEBUGP("create pte entry 0x%x 0x%X presnet %d\n", idx, pidx, entry->present);
         // // BMB;
         assert(pmap.length);
         // scan_page(&mmap, 1);
 
         u32 page = scan_physical_page(1);
 
-        DEBUGK("get new page entry 0x%x\n", page);
+        DEBUGP("get new page entry 0x%x\n", page);
 
         free_pages--;
 
@@ -71,10 +74,11 @@ u32 get_pte(u32 idx)
         PageEntry *mentry = &store;
         mentry->present = 1;
         mentry->write = 1;
+        mentry->user = 1;
         // mentry->dirty = 0;
         mentry->index = page;
-        DEBUGK("set entry 0x%x \n", store);
-        pde[pidx] = mentry;
+        DEBUGP("set pidx 0x%x entry 0x%x \n", pidx, store);
+        pde[pidx] = store;
     }
     return entry->index;
 }
@@ -84,27 +88,30 @@ void set_page(u32 vidx, u32 pidx)
     u32 pte = get_pte(vidx);
     u32 store = 0;
     PageEntry *mentry = &store;
-    DEBUGK("set page pte 0x%05X vaddr 0x%05X paddr 0x%05X idx 0x%05X \n", pte, vidx, pidx, pte_idx(pidx));
+    DEBUGP("set page pte 0x%05X vaddr 0x%05X paddr 0x%05X idx 0x%05X \n", pte, vidx, pidx, pte_idx(pidx));
     mentry->present = 1;
     mentry->write = 1;
     mentry->index = pidx;
 
-    Page page = pte << 12;
-    page[pte_idx(pidx)] = store;
+    Page page = (u32)(vidx >> 10 | 0xffc00) << 12;
+    u32 idx = pte_idx(vidx);
+
+    DEBUGP("get map page 0x%08X store 0x%08X pidx 0x%X\n", page, store, idx);
+    page[idx] = store;
 }
 
 u32 get_page(u32 vidx)
 {
-    DEBUGK("get pte idx 0x%X\n", vidx);
+    DEBUGP("get pte idx 0x%X\n", vidx);
     Page pte = get_pte(vidx) << 12;
-    DEBUGK("get pte idx 0x%X\n", pte);
+    DEBUGP("get pte idx 0x%X\n", pte);
     u32 page = pte[pte_idx(vidx)];
     return page;
 }
 
 void mmap_free(u32 user, Bitmap *mmap, u32 idx)
 {
-    DEBUGK("mmap set 0x%X index 0x%X\n", mmap->bits, idx);
+    DEBUGP("mmap set 0x%X index 0x%X\n", mmap->bits, idx);
     bitmap_set(mmap, idx, 0);
 }
 
@@ -123,7 +130,7 @@ static void init_memory_map()
     mmap.length = PG_SIZE;
     bitmap_init(&mmap);
 
-    DEBUGK("pmap length %d\n", pmap.length);
+    DEBUGP("pmap length %d\n", pmap.length);
 
     u32 pages = available_pages / PG_SIZE + 1;
     u32 remain = available_pages % PG_SIZE;
@@ -135,14 +142,14 @@ static void init_memory_map()
 
     // BMB;
 
-    DEBUGK("pmap pages %d \n", pages);
-    DEBUGK("vaddr 0x%08X paddr 0x%08X pages %d \n", vstart, pstart, pages);
+    DEBUGP("pmap pages %d \n", pages);
+    DEBUGP("vaddr 0x%08X paddr 0x%08X pages %d \n", vstart, pstart, pages);
 
     for (size_t i = 0; i < pages; i++)
     {
         u32 pidx = (pstart + i);
         u32 vidx = (vstart + i);
-        DEBUGK("physical map pages %d, vidx 0x%X pidx 0x%X\n", i, vidx, pidx);
+        DEBUGP("physical map pages %d, vidx 0x%X pidx 0x%X\n", i, vidx, pidx);
         set_page(vidx, pidx);
     }
 
@@ -158,9 +165,9 @@ static void init_memory_map()
     pmap.bits = temp.bits;
     pmap.length = temp.length;
 
-    DEBUGK("Available start page idx 0x%X\n", base_physical_pages);
-    DEBUGK("Available kernel bits 0x%X\n", mmap.length);
-    DEBUGK("Available memory pages 0x%X\n", available_pages);
+    DEBUGP("Available start page idx 0x%X\n", base_physical_pages);
+    DEBUGP("Available kernel bits 0x%X\n", mmap.length);
+    DEBUGP("Available memory pages 0x%X\n", available_pages);
     // BMB;
 }
 
@@ -182,7 +189,7 @@ static ARDS *get_valid_ards()
     if (max_size != 0)
     {
         ards = &ards_table[index];
-        DEBUGK("ARDS 0x%08X Addr 0x%08X Size 0x%08X Type %d \n",
+        DEBUGP("ARDS 0x%08X Addr 0x%08X Size 0x%08X Type %d \n",
                ards, ards->addr0, ards->size0, ards->type);
         if (ards->addr0 % 0x1000 != 0)
         {
@@ -210,7 +217,7 @@ u32 page_alloc(u32 user, u32 size)
         }
     }
     free_pages -= size;
-    DEBUGK("Available memory 0x%08X \n", free_pages);
+    DEBUGP("Available memory 0x%08X \n", free_pages);
     return vstart << 12;
 }
 
@@ -219,12 +226,12 @@ void page_free(u32 user, u32 vaddress, u32 size)
     u32 vstart = vaddress >> 12;
     if (user == USER_KERNEL)
     {
-        DEBUGK("free page vstart %X \n", vstart);
+        DEBUGP("free page vstart %X \n", vstart);
         for (size_t i = 0; i < size; i++)
         {
             u32 vidx = (vstart + i) - KERNEL_BASE_PAGE_VIDX;
             u32 pidx = (get_page(vidx) >> 12);
-            DEBUGK("page free vidx 0x%X pidx 0x%X i 0x%X \n", vidx, pidx, i);
+            DEBUGP("page free vidx 0x%X pidx 0x%X i 0x%X \n", vidx, pidx, i);
             mmap_free(user, &mmap, vidx);
             mmap_free(user, &pmap, pidx);
             free_pages += 1;
@@ -236,40 +243,30 @@ void init_memory()
 {
     printk("Initializing Memory...\n");
     printk("Total Memory Size 0x%X B\n", total_memory_bytes);
-    DEBUGK("Total Memory Ards count %d\n", ards_count);
+    DEBUGP("Total Memory Ards count %d\n", ards_count);
     ards = get_valid_ards();
     if (ards->addr0 < BASE_ADDR_LIMIT)
     {
-        DEBUGK("Memory size too small that can't run kernel, sorry about it!!!\n");
+        DEBUGP("Memory size too small that can't run kernel, sorry about it!!!\n");
         halt();
     }
     init_memory_map();
-
-    // u32 gap = 0x1;
-    // while (free_pages > gap)
-    // {
-    //     u32 vidx = page_alloc(USER_KERNEL, gap);
-    //     DEBUGK("Get vidx 0x%X\n", vidx);
-    //     // BMB;
-    //     page_free(USER_KERNEL, vidx, gap);
-    //     // BMB;
-    // }
 }
 
 u32 get_paddr(u32 vaddr)
 {
     PageEntry *entry = (PageEntry *)&vaddr;
-    DEBUGK("get paddr vaddr 0x%X index 0x%X\n", vaddr, entry->index);
+    DEBUGP("get paddr vaddr 0x%X index 0x%X\n", vaddr, entry->index);
 
     Page pte = (get_pte(entry->index) << 12);
 
-    DEBUGK("get pte 0x%X\n", (u32)pte);
+    DEBUGP("get pte 0x%X\n", (u32)pte);
     u32 idx = pte_idx(entry->index);
 
     PageEntry *page = (PageEntry *)&pte[idx];
     assert(page->present);
 
     u32 paddr = ((u32)page->index << 12) | vaddr & 0xfff;
-    DEBUGK("get vaddr 0x%X paddr 0x%X\n", vaddr, paddr);
+    DEBUGP("get vaddr 0x%X paddr 0x%X\n", vaddr, paddr);
     return paddr;
 }
