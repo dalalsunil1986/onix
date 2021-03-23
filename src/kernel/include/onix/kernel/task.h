@@ -3,10 +3,16 @@
 
 #include <onix/types.h>
 
+#define TASK_MAGIC 0x20210323
+#define TASK_SIZE 64
+
+#define TASK_INDEX_IDLE 0
+
 typedef void thread_target(void *);
 
 typedef enum TASK_STATUS
 {
+    TASK_INIT,
     TASK_RUNNING,
     TASK_READY,
     TASK_BLOCKED,
@@ -49,7 +55,7 @@ typedef struct ThreadFrame
     u32 edi;
     u32 esi;
 
-    void (*epi)(thread_target *target, void *args);
+    void (*eip)(thread_target *target, void *args);
 
     void(*unused_retaddr); // placeholder
     thread_target *target;
@@ -59,7 +65,6 @@ typedef struct ThreadFrame
 
 typedef struct Task
 {
-    u8 id;
     u32 *stack;
     TASK_STATUS status;
     u8 priority;
@@ -67,5 +72,11 @@ typedef struct Task
     u32 stack_magic;
 } Task;
 
-// typedef void thread_create(Task);
+extern Task *tasks[TASK_SIZE];
+extern Task *current_task;
+void init_task();
+void schedule();
+
+Task *thread_start(thread_target target, void *args, const char *name, int priority);
+
 #endif

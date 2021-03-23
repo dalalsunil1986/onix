@@ -24,7 +24,9 @@
 			"clock.h": "c",
 			"process.h": "c",
 			"bitmap.h": "c",
-			"task.h": "c"
+			"task.h": "c",
+			"exception": "c",
+			"stack": "c"
 		}
 	}
 }

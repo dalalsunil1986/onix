@@ -28,7 +28,7 @@ TESTS_CFLAG = -I $(INCLUDE) -m32 -Wall $(DEBUG_FLAGS)
 
 LDFLAGS = -m elf_i386 -Ttext $(ENTRYPOINT)
 
-.PHONY: clean
+.PHONY: clean image unlock win
 
 kernel: $(BUILD)/kernel.bin
 	# ps -ef | grep bochsrc-gdb | grep -v grep | awk '{print $$2}' | xargs -r kill -9
@@ -121,8 +121,12 @@ bochs: $(BUILD)/harddisk.img
 image: $(BUILD)/harddisk.img
 	-
 
+unlock:
+	rm -rf $(BUILD)/harddisk.img.lock
+
 win:
-	cd $(BUILD) && bochs -q -f bochsrc.bxrc
+	ssh arch "cd ~/source/github/onix/src && make image" && make unlock && \
+	cd $(BUILD) && bochs -q -f bochsrc.bxrc 
 
 clean:
 	rm -rf $(BUILD)/boot.bin

@@ -157,3 +157,19 @@ global get_pde:
 get_pde:
     mov eax, cr3
     ret
+
+
+; tasks
+
+extern current_task
+
+global __schedule
+__schedule:
+    xchg bx, bx
+    mov eax, [current_task]
+    mov esp, [eax]
+    pop ebp
+    pop ebx
+    pop edi
+    pop esi
+    iretd

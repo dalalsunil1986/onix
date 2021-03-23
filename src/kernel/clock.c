@@ -3,6 +3,7 @@
 #include <onix/kernel/printk.h>
 #include <onix/kernel/assert.h>
 #include <onix/kernel/interrupt.h>
+#include <onix/kernel/task.h>
 
 u32 __clock_counter;
 
@@ -20,6 +21,7 @@ void clock_handler(int vector)
     __clock_counter++;
     char ch = (char)(__clock_counter % 10 + 0x30);
     show_char(ch, 79, 0);
+    schedule();
 }
 
 void init_clock()

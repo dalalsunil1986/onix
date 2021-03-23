@@ -211,12 +211,12 @@ u32 page_alloc(u32 user, u32 size)
     }
     free_pages -= size;
     DEBUGK("Available memory 0x%08X \n", free_pages);
-    return vstart;
+    return vstart << 12;
 }
 
-void page_free(u32 user, u32 vidx, u32 size)
+void page_free(u32 user, u32 vaddress, u32 size)
 {
-    u32 vstart = vidx;
+    u32 vstart = vaddress >> 12;
     if (user == USER_KERNEL)
     {
         DEBUGK("free page vstart %X \n", vstart);
