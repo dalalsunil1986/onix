@@ -10,7 +10,7 @@ static const int TIMER_VALUE = INPUT_FREQUENCY / IRQ0_FREQUENCY;
 static const int TIMER0_PORT = 0x40;
 static const int PIT_CONTROL_PORT = 0x43;
 
-extern u32 __clock_counter;
+extern u32 __global_ticks;
 
 void init_pit();
 void init_clock();

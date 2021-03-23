@@ -26,10 +26,10 @@ void thread_create(Task *thread, thread_target target, void *args)
     frame->eip = kernel_thread;
     frame->target = target;
     frame->args = args;
-    frame->ebp = 0;
-    frame->ebx = 0;
-    frame->esi = 0;
-    frame->edi = 0;
+    frame->ebp = 1;
+    frame->ebx = 2;
+    frame->esi = 3;
+    frame->edi = 4;
 }
 
 void thread_init(Task *thread, char *name, int priority)
@@ -37,7 +37,8 @@ void thread_init(Task *thread, char *name, int priority)
     memset(thread, 0, sizeof(*thread));
     strcpy(thread->name, name);
     thread->status = TASK_INIT;
-    thread->priority = 1;
+    thread->priority = priority;
+    thread->ticks = thread->priority;
     thread->stack = (u32)thread + PG_SIZE;
     thread->stack_magic = TASK_MAGIC;
 }
@@ -71,16 +72,14 @@ void init_task()
     }
     Task *idle = thread_start(idle_task, NULL, "idle task", 1);
     tasks[TASK_INDEX_IDLE] = idle;
+    current_task = idle;
 }
 
 void schedule()
 {
-    if (current_task == NULL)
-    {
-        current_task = tasks[TASK_INDEX_IDLE];
-        return current_task;
-    }
-    DEBUGK("Task 0x%X stack top 0x%X\n", (u32)current_task, (u32)current_task->stack);
-    __schedule();
+    if(current_task->status == TASK_RUNNING);
+    // current_task->ticks--;
+    // DEBUGK("Task 0x%X stack top 0x%X\n", (u32)current_task, (u32)current_task->stack);
+    // __schedule();
     // Task *task = current_task;
 }

@@ -68,6 +68,7 @@ typedef struct Task
     u32 *stack;
     TASK_STATUS status;
     u8 priority;
+    u32 ticks;
     char name[32];
     u32 stack_magic;
 } Task;

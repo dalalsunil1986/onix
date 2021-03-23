@@ -5,7 +5,7 @@
 #include <onix/kernel/interrupt.h>
 #include <onix/kernel/task.h>
 
-u32 __clock_counter;
+u32 __global_ticks;
 
 void init_pit()
 {
@@ -18,13 +18,21 @@ void init_pit()
 void clock_handler(int vector)
 {
     assert(vector == 0x20);
-    __clock_counter++;
-    char ch = (char)(__clock_counter % 10 + 0x30);
+    assert(current_task->stack_magic == TASK_MAGIC);
+
+    __global_ticks++;
+    current_task->ticks--;
+    if (current_task->ticks == 0)
+    {
+        current_task->ticks = current_task->priority;
+        schedule();
+    }
+
+    char ch = (char)(__global_ticks % 10 + 0x30);
     show_char(ch, 79, 0);
-    schedule();
 }
 
 void init_clock()
 {
-    handler_table[ICW2_INT_VECTOR_IRQ0 + IRQ_CLOCK] = clock_handler;
+    register_handler(IRQ_CLOCK, clock_handler);
 }

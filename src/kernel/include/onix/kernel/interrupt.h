@@ -145,7 +145,7 @@ extern Pointer idt_ptr;
 extern InterruptHandler interrupt_entry_table[IDT_SIZE];
 extern InterruptHandler handler_table[IDT_SIZE];
 
-void setup_interrupt_handler(u32 irq, InterruptHandler handler);
+void register_handler(u32 irq, InterruptHandler handler);
 void enable_irq(u32 irq);
 void disable_irq(u32 irq);
 
