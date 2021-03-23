@@ -112,3 +112,9 @@ int printk(const char *fmt, ...)
     }
     return i;
 }
+
+void show_char(char ch, int x, int y)
+{
+    char *video = (char *)V_MEM_BASE + (get_pos(x, y) * 2);
+    *video = ch;
+}

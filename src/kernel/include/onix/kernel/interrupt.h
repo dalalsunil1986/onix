@@ -68,7 +68,7 @@ http://www.brokenthorn.com/Resources/OSDevPic.html
 #include <onix/types.h>
 #include <onix/kernel/global.h>
 
-#define IDT_SIZE 256
+#define IDT_SIZE 0x30
 
 #define PIC_M_CTRL 0x20 // 主片的控制端口
 #define PIC_M_DATA 0x21 // 主片的数据端口
@@ -144,4 +144,9 @@ extern InterruptGate idt[IDT_SIZE];
 extern Pointer idt_ptr;
 extern InterruptHandler interrupt_entry_table[IDT_SIZE];
 extern InterruptHandler handler_table[IDT_SIZE];
+
+void setup_interrupt_handler(u32 irq, InterruptHandler handler);
+void enable_irq(u32 irq);
+void disable_irq(u32 irq);
+
 #endif

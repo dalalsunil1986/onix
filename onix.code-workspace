@@ -22,7 +22,9 @@
 			"memory.h": "c",
 			"variant": "c",
 			"clock.h": "c",
-			"process.h": "c"
+			"process.h": "c",
+			"bitmap.h": "c",
+			"task.h": "c"
 		}
 	}
 }
