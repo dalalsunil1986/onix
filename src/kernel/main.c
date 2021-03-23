@@ -4,6 +4,7 @@
 #include <onix/kernel/debug.h>
 #include <onix/kernel/interrupt.h>
 #include <onix/kernel/memory.h>
+#include <onix/kernel/process.h>
 
 void __init_kernel()
 {
@@ -11,6 +12,7 @@ void __init_kernel()
     init_gdt();
     init_interrupt();
     init_memory();
+    init_process();
 }
 
 int main()

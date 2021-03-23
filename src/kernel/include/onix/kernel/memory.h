@@ -63,4 +63,6 @@ extern ARDS ards_table[ARDS_SIZE];
 extern u32 page_alloc(u32 user, u32 size);
 extern void page_free(u32 user, u32 page, u32 size);
 
+u32 get_paddr(u32 vaddr);
+
 #endif

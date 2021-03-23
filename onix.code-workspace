@@ -21,7 +21,8 @@
 			"global.h": "c",
 			"memory.h": "c",
 			"variant": "c",
-			"clock.h": "c"
+			"clock.h": "c",
+			"process.h": "c"
 		}
 	}
 }

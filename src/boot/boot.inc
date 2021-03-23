@@ -58,12 +58,6 @@ RPL3    equ 11b
 TI_GDT  equ 000b
 TI_LDT  equ 100b
 
-PG_P    equ 1b
-PG_RW_R equ 00b
-PG_RW_W equ 10b
-PG_US_S equ 000b
-PG_US_U equ 100b
-
 ; pde explain
 ; AVL_G_0_D_A_PCD_PWT_US_RW_P
 

@@ -79,6 +79,9 @@ $(BUILD)/bitmap.o: $(KERNEL)/bitmap.c
 $(BUILD)/memory.o: $(KERNEL)/memory.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/process.o: $(KERNEL)/process.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/global.o \
 	$(BUILD)/system.o \
@@ -91,6 +94,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/memory.o \
 	$(BUILD)/clock.o \
 	$(BUILD)/keyboard.o \
+	$(BUILD)/process.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 

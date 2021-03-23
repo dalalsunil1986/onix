@@ -21,6 +21,12 @@ load_idt:
     lidt [eax]
     ret
 
+global load_tss
+load_tss:
+    mov eax, [esp + 4]
+    ltr [eax]
+    ret
+
 global enable_int
 enable_int:
     sti

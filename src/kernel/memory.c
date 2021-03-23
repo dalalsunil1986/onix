@@ -25,9 +25,9 @@ static u32 pde_idx(u32 idx)
     return idx >> 10;
 }
 
-static u32 pte_idx(u32 address)
+static u32 pte_idx(u32 idx)
 {
-    return address & 0b1111111111;
+    return idx & 0b1111111111;
 }
 
 int scan_page(Bitmap *map, u32 size)
@@ -254,4 +254,22 @@ void init_memory()
     //     page_free(USER_KERNEL, vidx, gap);
     //     // BMB;
     // }
+}
+
+u32 get_paddr(u32 vaddr)
+{
+    PageEntry *entry = (PageEntry *)&vaddr;
+    DEBUGK("get paddr vaddr 0x%X index 0x%X\n", vaddr, entry->index);
+
+    Page pte = (get_pte(entry->index) << 12);
+
+    DEBUGK("get pte 0x%X\n", (u32)pte);
+    u32 idx = pte_idx(entry->index);
+
+    PageEntry *page = (PageEntry *)&pte[idx];
+    assert(page->present);
+
+    u32 paddr = ((u32)page->index << 12) | vaddr & 0xfff;
+    DEBUGK("get vaddr 0x%X paddr 0x%X\n", vaddr, paddr);
+    return paddr;
 }

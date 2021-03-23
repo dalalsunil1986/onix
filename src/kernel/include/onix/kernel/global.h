@@ -49,14 +49,25 @@ typedef struct Pointer
 extern Pointer gdt_ptr;
 extern Descriptor gdt[GDT_SIZE];
 
-static const Selector SELECTOR_KERNEL_CODE = {PL0, TI_GDT, 1};
-static const Selector SELECTOR_KERNEL_DATA = {PL0, TI_GDT, 2};
-static const Selector SELECTOR_KERNEL_VIDEO = {PL0, TI_GDT, 3};
+static const int SELECT_KERNEL_CODE_INDEX = 1;
+static const int SELECT_KERNEL_DATA_INDEX = 2;
+static const int SELECT_KERNEL_VIDEO_INDEX = 3;
+static const int SELECT_KERNEL_TSS_INDEX = 4;
+
+static const Selector SELECTOR_KERNEL_CODE = {PL0, TI_GDT, SELECT_KERNEL_CODE_INDEX};
+static const Selector SELECTOR_KERNEL_DATA = {PL0, TI_GDT, SELECT_KERNEL_DATA_INDEX};
+static const Selector SELECTOR_KERNEL_VIDEO = {PL0, TI_GDT, SELECT_KERNEL_VIDEO_INDEX};
+static const Selector SELECTOR_KERNEL_TSS = {PL0, TI_GDT, SELECT_KERNEL_TSS_INDEX};
+
 extern void load_gdt(Pointer *gdt_ptr);
 extern void load_idt(Pointer *idt_ptr);
 extern void save_gdt(Pointer *gdt_ptr);
+extern void load_tss(Selector *tss_selector);
+
 extern void enable_int();
 extern void disable_int();
+
+void init_descriptor(Descriptor *desc, u32 base, u32 limit);
 
 void init_gdt();
 #endif
