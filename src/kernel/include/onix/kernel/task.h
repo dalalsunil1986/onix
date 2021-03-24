@@ -2,11 +2,14 @@
 #define ONIX_THREAD_H
 
 #include <onix/types.h>
+#include <onix/queue.h>
+#include <onix/kernel/memory.h>
 
 #define TASK_MAGIC 0x20210323
-#define TASK_SIZE 64
+#define TASK_MAIN_PAGE (0x10000 | KERNEL_ADDR_MASK)
 
 #define TASK_INDEX_IDLE 0
+#define TASK_INDEX_INIT 0
 
 typedef void thread_target(void *);
 
@@ -66,18 +69,19 @@ typedef struct ThreadFrame
 typedef struct Task
 {
     u32 *stack;
+    Node node;
     TASK_STATUS status;
     u8 priority;
     u32 ticks;
     char name[32];
+    PageTable pde;
     u32 stack_magic;
 } Task;
 
-extern Task *tasks[TASK_SIZE];
-extern Task *current_task;
 void init_task();
 void schedule();
 
+Task *running_thread();
 Task *thread_start(thread_target target, void *args, const char *name, int priority);
 
 #endif

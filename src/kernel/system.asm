@@ -69,7 +69,6 @@ interrupt_entry_table:
 %macro INTERRUPT_HANDLER 2
 section .text
 interrupt_%1:
-    ; xchg bx, bx
     %2
     push ds
     push es
@@ -77,13 +76,13 @@ interrupt_%1:
     push gs
     pushad
 
-    push %1
-    call [handler_table + %1 * 4]
-    add esp, 4
-
     mov al, 0x20 ; eoi command
     out 0xa0, al ; slave pic chip
     out 0x20, al ; master pic chip
+
+    push %1
+    call [handler_table + %1 * 4]
+    add esp, 4
 
     popad
     pop gs
@@ -160,16 +159,30 @@ get_pde:
 
 
 ; tasks
+global switch_to
+switch_to:
+    ; xchg bx, bx
+    mov eax, [esp + 4]; cur
+    mov ecx, [esp + 8]; next
 
-extern current_task
+    push esi
+    push edi
+    push ebx
+    push ebp
 
-global __schedule
-__schedule:
-    xchg bx, bx
-    mov eax, [current_task]
-    mov esp, [eax]
+    mov [eax], esp
+    push ecx
+    push eax
+
+global jump_to_next;
+jump_to_next:
+    ; xchg bx, bx;
+    mov eax, [esp + 4]; next
+    mov esp, [eax];
+
     pop ebp
     pop ebx
     pop edi
     pop esi
-    iretd
+    sti
+    ret

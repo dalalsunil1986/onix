@@ -4,6 +4,10 @@
 #include <onix/kernel/assert.h>
 #include <onix/kernel/interrupt.h>
 #include <onix/kernel/task.h>
+#include <onix/kernel/debug.h>
+
+#define DEBUGP DEBUGK
+// #define DEBUGP(fmt, args...)
 
 u32 __global_ticks;
 
@@ -18,13 +22,17 @@ void init_pit()
 void clock_handler(int vector)
 {
     assert(vector == 0x20);
-    assert(current_task->stack_magic == TASK_MAGIC);
+
+    Task *cur = running_thread();
+    DEBUGP("Current task is 0x%X\n", cur);
+    // BMB;
+    assert(cur->stack_magic == TASK_MAGIC);
 
     __global_ticks++;
-    current_task->ticks--;
-    if (current_task->ticks == 0)
+    cur->ticks--;
+    if (cur->ticks == 0)
     {
-        current_task->ticks = current_task->priority;
+        cur->ticks = cur->priority;
         schedule();
     }
 

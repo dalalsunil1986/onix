@@ -108,7 +108,6 @@ void init_interrupt()
     init_clock();
     init_keyboard();
     printk("Initializing interrupt finished...\n");
-    enable_int();
 }
 
 void register_handler(u32 irq, InterruptHandler handler)

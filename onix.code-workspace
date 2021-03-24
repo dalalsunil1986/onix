@@ -26,7 +26,8 @@
 			"bitmap.h": "c",
 			"task.h": "c",
 			"exception": "c",
-			"stack": "c"
+			"stack": "c",
+			"queue.h": "c"
 		}
 	}
 }
