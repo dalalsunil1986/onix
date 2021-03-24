@@ -79,6 +79,9 @@ $(BUILD)/bitmap.o: $(KERNEL)/bitmap.c
 $(BUILD)/memory.o: $(KERNEL)/memory.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/arena.o: $(KERNEL)/arena.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/process.o: $(KERNEL)/process.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -98,6 +101,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/interrupt.o \
 	$(BUILD)/bitmap.o \
 	$(BUILD)/memory.o \
+	$(BUILD)/arena.o \
 	$(BUILD)/clock.o \
 	$(BUILD)/keyboard.o \
 	$(BUILD)/task.o \

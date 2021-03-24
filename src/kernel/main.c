@@ -4,6 +4,7 @@
 #include <onix/kernel/debug.h>
 #include <onix/kernel/interrupt.h>
 #include <onix/kernel/memory.h>
+#include <onix/kernel/arena.h>
 #include <onix/kernel/task.h>
 #include <onix/kernel/process.h>
 #include <onix/queue.h>
@@ -16,6 +17,7 @@ void __init_kernel()
     // BMB;
     init_gdt();
     init_memory();
+    init_arena();
     init_interrupt();
     // init_task();
     // init_process();

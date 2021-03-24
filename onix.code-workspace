@@ -27,7 +27,8 @@
 			"task.h": "c",
 			"exception": "c",
 			"stack": "c",
-			"queue.h": "c"
+			"queue.h": "c",
+			"arena.h": "c"
 		}
 	}
 }
