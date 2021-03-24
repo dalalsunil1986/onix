@@ -24,7 +24,7 @@ static void init_pic()
     outb(PIC_S_DATA, 2);                     // ICW3: 设置从片连接到主片的IR2引脚
     outb(PIC_S_DATA, ICW4_8086);             // ICW4: 8086模式, 正常EOI
 
-    outb(PIC_M_DATA, 0b11111111);
+    outb(PIC_M_DATA, 0b11111100);
     outb(PIC_S_DATA, 0b11111111);
 }
 
@@ -108,7 +108,7 @@ void init_interrupt()
     init_clock();
     init_keyboard();
     printk("Initializing interrupt finished...\n");
-    // enable_int();
+    enable_int();
 }
 
 void register_handler(u32 irq, InterruptHandler handler)
