@@ -3,96 +3,69 @@
 #include <onix/kernel/assert.h>
 #include <onix/kernel/debug.h>
 
-#define DEBUGP DEBUGK
-// #define DEBUGP(fmt, args...)
+// #define DEBUGP DEBUGK
+#define DEBUGP(fmt, args...)
 
 void queue_init(Queue *queue)
 {
-    queue->head = NULL;
-    queue->tail = NULL;
+    queue->head.prev = NULL;
+    queue->tail.next = NULL;
+    queue->head.next = &queue->tail;
+    queue->tail.prev = &queue->head;
     queue->size = 0;
 }
 
 void queue_push(Queue *queue, Node *node)
 {
-    queue->size++;
     DEBUGP("PUSH queue 0x%X node 0x%X size %d\n", queue, node, queue->size);
+    node->prev = &queue->head;
+    node->next = queue->head.next;
+    queue->head.next->prev = node;
+    queue->head.next = node;
+    queue->size++;
+}
 
-    if (queue->head == NULL)
-    {
-        node->prev = NULL;
-        node->next = NULL;
-        queue->head = node;
-        queue->tail = node;
-        return;
-    }
-    node->prev = queue->tail;
-    queue->tail->next = node;
-    queue->tail = node;
+Node *queue_pop(Queue *queue)
+{
+    assert(queue->size > 0);
+
+    Node *node = queue->head.next;
+    node->next->prev = &queue->head;
+    queue->head.next = node->next;
+    queue->size--;
+    DEBUGP("POP queue 0x%X node 0x%X size %d\n", queue, node, queue->size);
+    return node;
 }
 
 void queue_pushback(Queue *queue, Node *node)
 {
     DEBUGP("PUSHBACK queue 0x%X node 0x%X size %d\n", queue, node, queue->size);
+    node->next = &queue->tail;
+    node->prev = queue->tail.prev;
+    queue->tail.prev->next = node;
+    queue->tail.prev = node;
     queue->size++;
-    if (queue->head == NULL)
-    {
-        node->prev = NULL;
-        node->next = NULL;
-        queue->head = node;
-        queue->tail = node;
-        return;
-    }
-    node->next = queue->head;
-    queue->head->prev = node;
-    queue->head = node;
-}
-
-Node *queue_pop(Queue *queue)
-{
-    if (queue->head == NULL)
-        return NULL;
-
-    assert(queue->size > 0);
-
-    queue->size--;
-    Node *node = queue->head;
-    queue->head = queue->head->next;
-    if (queue->head)
-    {
-        queue->head->prev = NULL;
-    }
-    DEBUGP("POP queue 0x%X node 0x%X size %d\n", queue, node, queue->size);
-    return node;
 }
 
 Node *queue_popback(Queue *queue)
 {
-    if (queue->tail == NULL)
-        return NULL;
-
-    assert(queue->size > 0);
-
+    Node *node = queue->tail.prev;
+    node->prev->next = &queue->tail;
+    queue->tail.prev = node->prev;
     queue->size--;
-    Node *node = queue->tail;
-    queue->tail = queue->tail->prev;
-    if (queue->tail)
-    {
-        queue->tail->next = NULL;
-    }
     DEBUGP("POPBACK queue 0x%X node 0x%X size %d\n", queue, node, queue->size);
     return node;
 }
 
 bool queue_empty(Queue *queue)
 {
-    return (queue->head == NULL);
+    return (queue->size == 0);
 }
 
 bool queue_find(Queue *queue, Node *node)
 {
-    Node *next = queue->head;
-    while (next != NULL)
+    Node *next = queue->head.next;
+    while (next != &queue->tail)
     {
         DEBUGP("Found next 0x%X node 0x%x\n", next, node);
         if (next == node)
@@ -100,4 +73,49 @@ bool queue_find(Queue *queue, Node *node)
         next = next->next;
     }
     return false;
+}
+
+bool queue_remove(Node *node)
+{
+    DEBUGP("node 0x%X prev 0x%X next 0x%X\n", node, node->prev, node->next);
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+}
+
+void test_queue()
+{
+    Queue q;
+    Node node_a;
+    Node node_b;
+
+    Queue *queue = &q;
+    Node *a = &node_a;
+    Node *b = &node_b;
+
+    queue_init(queue);
+    assert(queue->size == 0);
+    queue_push(queue, a);
+    assert(queue->size == 1);
+    assert(queue_find(queue, a));
+    assert(queue_pop(queue) == a);
+    assert(!queue_find(queue, a));
+    assert(queue->size == 0);
+    queue_pushback(queue, a);
+    queue_pushback(queue, b);
+    assert(queue_pop(queue) == a);
+    assert(queue_pop(queue) == b);
+
+    queue_push(queue, a);
+    queue_push(queue, b);
+    assert(queue_popback(queue) == a);
+    assert(queue_popback(queue) == b);
+
+    queue_push(queue, a);
+    queue_push(queue, b);
+    assert(queue_find(queue, a));
+    assert(queue_find(queue, b));
+    queue_remove(a);
+    assert(!queue_find(queue, a));
+    assert(queue_find(queue, b));
+    BMB;
 }

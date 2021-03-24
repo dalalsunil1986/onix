@@ -44,7 +44,6 @@ void thread_init(Task *thread, char *name, int priority)
 {
     memset(thread, 0, sizeof(*thread));
     strcpy(thread->name, name);
-    thread->node.data = thread;
     thread->status = TASK_INIT;
     thread->priority = priority;
     thread->ticks = thread->priority;
@@ -143,9 +142,9 @@ void schedule()
     };
     assert(!queue_empty(&tasks_ready));
 
-    Task *next = queue_pop(&tasks_ready)->data;
-    DEBUGP("switch 0x%08X to 0x%08X\n", cur, next);
+    // Task *next = queue_pop(&tasks_ready)->data;
+    // DEBUGP("switch 0x%08X to 0x%08X\n", cur, next);
 
-    current_task = next;
-    switch_to(cur, next);
+    // current_task = next;
+    // switch_to(cur, next);
 }

@@ -8,23 +8,26 @@
 
 typedef struct Block
 {
-    Node block;
+    struct Block *prev;
+    struct Block *next;
 } Block;
 
-typedef struct BlockDesc
+typedef struct ArenaDesc
 {
-    u32 total_size;
+    u32 total_block;
     u32 block_size;
     Queue free_list;
-} BlockDesc;
+} ArenaDesc;
 
 typedef struct Arena
 {
-    BlockDesc *desc;
+    ArenaDesc *desc;
     u32 count;
     bool large;
 } Arena;
 
 void init_arena();
+extern void *malloc(size_t size);
+extern void free(void *ptr);
 
 #endif

@@ -58,6 +58,9 @@ $(BUILD)/printk.o: $(KERNEL)/printk.c
 $(BUILD)/string.o: $(KERNEL)/string.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/stdlib.o: $(KERNEL)/stdlib.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/vsprintf.o: $(KERNEL)/vsprintf.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -95,6 +98,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/global.o \
 	$(BUILD)/system.o \
 	$(BUILD)/string.o \
+	$(BUILD)/stdlib.o \
 	$(BUILD)/printk.o \
 	$(BUILD)/vsprintf.o \
 	$(BUILD)/assert.o \

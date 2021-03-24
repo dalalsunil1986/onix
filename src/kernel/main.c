@@ -17,20 +17,26 @@ void __init_kernel()
     // BMB;
     init_gdt();
     init_memory();
-    init_arena();
+
     init_interrupt();
     // init_task();
     // init_process();
     enable_int();
+    init_arena();
 }
 
 int main()
 {
+    // test_queue();
     // clear();
     // printk("code selector 0x%X\n", *(short *)&SELECTOR_KERNEL_CODE);
     // printk("data selector 0x%X\n", *(short *)&SELECTOR_KERNEL_DATA);
     // printk("video selector 0x%X\n", *(short *)&SELECTOR_KERNEL_VIDEO);
     // printk("code descriptor segment %d\n", gdt[1].segment);
+
+    // Queue queue;
+    // u32 entry = element_entry(Queue, size, &queue.size);
+    // DEBUGP("Queue entry 0x%X entry 0x%X \n", entry, &queue);
 
     u32 counter = 0;
 

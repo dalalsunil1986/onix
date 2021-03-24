@@ -5,8 +5,13 @@
 #include <onix/kernel/assert.h>
 #include <onix/string.h>
 
-// #define DEBUGP DEBUGK
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
 #define DEBUGP(fmt, args...)
+#endif
 
 u32 total_memory_bytes;
 u32 ards_count;
