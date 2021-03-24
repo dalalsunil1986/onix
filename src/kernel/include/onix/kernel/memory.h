@@ -3,6 +3,7 @@
 
 #include <onix/types.h>
 #include <onix/bitmap.h>
+#include <onix/queue.h>
 
 #define PG_P_0 0b0
 #define PG_P_1 0b1
@@ -27,6 +28,8 @@
 #define USER_USER 1
 
 #define ARDS_SIZE 32
+
+#define DESC_COUNT 7
 
 static const u32 ARDS_TYPE_MEMORY = 1;
 static const u32 ARDS_TYPE_RESERVED = 2;
@@ -57,6 +60,19 @@ typedef struct PageEntry
     u8 avl : 3;      // not use by cpu
     u32 index : 20;  // index of page
 } _packed PageEntry;
+
+typedef struct BlockDesc
+{
+    u32 total_size;
+    u32 block_size;
+    Queue free_list;
+} BlockDesc;
+
+typedef struct Arena
+{
+
+    /* data */
+} Arena;
 
 void init_memory();
 
