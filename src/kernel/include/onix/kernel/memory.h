@@ -15,10 +15,13 @@
 #define PG_BASE 0x100
 #define BASE_ADDR_LIMIT 0x100000
 #define KERNEL_ADDR_MASK 0xC0000000
+#define KERNEL_PDE_MASK 0xFFC00000
 #define KERNEL_MMAP_ADDR 0xC00003000
 #define PREPARE_PMAP_ADDR 0xC00004000
+
 #define KERNEL_PMAP_IDX 0xC0100
-#define KERNEL_BASE_PAGE_VIDX 0xC0100
+#define KERNEL_BASE_PAGE 0xC0100000
+#define KERNEL_BASE_PAGE_IDX 0xC0100
 
 #define USER_KERNEL 0
 #define USER_USER 1
@@ -28,7 +31,8 @@
 static const u32 ARDS_TYPE_MEMORY = 1;
 static const u32 ARDS_TYPE_RESERVED = 2;
 
-typedef u32 *Page;
+typedef u32 *PageTable;
+typedef void *Page;
 
 typedef struct ARDS
 {
@@ -61,8 +65,8 @@ extern u32 ards_count;
 extern ARDS ards_table[ARDS_SIZE];
 extern u32 free_pages;
 
-extern u32 page_alloc(u32 user, u32 size);
-extern void page_free(u32 user, u32 page, u32 size);
+extern Page page_alloc(u32 user, u32 size);
+extern void page_free(u32 user, Page page, u32 size);
 
 u32 get_paddr(u32 vaddr);
 

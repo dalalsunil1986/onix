@@ -28,8 +28,10 @@ int main()
     // printk("data selector 0x%X\n", *(short *)&SELECTOR_KERNEL_DATA);
     // printk("video selector 0x%X\n", *(short *)&SELECTOR_KERNEL_VIDEO);
     // printk("code descriptor segment %d\n", gdt[1].segment);
+
+
     u32 counter = 0;
-    char *queue = page_alloc(USER_KERNEL, 1);
+    char *queue = (char *)page_alloc(USER_KERNEL, 1);
     queue_init(queue);
     char buffer[32];
 
@@ -39,18 +41,17 @@ int main()
         show_char(counter % 10 + 0x30, 77, 0);
         DEBUGP("free pages 0x%X\n\0", free_pages);
 
-        char *node = page_alloc(USER_KERNEL, 1);
+        char *node = (char *)page_alloc(USER_KERNEL, 1);
         queue_push(queue, node);
-        if (free_pages < 3)
+        if (free_pages < 2)
             break;
     }
-
+    DEBUGP("free pages 0x%X, start release memory...\n\0", free_pages);
     while (!queue_empty(queue))
     {
         DEBUGP("free pages 0x%X\n\0", free_pages);
         Node * node = queue_pop(queue);
         page_free(USER_KERNEL, node, 1);
     }
-
     return 0;
 }
