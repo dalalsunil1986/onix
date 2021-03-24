@@ -17,8 +17,9 @@ void __init_kernel()
     init_gdt();
     init_memory();
     init_interrupt();
-    init_task();
-    init_process();
+    // init_task();
+    // init_process();
+    enable_int();
 }
 
 int main()
