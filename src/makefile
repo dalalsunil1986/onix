@@ -91,6 +91,9 @@ $(BUILD)/process.o: $(KERNEL)/process.c
 $(BUILD)/task.o: $(KERNEL)/task.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/mutex.o: $(KERNEL)/mutex.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/queue.o: $(KERNEL)/queue.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -111,6 +114,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/task.o \
 	$(BUILD)/queue.o \
 	$(BUILD)/process.o \
+	$(BUILD)/mutex.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
