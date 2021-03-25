@@ -6,9 +6,21 @@
 #include <onix/kernel/keyboard.h>
 #include <onix/kernel/debug.h>
 
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
+
+#define EFLAGS_IF 0x00000200
+
 InterruptGate idt[IDT_SIZE];
 Pointer idt_ptr;
 InterruptHandler handler_table[IDT_SIZE];
+
+extern u32 get_eflags();
 
 static void init_pic()
 {
@@ -24,7 +36,7 @@ static void init_pic()
     outb(PIC_S_DATA, 2);                     // ICW3: 设置从片连接到主片的IR2引脚
     outb(PIC_S_DATA, ICW4_8086);             // ICW4: 8086模式, 正常EOI
 
-    outb(PIC_M_DATA, 0b11111100);
+    outb(PIC_M_DATA, 0b11111110);
     outb(PIC_S_DATA, 0b11111111);
 }
 
@@ -76,7 +88,7 @@ static void exception_handler(int vector, int code, int eip, int cs, int eflags)
         "#MC Machine Check\0",
         "#XF SIMD Floating-Point Exception\0"};
 
-    printk("Exception: %s \n EFLAGS: %d CS: %d EIP: %d \n ErrorCode: %x \0",
+    printk("Exception: %s \n EFLAGS: 0x%X CS: 0x%X EIP: 0x%X \n ErrorCode: 0x%X \n",
            messages[vector],
            eflags,
            cs,
@@ -125,4 +137,10 @@ void init_interrupt()
 void register_handler(u32 irq, InterruptHandler handler)
 {
     handler_table[ICW2_INT_VECTOR_IRQ0 + irq] = handler;
+}
+
+bool get_interrupt_status()
+{
+    u32 eflag = get_eflags();
+    return (eflag & EFLAGS_IF) ? true : false;
 }

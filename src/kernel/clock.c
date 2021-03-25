@@ -23,20 +23,24 @@ void clock_handler(int vector)
 {
     assert(vector == 0x20);
 
-    // Task *cur = running_thread();
-    // DEBUGP("Current task is 0x%X\n", cur);
-    // // BMB;
-    // assert(cur->stack_magic == TASK_MAGIC);
+    Task *cur = running_task();
+    // DEBUGP("Current task is 0x%X magic 0x%X magic 0x%X\n", cur, cur->magic, TASK_MAGIC);
+    assert(cur->magic == TASK_MAGIC);
 
-    // cur->ticks--;
-    // if (cur->ticks == 0)
-    // {
-    //     cur->ticks = cur->priority;
-    //     schedule();
-    // }
+    cur->ticks--;
+    if (cur->ticks == 0)
+    {
+        cur->ticks = cur->priority;
+    }
+    schedule();
 
     __global_ticks++;
-    char ch = (char)(__global_ticks % 10 + 0x30);
+    char ch = ' ';
+    if ((__global_ticks % 2) != 0)
+    {
+        ch = 'C';
+    }
+
     show_char(ch, 79, 0);
 }
 

@@ -1,5 +1,5 @@
-#ifndef ONIX_THREAD_H
-#define ONIX_THREAD_H
+#ifndef ONIX_TASK_H
+#define ONIX_TASK_H
 
 #include <onix/types.h>
 #include <onix/queue.h>
@@ -11,7 +11,7 @@
 #define TASK_INDEX_IDLE 0
 #define TASK_INDEX_INIT 0
 
-typedef void thread_target(void *);
+typedef void Tasktarget(void *);
 
 typedef enum TASK_STATUS
 {
@@ -58,10 +58,10 @@ typedef struct ThreadFrame
     u32 edi;
     u32 esi;
 
-    void (*eip)(thread_target *target, void *args);
+    void (*eip)(Tasktarget *target, void *args);
 
     void(*unused_retaddr); // placeholder
-    thread_target *target;
+    Tasktarget *target;
     void *args;
     /* data */
 } ThreadFrame;
@@ -70,18 +70,19 @@ typedef struct Task
 {
     u32 *stack;
     Node node;
+    Node queue_node;
     TASK_STATUS status;
     u8 priority;
     u32 ticks;
     char name[32];
     PageTable pde;
-    u32 stack_magic;
+    u32 magic;
 } Task;
 
 void init_task();
 void schedule();
 
-Task *running_thread();
-Task *thread_start(thread_target target, void *args, const char *name, int priority);
+Task *running_task();
+Task *task_start(Tasktarget target, void *args, const char *name, int priority);
 
 #endif

@@ -37,6 +37,12 @@ disable_int:
     cli
     ret
 
+global get_eflags
+get_eflags:
+    pushf
+    pop eax
+    ret
+
 global outb
 outb:
     mov edx, [esp + 4];  port
@@ -169,20 +175,15 @@ switch_to:
     push edi
     push ebx
     push ebp
-
     mov [eax], esp
-    push ecx
-    push eax
+    ; 以上保存当前线程的堆栈信息
 
-global jump_to_next;
-jump_to_next:
-    ; xchg bx, bx;
-    mov eax, [esp + 4]; next
-    mov esp, [eax];
+    ; xchg bx, bx
 
+    ; 以下恢复需要切换到线程的堆栈信息
+    mov esp, [ecx];
     pop ebp
     pop ebx
     pop edi
     pop esi
-    sti
     ret

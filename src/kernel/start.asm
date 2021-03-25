@@ -15,6 +15,8 @@ extern ards_count
 extern ards_table
 extern memcpy
 
+extern current_task
+
 _start:
     ; setup memory
     pop ebx
@@ -36,7 +38,20 @@ _start:
 
     mov esp, KERNEL_STACK_TOP
     call __init_kernel
-    call main
+    jmp restart
+
+restart:
+    ; xchg bx, bx;
+    mov eax, [current_task]; init
+    mov esp, [eax];
+
+    pop ebp
+    pop ebx
+    pop edi
+    pop esi
+
+    sti
+    ret
 
 halt:
     sti

@@ -89,7 +89,7 @@ static PageTable get_pte(u32 vaddr)
     if (!entry->present)
     {
         DEBUGP("create pte entry 0x%x 0x%X presnet %d\n", pde, didx, entry->present);
-        // // BMB;
+        // BMB;
         assert(pmap.length);
 
         u32 page = scan_physical_page(1);

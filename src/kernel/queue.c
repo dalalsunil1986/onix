@@ -117,5 +117,5 @@ void test_queue()
     queue_remove(a);
     assert(!queue_find(queue, a));
     assert(queue_find(queue, b));
-    BMB;
+    // BMB;
 }

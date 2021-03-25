@@ -148,5 +148,7 @@ extern InterruptHandler handler_table[IDT_SIZE];
 void register_handler(u32 irq, InterruptHandler handler);
 void enable_irq(u32 irq);
 void disable_irq(u32 irq);
+bool get_interrupt_status();
+
 
 #endif
