@@ -16,6 +16,7 @@ extern ards_table
 extern memcpy
 
 extern current_task
+extern interrupt_exit
 
 _start:
     ; setup memory
@@ -38,7 +39,7 @@ _start:
 
     mov esp, KERNEL_STACK_TOP
     call __init_kernel
-    jmp restart
+    jmp interrupt_exit
 
 restart:
     ; xchg bx, bx;

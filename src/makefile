@@ -49,6 +49,9 @@ $(BUILD)/system.o: $(KERNEL)/system.asm
 $(BUILD)/handler.o: $(KERNEL)/handler.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
 
+$(BUILD)/schedule.o: $(KERNEL)/schedule.asm
+	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
+
 $(BUILD)/global.o: $(KERNEL)/global.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -118,6 +121,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/queue.o \
 	$(BUILD)/process.o \
 	$(BUILD)/handler.o \
+	$(BUILD)/schedule.o \
 	$(BUILD)/mutex.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
