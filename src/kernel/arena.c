@@ -5,8 +5,13 @@
 #include <onix/string.h>
 #include <onix/stdlib.h>
 
+// #define DEBUGINFO
+
+#ifdef DEBUGINFO
 #define DEBUGP DEBUGK
-// #define DEBUGP(fmt, args...)
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 ArenaDesc arena_descs[DESC_COUNT];
 
@@ -137,11 +142,13 @@ void free(void *ptr)
 
 static void test_arena()
 {
+    DEBUGK("Test arena.....\n");
     int size = 4096;
     DEBUGP("free pages %d\n", free_pages);
     u32 *test = malloc(size);
+
     DEBUGP("get test memory 0x%X free pages %d\n", test, free_pages);
-    BMB;
+    // BMB;
     for (size_t i = 0; i < size / 4; i++)
     {
         DEBUGP("set test memory %i\n", i);

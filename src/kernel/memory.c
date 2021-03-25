@@ -238,6 +238,7 @@ void page_free(u32 user, Page vaddr, u32 size)
 
 void test_memory()
 {
+    DEBUGK("Test memory.....\n");
     char buf[0x10];
     u32 fp = free_pages;
 

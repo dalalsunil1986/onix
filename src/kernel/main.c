@@ -21,13 +21,13 @@ void __init_kernel()
 {
     // BMB;
     init_gdt();
-    init_interrupt();
     init_memory();
-
+    init_arena();
+    init_interrupt();
     // init_task();
     // init_process();
     enable_int();
-    init_arena();
+    
 }
 
 int main()
