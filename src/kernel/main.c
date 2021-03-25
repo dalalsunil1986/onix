@@ -9,8 +9,13 @@
 #include <onix/kernel/process.h>
 #include <onix/queue.h>
 
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
 #define DEBUGP DEBUGK
-// #define DEBUGP(fmt, args...)
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 void __init_kernel()
 {

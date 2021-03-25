@@ -1,14 +1,29 @@
 #include <onix/kernel/global.h>
 #include <onix/kernel/printk.h>
+#include <onix/kernel/assert.h>
+#include <onix/kernel/debug.h>
 #include <onix/string.h>
+
+// #define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 Descriptor gdt[GDT_SIZE];
 Pointer gdt_ptr;
 
 void init_gdt()
 {
-    printk("Initializing GDT descriptor...\n");
+    printk("Initializing GDT...\n");
     save_gdt(&gdt_ptr);
+
+    DEBUGP("Gdt base 0x%X limit 0x%X 0x%X\n", gdt_ptr.base, gdt_ptr.limit, sizeof(Descriptor));
+    assert(gdt_ptr.base == 0x6003);
+    assert(gdt_ptr.limit == (sizeof(Descriptor) * 4 - 1));
+
     memcpy(&gdt, (void *)gdt_ptr.base, gdt_ptr.limit + 1);
     gdt_ptr.base = (u32)&gdt;
     gdt_ptr.limit = sizeof(Pointer) * GDT_SIZE - 1;
