@@ -5,7 +5,7 @@
 #include <onix/kernel/assert.h>
 #include <onix/string.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -194,6 +194,8 @@ static void init_memory_map()
 
 Page page_alloc(u32 user, u32 size)
 {
+    assert(size > 0 && size < available_pages);
+
     u32 pstart = scan_physical_page(size);
     u32 vstart = 0;
     if (user == USER_KERNEL)
@@ -201,7 +203,6 @@ Page page_alloc(u32 user, u32 size)
         vstart = (scan_page(&mmap, size) + KERNEL_BASE_PAGE);
         for (size_t i = 0; i < size; i++)
         {
-            // BMB;
             u32 paddr = pstart + i * PG_SIZE;
             u32 vaddr = vstart + i * PG_SIZE;
             set_page(vaddr, paddr);
@@ -223,6 +224,8 @@ void page_free(u32 user, Page vaddr, u32 size)
             u32 vidx = (vaddress >> 12) - KERNEL_BASE_PAGE_IDX;
             PageTable pte = get_pte(vaddress);
             PageEntry *entry = &pte[TIDX(vaddress)];
+            assert(entry->present);
+
             entry->present = 0;
             u32 pidx = (pte[TIDX(vaddress)] >> 12) - base_physical_pages;
             DEBUGP("page free vidx 0x%X pidx 0x%X i 0x%X \n", vidx, pidx, i);
@@ -233,20 +236,26 @@ void page_free(u32 user, Page vaddr, u32 size)
     }
 }
 
-// void test_memory()
-// {
-//     char buf[0x10];
-//     while (free_pages > 2)
-//     {
-//         size_t size = 5;
-//         Page page = page_alloc(USER_KERNEL, size);
-//         va_list arg = (va_list)((char *)&page);
-//         u32 i = vsprintf(buf, "0x%X", arg);
-//         memcpy(page, buf, i);
-//         DEBUGP("set memory size %d 0x%08X %s\n", size, page, buf);
-//         page_free(USER_KERNEL, page, size);
-//     }
-// }
+void test_memory()
+{
+    char buf[0x10];
+    u32 fp = free_pages;
+
+    size_t size = 1;
+
+    while (size <= 64)
+    {
+        Page page = page_alloc(USER_KERNEL, size);
+        DEBUGP("Allocate page 0x%X size\n", page, size);
+        u32 *value = (u32 *)page;
+        *value = (u32)value;
+        assert(*value == (u32)value);
+        DEBUGP("free page 0x%X\n", page);
+        page_free(USER_KERNEL, page, size);
+        size *= 2;
+    }
+    assert(fp == free_pages);
+}
 
 void init_memory()
 {
@@ -260,7 +269,7 @@ void init_memory()
         halt();
     }
     init_memory_map();
-    // test_memory();
+    test_memory();
 }
 
 u32 get_paddr(u32 vaddr)
