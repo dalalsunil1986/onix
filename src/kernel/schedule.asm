@@ -5,7 +5,7 @@ section .text
 
 global switch_to
 switch_to:
-    xchg bx, bx
+    ; xchg bx, bx
     mov eax, [esp + 4]; cur
     mov ecx, [esp + 8]; next
 
@@ -24,4 +24,10 @@ switch_to:
     pop ebx
     pop edi
     pop esi
+    ret
+
+global running_task
+running_task:
+    mov eax, esp
+    and eax, 0xfffff000
     ret

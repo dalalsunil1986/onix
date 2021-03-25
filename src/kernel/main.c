@@ -28,6 +28,11 @@ void __init_kernel()
     // init_process();
 }
 
+void test_function()
+{
+    // BMB;
+}
+
 int main()
 {
     // test_queue();

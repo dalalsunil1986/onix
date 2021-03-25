@@ -16,18 +16,14 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-Task *current_task;
 Queue tasks_queue;
 Queue tasks_ready;
+
+u32 init_stack_top;
 
 extern void restart(Task *init);
 extern void switch_to(Task *current, Task *next);
 void idle_task();
-
-Task *running_task()
-{
-    return current_task;
-}
 
 Task *pop_ready_task()
 {
@@ -37,8 +33,9 @@ Task *pop_ready_task()
     return task;
 }
 
-static void kernel_task(Tasktarget target, void *args)
+void kernel_task(Tasktarget target, void *args)
 {
+    enable_int();
     target(args);
 }
 
@@ -53,9 +50,6 @@ void task_create(Task *task, Tasktarget target, void *args)
     frame->eip = kernel_task;
     frame->target = target;
     frame->args = args;
-
-    frame->eflags = 0x1202;
-    frame->cs = SELECT_KERNEL_CODE_INDEX << 3 | PL0;
     frame->ebp = 0;
     frame->ebx = 0;
     frame->esi = 0;
@@ -96,6 +90,8 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
 void init_kernel_task()
 {
     Task *idle = task_start(idle_task, NULL, "idle task", 1);
+
+    enable_int();
     DEBUGP("Create idle finish\n");
     u32 counter = 0;
     while (true)
@@ -111,24 +107,29 @@ void init_kernel_task()
             ch = 'K';
         }
         show_char(ch, 77, 0);
-        schedule();
     }
 }
 
 static void make_init_task()
 {
     Task *task = (Task *)TASK_MAIN_PAGE;
-    task_init(task, "init task", 5);
+    task_init(task, "init task", 1);
     task_create(task, init_kernel_task, NULL);
+
+    ThreadFrame *frame = (ThreadFrame *)task->stack;
+    frame->ebp = 0x11;
+    frame->ebx = 0x22;
+    frame->esi = 0x33;
+    frame->edi = 0x44;
+
+    init_stack_top = (u32)task->stack - (sizeof(void *));
+
     task->status = TASK_RUNNING;
     assert(task->magic == TASK_MAGIC);
 
     assert(!queue_find(&tasks_queue, &task->queue_node));
     queue_push(&tasks_queue, &task->queue_node);
-
     DEBUGP("Task create 0x%X stack top 0x%X\n", (u32)task, (u32)task->stack);
-    current_task = task;
-    assert(current_task->magic == TASK_MAGIC);
 }
 
 void idle_task()
@@ -136,8 +137,10 @@ void idle_task()
     u32 counter = 0;
     while (true)
     {
-        DEBUGP("idle task....\n");
         // BMB;
+        // schedule();
+        // // BMB;
+        DEBUGP("idle task....\n");
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
         counter++;
@@ -147,8 +150,8 @@ void idle_task()
             ch = 'D';
         }
         show_char(ch, 75, 0);
-        halt();
-        schedule();
+        // halt();
+        // schedule();
     }
 }
 
@@ -162,8 +165,7 @@ void test_task()
 
 void schedule()
 {
-    bool inter = get_interrupt_status();
-
+    // assert(!get_interrupt_status());
     Task *cur = running_task();
     assert(cur->magic == TASK_MAGIC);
 
@@ -187,20 +189,10 @@ void schedule()
     next->status = TASK_RUNNING;
 
     assert(((u32)next & 0xfff) == 0);
-    current_task = next;
 
     if (next == cur)
         return;
-
-    if (true)
-    {
-        DEBUGP("switch 0x%08X to 0x%08X\n", cur, next);
-        switch_to(cur, next);
-    }
-    else
-    {
-        // DEBUGP("exit 0x%08X to 0x%08X\n", cur, next);
-    }
+    switch_to(cur, next);
 }
 
 void init_task()

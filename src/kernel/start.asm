@@ -6,7 +6,6 @@ bits 32
 global _start
 global halt
 
-extern main
 extern __init_kernel
 extern gdt_ptr
 extern idt_ptr
@@ -14,9 +13,6 @@ extern total_memory_bytes
 extern ards_count
 extern ards_table
 extern memcpy
-
-extern current_task
-extern interrupt_exit
 
 _start:
     ; setup memory
@@ -39,20 +35,15 @@ _start:
 
     mov esp, KERNEL_STACK_TOP
     call __init_kernel
-    jmp interrupt_exit
+    jmp restart
+
+extern init_kernel_task
+extern init_stack_top
 
 restart:
-    ; xchg bx, bx;
-    mov eax, [current_task]; init
-    mov esp, [eax];
-
-    pop ebp
-    pop ebx
-    pop edi
-    pop esi
-
-    sti
-    ret
+    mov eax, [init_stack_top]
+    mov esp, eax
+    jmp init_kernel_task
 
 halt:
     sti

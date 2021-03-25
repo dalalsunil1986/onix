@@ -15,6 +15,7 @@ interrupt_entry_table:
 %macro INTERRUPT_HANDLER 2
 section .text
 interrupt_%1:
+    ; xchg bx, bx
     %2
     push ds
     push es
