@@ -52,7 +52,7 @@ static void default_handler(int vector)
     printk("default interrupt handler 0x%X \n", vector);
 }
 
-static void exception_handler(int vector)
+static void exception_handler(int vector, int code, int eip, int cs, int eflags)
 {
     char *messages[] = {
         "#DE Divide Error\0",
@@ -75,14 +75,18 @@ static void exception_handler(int vector)
         "#AC Alignment Check\0",
         "#MC Machine Check\0",
         "#XF SIMD Floating-Point Exception\0"};
-    // BMB;
-    printk("Exception: %s \n Vector: 0x%X \0", messages[vector], vector);
+
+    printk("Exception: %s \n EFLAGS: %d CS: %d EIP: %d \n ErrorCode: %x \0",
+           messages[vector],
+           eflags,
+           cs,
+           eip,
+           code);
     halt();
 }
 
 void init_handler()
 {
-
     for (size_t i = 20; i < IDT_SIZE; i++)
     {
         handler_table[i] = &default_handler;
@@ -97,6 +101,13 @@ void init_exception()
     }
 }
 
+static void test_interrupt()
+{
+    DEBUGK("Test interrupt...\n");
+    // u32 *addr = (u32 *)0x22222222;
+    // *addr = 0x22222222;
+}
+
 void init_interrupt()
 {
     printk("Initializing interrupt...\n");
@@ -107,6 +118,7 @@ void init_interrupt()
     init_handler();
     init_clock();
     init_keyboard();
+    test_interrupt();
     printk("Initializing interrupt finished...\n");
 }
 
