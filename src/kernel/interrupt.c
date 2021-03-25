@@ -20,8 +20,6 @@ InterruptGate idt[IDT_SIZE];
 Pointer idt_ptr;
 InterruptHandler handler_table[IDT_SIZE];
 
-extern u32 get_eflags();
-
 static void init_pic()
 {
     /* 初始化主片 */

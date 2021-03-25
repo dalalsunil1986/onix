@@ -44,7 +44,7 @@ typedef struct TaskFrame
     u32 ds;
 
     u32 error;
-    void (*epi)(void);
+    void (*eip)(void);
     u32 cs;
     u32 eflags;
     void *esp;
@@ -57,9 +57,11 @@ typedef struct ThreadFrame
     u32 ebx;
     u32 edi;
     u32 esi;
+    u32 placeholder;
 
     void (*eip)(Tasktarget *target, void *args);
-
+    u32 cs;
+    u32 eflags;
     void(*unused_retaddr); // placeholder
     Tasktarget *target;
     void *args;

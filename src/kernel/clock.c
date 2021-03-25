@@ -31,8 +31,8 @@ void clock_handler(int vector)
     if (cur->ticks == 0)
     {
         cur->ticks = cur->priority;
+        schedule();
     }
-    schedule();
 
     __global_ticks++;
     char ch = ' ';

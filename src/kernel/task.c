@@ -53,6 +53,9 @@ void task_create(Task *task, Tasktarget target, void *args)
     frame->eip = kernel_task;
     frame->target = target;
     frame->args = args;
+
+    frame->eflags = 0x1202;
+    frame->cs = SELECT_KERNEL_CODE_INDEX << 3 | PL0;
     frame->ebp = 0;
     frame->ebx = 0;
     frame->esi = 0;
@@ -92,14 +95,15 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
 
 void init_kernel_task()
 {
-    // Task *idle = task_start(idle_task, NULL, "idle task", 1);
+    Task *idle = task_start(idle_task, NULL, "idle task", 1);
     DEBUGP("Create idle finish\n");
     u32 counter = 0;
     while (true)
     {
+        DEBUGP("init task....\n");
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
-        get_interrupt_status();
+        // BMB;
         counter++;
         char ch = ' ';
         if ((counter % 2) != 0)
@@ -107,6 +111,7 @@ void init_kernel_task()
             ch = 'K';
         }
         show_char(ch, 77, 0);
+        schedule();
     }
 }
 
@@ -131,17 +136,19 @@ void idle_task()
     u32 counter = 0;
     while (true)
     {
+        DEBUGP("idle task....\n");
+        // BMB;
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
-
         counter++;
         char ch = ' ';
         if ((counter % 2) != 0)
         {
-            ch = 'I';
+            ch = 'D';
         }
         show_char(ch, 75, 0);
         halt();
+        schedule();
     }
 }
 
@@ -155,7 +162,7 @@ void test_task()
 
 void schedule()
 {
-    assert(get_interrupt_status() == false);
+    bool inter = get_interrupt_status();
 
     Task *cur = running_task();
     assert(cur->magic == TASK_MAGIC);
@@ -185,12 +192,22 @@ void schedule()
     if (next == cur)
         return;
 
-    DEBUGP("switch 0x%08X to 0x%08X\n", cur, next);
-    switch_to(cur, next);
+    if (true)
+    {
+        DEBUGP("switch 0x%08X to 0x%08X\n", cur, next);
+        switch_to(cur, next);
+    }
+    else
+    {
+        // DEBUGP("exit 0x%08X to 0x%08X\n", cur, next);
+    }
 }
 
 void init_task()
 {
+    DEBUGP("Size Taskframe %d\n", sizeof(TaskFrame));
+    DEBUGP("Size Threadframe %d\n", sizeof(ThreadFrame));
+    DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(TaskFrame));
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
     make_init_task();
