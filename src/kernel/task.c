@@ -89,6 +89,31 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
     return task;
 }
 
+void task_block(Task *task)
+{
+    bool old = get_interrupt_status();
+    set_interrupt_status(0);
+
+    assert(task->status != TASK_BLOCKED);
+    task->stack = TASK_BLOCKED;
+
+    schedule();
+
+    set_interrupt_status(old);
+}
+
+void task_unblock(Task *task)
+{
+    bool old = get_interrupt_status();
+    set_interrupt_status(0);
+
+    assert(task->status == TASK_BLOCKED);
+    task->status = TASK_READY;
+    schedule();
+
+    set_interrupt_status(old);
+}
+
 void init_kernel_task()
 {
     u32 counter = 0;
@@ -133,7 +158,7 @@ void idle_task()
 
 static void make_init_task()
 {
-    Task *task = (Task *)TASK_MAIN_PAGE;
+    Task *task = (Task *)TASK_INIT_PAGE;
     task_init(task, "init task", 50);
     task_create(task, init_kernel_task, NULL);
 
@@ -176,7 +201,11 @@ void schedule()
         assert(!queue_find(&tasks_ready, &cur->node));
         queue_push(&tasks_ready, &cur->node);
         cur->status = TASK_READY;
-    };
+    }
+    else if (cur->status == TASK_BLOCKED)
+    {
+        /* code */
+    }
 
     Task *next = pop_ready_task();
     assert(next->magic == TASK_MAGIC);

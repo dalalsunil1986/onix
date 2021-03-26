@@ -151,6 +151,8 @@ void register_handler(u32 irq, InterruptHandler handler);
 void enable_irq(u32 irq);
 void disable_irq(u32 irq);
 extern u32 get_eflags();
+extern void set_eflags(u32 eflags);
 bool get_interrupt_status();
+void set_interrupt_status(bool status);
 
 #endif

@@ -6,7 +6,7 @@
 #include <onix/kernel/memory.h>
 
 #define TASK_MAGIC 0x20210323
-#define TASK_MAIN_PAGE (0x10000 | KERNEL_ADDR_MASK)
+#define TASK_INIT_PAGE (0x10000 | KERNEL_ADDR_MASK)
 
 #define TASK_INDEX_IDLE 0
 #define TASK_INDEX_INIT 0

@@ -43,6 +43,14 @@ get_eflags:
     pop eax
     ret
 
+global set_eflags
+set_eflags:
+    xchg bx, bx
+    push dword [esp + 4]
+    popf
+    ret
+
+
 global outb
 outb:
     mov edx, [esp + 4];  port

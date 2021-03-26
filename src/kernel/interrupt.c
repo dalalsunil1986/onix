@@ -142,3 +142,14 @@ bool get_interrupt_status()
     u32 eflag = get_eflags();
     return (eflag & EFLAGS_IF) ? true : false;
 }
+
+void set_interrupt_status(bool status)
+{
+    BMB;
+    u32 eflag = get_eflags();
+    bool old = (eflag & EFLAGS_IF) ? true : false;
+    if (old == status)
+        return;
+    eflag = (eflag & ~EFLAGS_IF) | (eflag ^ EFLAGS_IF);
+    set_eflags(eflag);
+}
