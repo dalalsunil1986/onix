@@ -103,6 +103,9 @@ $(BUILD)/mutex.o: $(KERNEL)/mutex.c
 $(BUILD)/queue.o: $(KERNEL)/queue.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/ioqueue.o: $(KERNEL)/ioqueue.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/global.o \
 	$(BUILD)/system.o \
@@ -119,6 +122,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/keyboard.o \
 	$(BUILD)/task.o \
 	$(BUILD)/queue.o \
+	$(BUILD)/ioqueue.o \
 	$(BUILD)/process.o \
 	$(BUILD)/handler.o \
 	$(BUILD)/schedule.o \

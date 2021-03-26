@@ -86,6 +86,10 @@ void put_char(char ch)
     case '\r':
         cpos = get_pos(0, y + 1);
         break;
+    case '\t':
+        break;
+    case '\x1b': // esc
+        break;
     default:
         *current = ch;
         cpos++;
