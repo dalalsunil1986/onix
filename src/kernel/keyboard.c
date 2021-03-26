@@ -3,6 +3,7 @@
 #include <onix/kernel/io.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/printk.h>
+#include <onix/kernel/ioqueue.h>
 
 #define DEBUGINFO
 
@@ -17,6 +18,8 @@ bool shift_status;
 bool alt_status;
 bool capslock_status;
 bool ext_status;
+
+IOQueue key_ioq;
 
 static char keymap[][2] = {
     /* 扫描码   未与shift组合  与shift组合*/
@@ -159,14 +162,15 @@ void keyboard_handler(int vector)
     {
         u8 index = (scancode &= 0x00ff);
         char ch = keymap[index][shift];
-        if (ch)
+        if (ch && !ioqueue_full(&key_ioq))
         {
-            put_char(ch);
+            ioqueue_put(&key_ioq, ch);
         }
     }
 }
 
 void init_keyboard()
 {
+    ioqueue_init(&key_ioq);
     register_handler(IRQ_KEYBOARD, keyboard_handler);
 }

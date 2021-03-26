@@ -7,6 +7,7 @@
 #include <onix/kernel/interrupt.h>
 #include <onix/string.h>
 #include <onix/queue.h>
+#include <onix/kernel/ioqueue.h>
 
 // #define DEBUGINFO
 
@@ -15,6 +16,8 @@
 #else
 #define DEBUGP(fmt, args...)
 #endif
+
+extern IOQueue key_ioq;
 
 Queue tasks_queue;
 Queue tasks_ready;
@@ -176,14 +179,6 @@ static void make_init_task()
     DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n", (u32)task, (u32)task->stack, init_kernel_task);
 }
 
-void test_task()
-{
-    while (1)
-    {
-        DEBUGP("test task is running....\n");
-    }
-}
-
 void schedule()
 {
     assert(!get_interrupt_status());
@@ -210,6 +205,20 @@ void schedule()
     switch_to(cur, next);
 }
 
+void keyboard_task()
+{
+    while (1)
+    {
+        bool old = disable_int();
+        if (!ioqueue_empty(&key_ioq))
+        {
+            char byte = ioqueue_get(&key_ioq);
+            put_char(byte);
+        }
+        set_interrupt_status(old);
+    }
+}
+
 void init_task()
 {
     DEBUGP("Size Taskframe %d\n", sizeof(TaskFrame));
@@ -219,4 +228,5 @@ void init_task()
     queue_init(&tasks_ready);
     make_init_task();
     task_start(idle_task, NULL, "idle task", 1);
+    task_start(keyboard_task, NULL, "key task", 16);
 }
