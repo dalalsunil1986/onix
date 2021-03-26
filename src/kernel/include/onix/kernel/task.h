@@ -59,7 +59,7 @@ typedef struct ThreadFrame
     u32 esi;
 
     void (*eip)(Tasktarget *target, void *args);
-    void(*unused_retaddr); // placeholder
+    void(*addr); // placeholder
 
     Tasktarget *target;
     void *args;

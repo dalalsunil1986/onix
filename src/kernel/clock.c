@@ -6,8 +6,13 @@
 #include <onix/kernel/task.h>
 #include <onix/kernel/debug.h>
 
+// #define DEBUGINFO
+
+#ifdef DEBUGINFO
 #define DEBUGP DEBUGK
-// #define DEBUGP(fmt, args...)
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 u32 __global_ticks;
 
@@ -24,7 +29,7 @@ void clock_handler(int vector)
     assert(vector == 0x20);
 
     Task *cur = running_task();
-    // DEBUGP("Current task is 0x%X magic 0x%X magic 0x%X\n", cur, cur->magic, TASK_MAGIC);
+    DEBUGP("Current task is 0x%X ticks 0x%X\n", cur, cur->ticks);
     assert(cur->magic == TASK_MAGIC);
 
     cur->ticks--;

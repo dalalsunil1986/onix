@@ -28,9 +28,12 @@ void __init_kernel()
     // init_process();
 }
 
-void test_function()
+int test_function()
 {
-    // BMB;
+    BMB;
+    // int i = 0;
+    // i++;
+    // return i;
 }
 
 int main()

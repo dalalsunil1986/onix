@@ -67,3 +67,18 @@ global get_pde:
 get_pde:
     mov eax, cr3
     ret
+
+; routine control
+
+global halt
+halt:
+    sti
+    hlt
+    jmp halt
+
+global pause
+pause:
+    sti
+    hlt
+    cli
+    ret

@@ -8,7 +8,7 @@
 #include <onix/string.h>
 #include <onix/queue.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -35,6 +35,7 @@ Task *pop_ready_task()
 
 void kernel_task(Tasktarget target, void *args)
 {
+    assert(!get_interrupt_status());
     enable_int();
     target(args);
 }
@@ -50,10 +51,11 @@ void task_create(Task *task, Tasktarget target, void *args)
     frame->eip = kernel_task;
     frame->target = target;
     frame->args = args;
-    frame->ebp = 0;
-    frame->ebx = 0;
-    frame->esi = 0;
-    frame->edi = 0;
+    frame->ebp = 0x11111111; // 这里的值不重要，用于调试定位栈顶信息
+    frame->ebx = 0x22222222;
+    frame->edi = 0x33333333;
+    frame->esi = 0x44444444;
+    frame->addr = 0x55555555;
 }
 
 void task_init(Task *task, char *name, int priority)
@@ -83,20 +85,17 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
     assert(!queue_find(&tasks_ready, &task->node));
     queue_push(&tasks_ready, &task->node);
 
-    DEBUGP("Task create 0x%X stack top 0x%X\n", (u32)task, (u32)task->stack);
+    DEBUGP("Task create 0x%X stack top 0x%X target 0x%08x\n", (u32)task, (u32)task->stack, kernel_task);
     return task;
 }
 
 void init_kernel_task()
 {
-    Task *idle = task_start(idle_task, NULL, "idle task", 1);
-
-    enable_int();
-    DEBUGP("Create idle finish\n");
     u32 counter = 0;
     while (true)
     {
-        DEBUGP("init task....\n");
+        // BMB;
+        // DEBUGP("init task....\n");
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
         // BMB;
@@ -110,49 +109,51 @@ void init_kernel_task()
     }
 }
 
+void idle_task()
+{
+    static u32 idle_counter = 0;
+    while (true)
+    {
+        // BMB;
+        DEBUGP("idle task 0x%X....\n", idle_counter);
+
+        Task *task = running_task();
+        assert(task->magic == TASK_MAGIC);
+        idle_counter++;
+        char ch = ' ';
+        if ((idle_counter % 2) != 0)
+        {
+            ch = 'D';
+        }
+        show_char(ch, 75, 0);
+        pause();
+        schedule();
+    }
+}
+
 static void make_init_task()
 {
     Task *task = (Task *)TASK_MAIN_PAGE;
-    task_init(task, "init task", 1);
+    task_init(task, "init task", 50);
     task_create(task, init_kernel_task, NULL);
 
     ThreadFrame *frame = (ThreadFrame *)task->stack;
-    frame->ebp = 0x11;
-    frame->ebx = 0x22;
-    frame->esi = 0x33;
-    frame->edi = 0x44;
+    frame->ebp = 0x1111; // 这里的值不重要，用于调试定位栈顶信息
+    frame->ebx = 0x2222;
+    frame->edi = 0x3333;
+    frame->esi = 0x4444;
+    frame->addr = 0x5555;
 
-    init_stack_top = (u32)task->stack - (sizeof(void *));
+    init_stack_top = (u32)task->stack + element_offset(ThreadFrame, addr);
+    // 跳过 switch_to 返回的栈空间
+    // 这样从形式上和其他线程的栈空间一致
 
     task->status = TASK_RUNNING;
     assert(task->magic == TASK_MAGIC);
 
     assert(!queue_find(&tasks_queue, &task->queue_node));
     queue_push(&tasks_queue, &task->queue_node);
-    DEBUGP("Task create 0x%X stack top 0x%X\n", (u32)task, (u32)task->stack);
-}
-
-void idle_task()
-{
-    u32 counter = 0;
-    while (true)
-    {
-        // BMB;
-        // schedule();
-        // // BMB;
-        DEBUGP("idle task....\n");
-        Task *task = running_task();
-        assert(task->magic == TASK_MAGIC);
-        counter++;
-        char ch = ' ';
-        if ((counter % 2) != 0)
-        {
-            ch = 'D';
-        }
-        show_char(ch, 75, 0);
-        // halt();
-        // schedule();
-    }
+    DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n", (u32)task, (u32)task->stack, init_kernel_task);
 }
 
 void test_task()
@@ -165,17 +166,10 @@ void test_task()
 
 void schedule()
 {
-    // assert(!get_interrupt_status());
+    assert(!get_interrupt_status());
+
     Task *cur = running_task();
     assert(cur->magic == TASK_MAGIC);
-
-    char ch = ' ';
-    if ((cur->ticks % 2) != 0)
-    {
-        ch = 'S';
-    }
-    // char ch = cur->ticks % 10 + 0x30;
-    show_char(ch, 73, 0);
 
     if (cur->status == TASK_RUNNING)
     {
@@ -192,6 +186,7 @@ void schedule()
 
     if (next == cur)
         return;
+
     switch_to(cur, next);
 }
 
@@ -203,4 +198,5 @@ void init_task()
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
     make_init_task();
+    task_start(idle_task, NULL, "idle task", 1);
 }

@@ -15,18 +15,18 @@ LD=ld
 
 ENTRYPOINT = 0xC0020000
 
-ASM_FLAGS= -f elf -g
+ASM_FLAGS= -f elf
 
 DEBUG_FLAGS = -D ONIX_DEBUG
 # DEBUG_FLAGS =
 
-CFLAGS = -I $(INCLUDE) -g  -c -fno-builtin -m32 -fno-stack-protector \
+CFLAGS = -I $(INCLUDE) -c -fno-builtin -m32 -fno-stack-protector \
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
 		$(DEBUG_FLAGS)
 
 TESTS_CFLAG = -I $(INCLUDE) -m32 -Wall $(DEBUG_FLAGS)
 
-LDFLAGS = -m elf_i386 -Ttext $(ENTRYPOINT)
+LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 
 .PHONY: clean image unlock win
 

@@ -4,7 +4,6 @@ bits 32
 [section .text]
 
 global _start
-global halt
 
 extern __init_kernel
 extern gdt_ptr
@@ -37,16 +36,18 @@ _start:
     call __init_kernel
     jmp restart
 
-extern init_kernel_task
 extern init_stack_top
+extern test_function
+extern kernel_task
 
 restart:
     mov eax, [init_stack_top]
     mov esp, eax
-    jmp init_kernel_task
+    jmp kernel_task
 
-halt:
+; 按理来说绝对不会走到这里
+__halt:
     sti
     hlt
     ; xchg bx, bx
-    jmp halt
+    jmp __halt
