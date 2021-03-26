@@ -15,5 +15,6 @@ void bitmap_init(Bitmap *bitmap);
 int bitmap_test(Bitmap *bitmap, u32 idx);
 int bitmap_scan(Bitmap *bitmap, u32 count);
 void bitmap_set(Bitmap *bitmap, u32 idx, u8 value);
+void test_bitmap();
 
 #endif

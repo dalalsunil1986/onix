@@ -1,5 +1,6 @@
 #include <onix/bitmap.h>
 #include <onix/string.h>
+#include <onix/kernel/assert.h>
 
 void bitmap_init(Bitmap *bitmap)
 {
@@ -62,4 +63,30 @@ void bitmap_set(Bitmap *bitmap, u32 idx, u8 value)
     {
         bitmap->bits[idx_byte] &= ~(BITMAP_MASK << idx_bit);
     }
+}
+
+void test_bitmap()
+{
+    const static MAPSIZE = 0x10;
+    u8 bits[MAPSIZE];
+    Bitmap store;
+    Bitmap *map = &store;
+    map->bits = bits;
+    map->length = MAPSIZE;
+    bitmap_init(map);
+    for (size_t i = 0; i < MAPSIZE; i++)
+    {
+        assert(bits[0] == 0);
+    }
+    bitmap_set(map, 0, 1);
+    assert(bits[0] == 1);
+    bitmap_set(map, 8, 1);
+    assert(bits[1] == 1);
+    u32 value = *(u32 *)bits;
+    assert(value == 0x00000101);
+
+    assert(bitmap_test(map, 8));
+    assert(!bitmap_test(map, 9));
+    bitmap_set(map, 8, 0);
+    assert(!bitmap_test(map, 8));
 }
