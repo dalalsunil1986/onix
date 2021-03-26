@@ -78,9 +78,12 @@ void put_char(char ch)
     {
     case '\b':
         x = x >= 1 ? x - 1 : 0;
+        current -= 2;
         *current = ' ';
         cpos = get_pos(x, y);
+        break;
     case '\n':
+    case '\r':
         cpos = get_pos(0, y + 1);
         break;
     default:

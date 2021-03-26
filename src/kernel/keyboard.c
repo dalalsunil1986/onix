@@ -2,6 +2,7 @@
 #include <onix/kernel/keyboard.h>
 #include <onix/kernel/io.h>
 #include <onix/kernel/debug.h>
+#include <onix/kernel/printk.h>
 
 #define DEBUGINFO
 
@@ -160,11 +161,9 @@ void keyboard_handler(int vector)
         char ch = keymap[index][shift];
         if (ch)
         {
-            DEBUGP("%c", ch);
+            put_char(ch);
         }
     }
-
-    // DEBUGK("key %c %d\n", chr, chr);
 }
 
 void init_keyboard()
