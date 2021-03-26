@@ -64,9 +64,6 @@ extern void load_idt(Pointer *idt_ptr);
 extern void save_gdt(Pointer *gdt_ptr);
 extern void load_tss(Selector *tss_selector);
 
-extern void enable_int();
-extern void disable_int();
-
 void init_descriptor(Descriptor *desc, u32 base, u32 limit);
 
 void init_gdt();

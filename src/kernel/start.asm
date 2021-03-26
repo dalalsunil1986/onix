@@ -32,6 +32,7 @@ _start:
     push ards_table; ards
     call memcpy 
 
+    ; xchg bx, bx
     mov esp, KERNEL_STACK_TOP
     call __init_kernel
     jmp restart
@@ -41,6 +42,7 @@ extern test_function
 extern kernel_task
 
 restart:
+    call test_function
     mov eax, [init_stack_top]
     mov esp, eax
     jmp kernel_task

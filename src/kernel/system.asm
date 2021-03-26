@@ -29,12 +29,21 @@ load_tss:
 
 global enable_int
 enable_int:
+    pushf
+    cli
+    pop eax
+    and eax, 0x00000200
+    shr eax, 9
     sti
     ret
 
 global disable_int
 disable_int:
+    pushf
     cli
+    pop eax
+    and eax, 0x00000200
+    shr eax, 9
     ret
 
 global get_eflags
@@ -45,7 +54,6 @@ get_eflags:
 
 global set_eflags
 set_eflags:
-    xchg bx, bx
     push dword [esp + 4]
     popf
     ret

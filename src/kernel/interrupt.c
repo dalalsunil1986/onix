@@ -145,7 +145,6 @@ bool get_interrupt_status()
 
 void set_interrupt_status(bool status)
 {
-    BMB;
     u32 eflag = get_eflags();
     bool old = (eflag & EFLAGS_IF) ? true : false;
     if (old == status)

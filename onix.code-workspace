@@ -28,7 +28,8 @@
 			"exception": "c",
 			"stack": "c",
 			"queue.h": "c",
-			"arena.h": "c"
+			"arena.h": "c",
+			"mutex.h": "c"
 		}
 	}
 }

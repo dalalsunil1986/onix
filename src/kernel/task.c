@@ -8,7 +8,7 @@
 #include <onix/string.h>
 #include <onix/queue.h>
 
-// #define DEBUGINFO
+#define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -91,12 +91,10 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
 
 void task_block(Task *task)
 {
-    bool old = get_interrupt_status();
-    set_interrupt_status(0);
+    bool old = disable_int();
 
     assert(task->status != TASK_BLOCKED);
     task->stack = TASK_BLOCKED;
-
     schedule();
 
     set_interrupt_status(old);
@@ -104,9 +102,7 @@ void task_block(Task *task)
 
 void task_unblock(Task *task)
 {
-    bool old = get_interrupt_status();
-    set_interrupt_status(0);
-
+    bool old = disable_int();
     assert(task->status == TASK_BLOCKED);
     task->status = TASK_READY;
     schedule();
@@ -120,7 +116,7 @@ void init_kernel_task()
     while (true)
     {
         // BMB;
-        // DEBUGP("init task....\n");
+        DEBUGP("init task....\n");
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
         // BMB;
@@ -141,7 +137,6 @@ void idle_task()
     {
         // BMB;
         DEBUGP("idle task 0x%X....\n", idle_counter);
-
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
         idle_counter++;
@@ -201,10 +196,6 @@ void schedule()
         assert(!queue_find(&tasks_ready, &cur->node));
         queue_push(&tasks_ready, &cur->node);
         cur->status = TASK_READY;
-    }
-    else if (cur->status == TASK_BLOCKED)
-    {
-        /* code */
     }
 
     Task *next = pop_ready_task();
