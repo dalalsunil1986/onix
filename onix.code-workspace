@@ -3,33 +3,6 @@
 		{
 			"path": "."
 		}
-    ],
-	"settings": {
-		"files.associations": {
-			"printk.h": "c",
-			"debug.h": "c",
-			"types.h": "c",
-			"io.h": "c",
-			"*.tcc": "c",
-			"cstdio": "c",
-			"string.h": "c",
-			"random": "cpp",
-			"interrupt.h": "c",
-			"functional": "c",
-			"mutex": "c",
-			"assert.h": "c",
-			"global.h": "c",
-			"memory.h": "c",
-			"variant": "c",
-			"clock.h": "c",
-			"process.h": "c",
-			"bitmap.h": "c",
-			"task.h": "c",
-			"exception": "c",
-			"stack": "c",
-			"queue.h": "c",
-			"arena.h": "c",
-			"mutex.h": "c"
-		}
-	}
+	],
+	"settings": {}
 }

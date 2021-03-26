@@ -8,7 +8,7 @@
 #include <onix/string.h>
 #include <onix/queue.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -116,7 +116,7 @@ void init_kernel_task()
     while (true)
     {
         // BMB;
-        DEBUGP("init task....\n");
+        // DEBUGP("init task....\n");
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
         // BMB;
@@ -136,7 +136,7 @@ void idle_task()
     while (true)
     {
         // BMB;
-        DEBUGP("idle task 0x%X....\n", idle_counter);
+        // DEBUGP("idle task 0x%X....\n", idle_counter);
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
         idle_counter++;
