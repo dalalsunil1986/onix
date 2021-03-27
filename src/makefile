@@ -141,7 +141,14 @@ endif
 	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ bs=512 seek=100 count=200 conv=notrunc
 
-bochs: $(BUILD)/harddisk.img
+$(BUILD)/slave.img:
+
+ifeq ("$(wildcard $(BUILD)/slave.img)", "")
+	bximage -q -hd=16 -mode=create -sectsize=512 -imgmode=flat $@
+endif
+
+
+bochs: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	@rm -rf $(BUILD)/harddisk.img.lock
 	@rm -rf $(BUILD)/bx_enh_dbg.ini
 	cd $(BUILD) && $(BOCHS) -q  -f bochsrc
@@ -150,7 +157,7 @@ image: $(BUILD)/harddisk.img
 	-
 
 unlock:
-	rm -rf $(BUILD)/harddisk.img.lock
+	rm -rf $(BUILD)/*.img.lock
 
 win:
 	ssh arch "cd ~/source/github/onix/src && make image" && make unlock && \
@@ -161,6 +168,6 @@ clean:
 	rm -rf $(BUILD)/loader.bin
 	rm -rf $(BUILD)/kernel.bin
 	rm -rf $(BUILD)/*.o
-	rm -rf $(BUILD)/harddisk.img*
+	rm -rf $(BUILD)/*.img*
 	rm -rf $(BUILD)/test
 
