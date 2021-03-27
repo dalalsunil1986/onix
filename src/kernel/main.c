@@ -26,7 +26,7 @@ void __init_kernel()
     init_arena();
     init_interrupt();
     init_task();
-    // init_process();
+    init_process();
 }
 
 int test_function()

@@ -20,11 +20,11 @@ void init_tss()
     tss_desc->long_mode = 0;
     tss_desc->present = 1;
     tss_desc->DPL = PL0;
-    tss_desc->code = 1;
-    tss_desc->conform_expand = 0;
-    tss_desc->read_write = 0; // busy
-    tss_desc->accessed = 1;
-
+    tss_desc->type = 0b1001;
+    // tss_desc->code = 1;
+    // tss_desc->conform_expand = 0;
+    // tss_desc->read_write = 0; // busy
+    // tss_desc->accessed = 1;
     load_tss(&SELECTOR_KERNEL_TSS);
 }
 
