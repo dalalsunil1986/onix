@@ -82,6 +82,23 @@ bool queue_remove(Node *node)
     node->next->prev = node->prev;
 }
 
+Node *queue_traversal(Queue *queue, traversal visit, int arg)
+{
+    if (queue_empty(queue))
+        return NULL;
+
+    Node *node = queue->head.next;
+    while (node != &queue->tail)
+    {
+        if (visit(node, arg))
+        {
+            return node;
+        }
+        node = node->next;
+    }
+    return NULL;
+}
+
 void test_queue()
 {
     Queue q;

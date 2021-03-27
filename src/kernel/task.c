@@ -8,6 +8,7 @@
 #include <onix/string.h>
 #include <onix/queue.h>
 #include <onix/kernel/ioqueue.h>
+#include <onix/kernel/harddisk.h>
 
 // #define DEBUGINFO
 
@@ -146,6 +147,8 @@ void task_yield()
 
 void init_kernel_task()
 {
+    clear();
+    init_harddisk();
     u32 counter = 0;
     while (true)
     {

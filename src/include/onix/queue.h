@@ -19,6 +19,8 @@ typedef struct Queue
     u32 size;
 } Queue;
 
+typedef bool(traversal)(Node *, int arg);
+
 void queue_init(Queue *queue);
 bool queue_find(Queue *queue, Node *node);
 bool queue_remove(Node *node);
@@ -27,6 +29,7 @@ void queue_pushback(Queue *queue, Node *node);
 Node *queue_pop(Queue *queue);
 Node *queue_popback(Queue *queue);
 bool queue_empty(Queue *queue);
+Node *queue_traversal(Queue *queue, traversal visit, int arg);
 
 void test_queue();
 

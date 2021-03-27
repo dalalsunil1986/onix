@@ -24,8 +24,8 @@ extern void set_cursor(int pos);
 void clear();
 void put_char(char ch);
 void show_char(char ch, int x, int y);
-
 extern int vsprintf(char *buf, const char *fmt, va_list args);
+extern int sprintf(char *buf, const char *fmt, ...);
 int printk(const char *fmt, ...);
 
 #endif

@@ -129,7 +129,6 @@ void init_interrupt()
     init_handler();
     init_clock();
     init_keyboard();
-    init_harddisk();
     test_interrupt();
     printk("Initializing interrupt finished...\n");
 }

@@ -8,7 +8,14 @@
 		"files.associations": {
 			"ioqueue.h": "c",
 			"assert.h": "c",
-			"interrupt.h": "c"
+			"interrupt.h": "c",
+			"harddisk.h": "c",
+			"queue.h": "c",
+			"stdlib.h": "c",
+			"mutex.h": "c",
+			"io.h": "c",
+			"clock.h": "c",
+			"functional": "c"
 		}
 	}
 }

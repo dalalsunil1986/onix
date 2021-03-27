@@ -6,6 +6,9 @@ refer to https://wiki.osdev.org/PCI_IDE_Controller#Parallel.2FSerial_ATA.2FATAPI
 */
 
 #include <onix/types.h>
+#include <onix/queue.h>
+#include <onix/bitmap.h>
+#include <onix/kernel/mutex.h>
 
 #define ATA_SR_BSY 0x80  // Busy
 #define ATA_SR_DRDY 0x40 // Drive ready
@@ -39,30 +42,90 @@ refer to https://wiki.osdev.org/PCI_IDE_Controller#Parallel.2FSerial_ATA.2FATAPI
 #define ATA_CMD_IDENTIFY_PACKET 0xA1
 #define ATA_CMD_IDENTIFY 0xEC
 
-#define IDE_ATA 0x00
-#define IDE_ATAPI 0x01
+#define ATA_REG_DATA(channel) (channel->bus + 0)
+#define ATA_REG_FEATURES(channel) (channel->bus + 1)
+#define ATA_REG_ERROR(channel) ATA_REG_FEATURES(channel)
+#define ATA_REG_NSECTOR(channel) (channel->bus + 2)
+#define ATA_REG_LBA_LOW(channel) (channel->bus + 3)
+#define ATA_REG_LBA_MID(channel) (channel->bus + 4)
+#define ATA_REG_LBA_HIGH(channel) (channel->bus + 5)
+#define ATA_REG_DEVICE(channel) (channel->bus + 6)
+#define ATA_REG_STATUS(channel) (channel->bus + 7)
+#define ATA_REG_CMD(channel) (ATA_REG_STATUS(channel))
+#define ATA_REG_DCR(channel) (channel->bus + 0x206) /* device control register */
+#define ATA_REG_CTL(channel) (ATA_REG_ALT(channel))
 
-#define ATA_MASTER 0x00
-#define ATA_SLAVE 0x01
+#define ATA_BUS_PRIMARY 0x1F0
+#define ATA_BUS_SECONDARY 0x170
 
-#define ATA_REG_DATA 0x00
-#define ATA_REG_ERROR 0x01
-#define ATA_REG_FEATURES 0x01
-#define ATA_REG_SECCOUNT0 0x02
-#define ATA_REG_LBA0 0x03
-#define ATA_REG_LBA1 0x04
-#define ATA_REG_LBA2 0x05
-#define ATA_REG_HDDEVSEL 0x06
-#define ATA_REG_COMMAND 0x07
-#define ATA_REG_STATUS 0x07
-#define ATA_REG_SECCOUNT1 0x08
-#define ATA_REG_LBA3 0x09
-#define ATA_REG_LBA4 0x0A
-#define ATA_REG_LBA5 0x0B
-#define ATA_REG_CONTROL 0x0C
-#define ATA_REG_ALTSTATUS 0x0C
-#define ATA_REG_DEVADDRESS 0x0D
+#define ATA_DRIVE_MASTER 0xA0
+#define ATA_DRIVE_SLAVE 0xB0
 
+#define BIT_DEV_MBS 0xA0
+#define BIT_DEV_LBA 0x40
+#define BIT_DEV_DEV 0x10
+
+#define MAX_LBA ((16 * 1024 * 1024 / 512) - 1)
+
+#define SECTOR_SIZE 512
+
+typedef struct Partition
+{
+    u32 start_lba;
+    u32 sec_cnt;
+    struct Harddisk *disk;
+    Node node;
+    char name[8];
+    struct SuperBlock *super_block;
+    Bitmap block_bitmap;
+    Bitmap inode_bitmap;
+    Queue open_inodes;
+
+} Partition;
+
+typedef struct Harddisk
+{
+    char name[8];
+    struct IDEChannel *channel;
+    u8 dev_no;
+    struct Partition primary_parts[4];
+    struct Partition logical_parts[4];
+} Harddisk;
+
+typedef struct IDEChannel
+{
+    char name[8];
+    u16 bus;
+    u8 irq_no;
+    Lock lock;
+    bool waiting;
+    Semaphore done;
+    Harddisk devices[2];
+} IDEChannel;
+
+typedef struct PartitionTableEntry
+{
+    u8 bootable;
+    u8 start_head;
+    u8 start_sec;
+    u8 start_chs;
+    u8 fs_type;
+    u8 end_head;
+    u8 end_sec;
+    u8 end_chs;
+    u32 start_lba;
+    u32 sec_cnt
+} _packed PartitionTableEntry;
+
+typedef struct BootSector
+{
+    u8 other[446];
+    PartitionTableEntry entry[4];
+    u16 signature;
+} _packed BootSector;
+
+extern u8 channel_count;
+extern IDEChannel channels[];
 void init_harddisk();
 
 void harddisk_handler(int vector);

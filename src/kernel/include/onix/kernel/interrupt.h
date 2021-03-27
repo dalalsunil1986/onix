@@ -122,6 +122,7 @@ http://www.brokenthorn.com/Resources/OSDevPic.html
 #define IRQ_MOUSE 12
 #define IRQ_MATH 13
 #define IRQ_HARDDISK 14
+#define IRQ_HARDDISK2 15
 
 #define PIC_EOI 0X20 /* End-of-interrupt command code */
 

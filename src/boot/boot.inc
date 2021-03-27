@@ -176,4 +176,8 @@ read_disk:
 %endif
 %endmacro
 
+%macro BMB 0
+xchg bx, bx
+%endmacro
+
 %endif

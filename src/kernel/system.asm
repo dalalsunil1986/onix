@@ -68,6 +68,16 @@ outb:
     nop; a little delay
     ret
 
+global outsw
+outsw:
+    mov edx, [esp + 4]; port
+    mov esi, [esp + 8]; addr
+    mov ecx, [esp + 12]; size
+    cld
+    rep outsw
+    ret
+
+
 global inb
 inb:
     mov edx, [esp + 4]; port
@@ -76,6 +86,16 @@ inb:
     nop;
     nop; a little delay
     ret
+
+global insw
+insw:
+    mov edx, [esp + 4]; port
+    mov edi, [esp + 8]; addr
+    mov ecx, [esp + 12]; size
+    cld
+    rep insw
+    ret
+
 
 ; memory management
 
@@ -94,7 +114,8 @@ halt:
 
 global pause
 pause:
+    ; BMB;
     sti
     hlt
-    cli
+    ; BMB;
     ret

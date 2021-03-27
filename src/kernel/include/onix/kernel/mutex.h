@@ -18,6 +18,10 @@ typedef struct Lock
     u32 repeat;
 } Lock;
 
+void sema_init(Semaphore *sema, u8 value);
+void sema_down(Semaphore *sema);
+void sema_up(Semaphore *sema);
+
 void lock_init(Lock *lock);
 void acquire(Lock *lock);
 void release(Lock *lock);
