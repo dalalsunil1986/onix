@@ -4,6 +4,7 @@
 #include <onix/kernel/assert.h>
 #include <onix/kernel/clock.h>
 #include <onix/kernel/keyboard.h>
+#include <onix/kernel/harddisk.h>
 #include <onix/kernel/debug.h>
 
 #define DEBUGINFO
@@ -34,8 +35,8 @@ static void init_pic()
     outb(PIC_S_DATA, 2);                     // ICW3: 设置从片连接到主片的IR2引脚
     outb(PIC_S_DATA, ICW4_8086);             // ICW4: 8086模式, 正常EOI
 
-    outb(PIC_M_DATA, 0b11111100);
-    outb(PIC_S_DATA, 0b11111111);
+    // outb(PIC_M_DATA, 0b11111100);
+    // outb(PIC_S_DATA, 0b11111111);
 }
 
 static void init_idt()
@@ -128,6 +129,7 @@ void init_interrupt()
     init_handler();
     init_clock();
     init_keyboard();
+    init_harddisk();
     test_interrupt();
     printk("Initializing interrupt finished...\n");
 }
@@ -151,4 +153,21 @@ void set_interrupt_status(bool status)
         return;
     eflag = (eflag & ~EFLAGS_IF) | (eflag ^ EFLAGS_IF);
     set_eflags(eflag);
+}
+
+void enable_irq(u32 irq)
+{
+    DEBUGP("enable irq %d\n", irq);
+    if (irq < 8)
+        outb(PIC_M_DATA, inb(PIC_M_DATA) & ~(1 << irq));
+    else
+        outb(PIC_S_DATA, inb(PIC_S_DATA) & ~(1 << irq));
+}
+
+void disable_irq(u32 irq)
+{
+    if (irq < 8)
+        outb(PIC_M_DATA, inb(PIC_M_DATA) | (1 << irq));
+    else
+        outb(PIC_S_DATA, inb(PIC_S_DATA) | (1 << irq));
 }

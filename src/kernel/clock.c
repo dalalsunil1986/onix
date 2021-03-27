@@ -52,4 +52,5 @@ void clock_handler(int vector)
 void init_clock()
 {
     register_handler(IRQ_CLOCK, clock_handler);
+    enable_irq(IRQ_CLOCK);
 }

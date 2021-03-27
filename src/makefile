@@ -82,6 +82,9 @@ $(BUILD)/clock.o: $(KERNEL)/clock.c
 $(BUILD)/keyboard.o: $(KERNEL)/keyboard.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/harddisk.o: $(KERNEL)/harddisk.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/bitmap.o: $(KERNEL)/bitmap.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -120,6 +123,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/arena.o \
 	$(BUILD)/clock.o \
 	$(BUILD)/keyboard.o \
+	$(BUILD)/harddisk.o \
 	$(BUILD)/task.o \
 	$(BUILD)/queue.o \
 	$(BUILD)/ioqueue.o \

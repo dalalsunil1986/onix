@@ -173,4 +173,5 @@ void init_keyboard()
 {
     ioqueue_init(&key_ioq);
     register_handler(IRQ_KEYBOARD, keyboard_handler);
+    enable_irq(IRQ_KEYBOARD);
 }
