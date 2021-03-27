@@ -28,12 +28,29 @@ extern void restart(Task *init);
 extern void switch_to(Task *current, Task *next);
 void idle_task();
 
+static Task *idle;
+
+void push_task(Task *task)
+{
+    queue_push(&tasks_queue, &task->queue_node);
+}
+
 Task *pop_ready_task()
 {
+    if (queue_empty(&tasks_ready))
+    {
+        task_unblock(idle);
+    }
+
     assert(!queue_empty(&tasks_ready));
     Task *task = element_entry(Task, node, queue_popback(&tasks_ready));
     assert(task->magic == TASK_MAGIC);
     return task;
+}
+
+void push_ready_task(Task *task)
+{
+    queue_push(&tasks_ready, &task->node);
 }
 
 void kernel_task(Tasktarget target, void *args)
@@ -82,11 +99,11 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
     task->status = TASK_READY;
 
     assert(!queue_find(&tasks_queue, &task->queue_node));
-    queue_push(&tasks_queue, &task->queue_node);
+    push_task(task);
 
     assert(task->magic == TASK_MAGIC);
     assert(!queue_find(&tasks_ready, &task->node));
-    queue_push(&tasks_ready, &task->node);
+    push_ready_task(task);
 
     DEBUGP("Task create 0x%X stack top 0x%X target 0x%08x\n", (u32)task, (u32)task->stack, kernel_task);
     return task;
@@ -108,8 +125,22 @@ void task_unblock(Task *task)
     bool old = disable_int();
     assert(task->status == TASK_BLOCKED);
     task->status = TASK_READY;
+    push_ready_task(task);
     schedule();
+    set_interrupt_status(old);
+}
 
+void task_yield()
+{
+    Task *task = running_task();
+
+    // DEBUGP("yield task 0x%X\n", task);
+
+    bool old = disable_int();
+    assert(!queue_find(&tasks_ready, &task->node));
+    task->status = TASK_READY;
+    push_ready_task(task);
+    schedule();
     set_interrupt_status(old);
 }
 
@@ -149,8 +180,8 @@ void idle_task()
             ch = 'D';
         }
         show_char(ch, 75, 0);
+        task_block(task);
         pause();
-        schedule();
     }
 }
 
@@ -175,7 +206,7 @@ static void make_init_task()
     assert(task->magic == TASK_MAGIC);
 
     assert(!queue_find(&tasks_queue, &task->queue_node));
-    queue_push(&tasks_queue, &task->queue_node);
+    push_task(task);
     DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n", (u32)task, (u32)task->stack, init_kernel_task);
 }
 
@@ -189,7 +220,7 @@ void schedule()
     if (cur->status == TASK_RUNNING)
     {
         assert(!queue_find(&tasks_ready, &cur->node));
-        queue_push(&tasks_ready, &cur->node);
+        push_ready_task(cur);
         cur->status = TASK_READY;
     }
 
@@ -227,6 +258,6 @@ void init_task()
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
     make_init_task();
-    task_start(idle_task, NULL, "idle task", 1);
+    idle = task_start(idle_task, NULL, "idle task", 1);
     task_start(keyboard_task, NULL, "key task", 16);
 }

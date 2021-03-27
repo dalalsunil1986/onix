@@ -86,5 +86,6 @@ Task *running_task();
 Task *task_start(Tasktarget target, void *args, const char *name, int priority);
 void task_block(Task *task);
 void task_unblock(Task *task);
+void task_yield();
 
 #endif
