@@ -112,15 +112,16 @@ http://www.brokenthorn.com/Resources/OSDevPic.html
 #define IRQ_CASCADE 2  // 8259 从片控制器
 #define IRQ_SERIAL_2 3
 #define IRQ_SERIAL_1 4
-#define IRQ_HARD_DISK_2 5
+#define IRQ_PARALLEL_2 5
 
 #define IRQ_FLOPPY 6 // 软盘控制器
 #define IRQ_PARALLEL_1 7
 #define IRQ_RTC 8
+#define IRQ_REDIRECT 9
 
 #define IRQ_MOUSE 12
 #define IRQ_MATH 13
-#define IRQ_HARD_DISK_1 14
+#define IRQ_HARDDISK 14
 
 #define PIC_EOI 0X20 /* End-of-interrupt command code */
 
