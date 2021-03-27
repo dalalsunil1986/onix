@@ -61,8 +61,8 @@ void *malloc(size_t size)
     if (size > 1024)
     {
         size += sizeof(Arena);
-        size = round_up(size, PG_SIZE);
-        u32 page_count = size / PG_SIZE;
+        u32 page_count = round_up(size, PG_SIZE);
+        size = page_count * PG_SIZE;
         DEBUGP("get page size %d page count %d\n", size, page_count);
         arena = page_alloc(USER_KERNEL, page_count);
         memset(arena, 0, size);
