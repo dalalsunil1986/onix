@@ -89,11 +89,20 @@ void task_init(Task *task, char *name, int priority)
     task->stack = (u32)task + PG_SIZE;
     task->pde = NULL;
     task->magic = TASK_MAGIC;
+    task->user = 0;
+
+    Task *cur = running_task();
+    if (task != cur)
+    {
+        task->vaddr.mmap.bits = cur->vaddr.mmap.bits;
+        task->vaddr.mmap.length = cur->vaddr.mmap.length;
+        task->pde = cur->pde;
+    }
 }
 
 Task *task_start(Tasktarget target, void *args, const char *name, int priority)
 {
-    Task *task = page_alloc(USER_KERNEL, 1);
+    Task *task = page_alloc(1);
     DEBUGP("Start task 0x%X\n", (u32)task);
     task_init(task, name, priority);
     task_create(task, target, args);
@@ -106,7 +115,7 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
     assert(!queue_find(&tasks_ready, &task->node));
     push_ready_task(task);
 
-    DEBUGP("Task create 0x%X stack top 0x%X target 0x%08x\n", (u32)task, (u32)task->stack, kernel_task);
+    DEBUGP("Task create %s 0x%X stack top 0x%X target 0x%08x\n", name, (u32)task, (u32)task->stack, kernel_task);
     return task;
 }
 
@@ -218,7 +227,6 @@ void make_setup_task()
     Task *task = running_task();
     task_init(task, "init task", 50);
     task_create(task, NULL, NULL);
-
 
     task->status = TASK_RUNNING;
     assert(task->magic == TASK_MAGIC);

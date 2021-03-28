@@ -1,6 +1,15 @@
 #include <onix/kernel/mutex.h>
 #include <onix/kernel/interrupt.h>
 #include <onix/kernel/assert.h>
+#include <onix/kernel/debug.h>
+
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 void sema_init(Semaphore *sema, u8 value)
 {
@@ -52,7 +61,9 @@ void acquire(Lock *lock)
 {
     if (lock->holder != running_task())
     {
+        // DEBUGP("holder 0x%08X task 0x%08X\n", lock->holder, running_task());
         sema_down(&lock->sema);
+        // DEBUGP("holder 0x%08X task 0x%08X reapeat %d\n", lock->holder, running_task(), lock->repeat);
         lock->holder = running_task();
         assert(lock->repeat == 0);
         lock->repeat = 1;
@@ -72,7 +83,7 @@ void release(Lock *lock)
         return;
     }
     assert(lock->repeat == 1);
-    lock->holder == NULL;
-    lock->repeat == 0;
+    lock->holder = NULL;
+    lock->repeat = 0;
     sema_up(&lock->sema);
 }

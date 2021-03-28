@@ -15,6 +15,7 @@
 #define PG_BASE 0x100
 #define BASE_ADDR_LIMIT 0x100000
 #define KERNEL_ADDR_MASK 0xC0000000
+#define USER_VADDR_START 0x8048000
 #define KERNEL_PDE_MASK 0xFFC00000
 #define KERNEL_MMAP_ADDR 0xC00003000
 #define PREPARE_PMAP_ADDR 0xC00004000
@@ -33,6 +34,12 @@ static const u32 ARDS_TYPE_RESERVED = 2;
 
 typedef u32 *PageTable;
 typedef void *Page;
+
+typedef struct Vaddr
+{
+    u32 start;
+    Bitmap mmap;
+} Vaddr;
 
 typedef struct ARDS
 {
@@ -65,8 +72,8 @@ extern u32 ards_count;
 extern ARDS ards_table[ARDS_SIZE];
 extern u32 free_pages;
 
-extern Page page_alloc(u32 user, u32 size);
-extern void page_free(u32 user, Page page, u32 size);
+extern Page page_alloc(u32 size);
+extern void page_free(Page page, u32 size);
 
 u32 get_paddr(u32 vaddr);
 

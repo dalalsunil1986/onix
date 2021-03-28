@@ -260,6 +260,7 @@ static void partition_scan(Harddisk *disk, u32 ext_lba)
     // BMB;
 
     DEBUGP("part scan start \n");
+
     BootSector *bs = malloc(sizeof(BootSector));
 
     DEBUGP("part scan memory alloc 0x%08X\n", bs);

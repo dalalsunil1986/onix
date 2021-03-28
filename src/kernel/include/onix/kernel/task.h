@@ -75,6 +75,8 @@ typedef struct Task
     u8 priority;
     u32 ticks;
     char name[32];
+    u8 user; // 0 表示内核，其他表示用户
+    Vaddr vaddr;
     PageTable pde;
     u32 magic;
 } Task;

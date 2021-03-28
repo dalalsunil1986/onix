@@ -16,7 +16,21 @@
 			"io.h": "c",
 			"clock.h": "c",
 			"functional": "c",
-			"task.h": "c"
+			"task.h": "c",
+			"string.h": "c",
+			"array": "c",
+			"string_view": "c",
+			"initializer_list": "c",
+			"ranges": "c",
+			"utility": "c",
+			"valarray": "c",
+			"memory.h": "c",
+			"condition_variable": "c",
+			"*.tcc": "c",
+			"fstream": "c",
+			"mutex": "c",
+			"ostream": "c",
+			"stop_token": "c"
 		}
 	}
 }
