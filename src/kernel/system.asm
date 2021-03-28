@@ -77,6 +77,15 @@ outsw:
     rep outsw
     ret
 
+global outsd
+outsd:
+    mov edx, [esp + 4]; port
+    mov esi, [esp + 8]; addr
+    mov ecx, [esp + 12]; size
+    cld
+    rep outsd
+    ret
+
 
 global inb
 inb:
@@ -96,6 +105,14 @@ insw:
     rep insw
     ret
 
+global insd
+insd:
+    mov edx, [esp + 4]; port
+    mov edi, [esp + 8]; addr
+    mov ecx, [esp + 12]; size
+    cld
+    rep insd
+    ret
 
 ; memory management
 

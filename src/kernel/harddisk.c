@@ -86,13 +86,13 @@ void read_sectors(Harddisk *disk, void *buf, u8 sec_cnt)
 {
     // 由于 sec_cnt 是 8 位，实际不可能读 0 个扇区，于是用于表示 256；
     u32 size = ((sec_cnt) ? sec_cnt : 256) * SECTOR_SIZE;
-    insw(ATA_REG_DATA(disk->channel), buf, size / 2);
+    insd(ATA_REG_DATA(disk->channel), buf, size / 4);
 }
 
 void write_sectors(Harddisk *disk, void *buf, u8 sec_cnt)
 {
     u32 size = ((sec_cnt) ? sec_cnt : 256) * SECTOR_SIZE;
-    outsw(ATA_REG_DATA(disk->channel), buf, size / 2);
+    outsd(ATA_REG_DATA(disk->channel), buf, size / 4);
 }
 
 bool harddisk_busy_wait(Harddisk *disk)
