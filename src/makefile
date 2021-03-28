@@ -28,7 +28,7 @@ TESTS_CFLAG = -I $(INCLUDE) -m32 -Wall $(DEBUG_FLAGS)
 
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 
-.PHONY: clean image unlock win
+.PHONY: clean image unlock win fdisk
 
 kernel: $(BUILD)/kernel.bin
 	# ps -ef | grep bochsrc-gdb | grep -v grep | awk '{print $$2}' | xargs -r kill -9
@@ -151,6 +151,8 @@ ifeq ("$(wildcard $(BUILD)/slave.img)", "")
 	bximage -q -hd=16 -mode=create -sectsize=512 -imgmode=flat $@
 endif
 
+fdisk: $(BUILD)/slave.img
+	fdisk $<
 
 bochs: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	@rm -rf $(BUILD)/harddisk.img.lock
