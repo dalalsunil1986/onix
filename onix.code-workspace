@@ -15,7 +15,8 @@
 			"mutex.h": "c",
 			"io.h": "c",
 			"clock.h": "c",
-			"functional": "c"
+			"functional": "c",
+			"task.h": "c"
 		}
 	}
 }

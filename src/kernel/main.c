@@ -22,6 +22,7 @@ void __init_kernel()
 {
     // BMB;
     init_gdt();
+    make_setup_task();
     init_memory();
     init_arena();
     init_interrupt();

@@ -82,6 +82,7 @@ typedef struct Task
 void init_task();
 void schedule();
 
+void make_setup_task();
 Task *running_task();
 Task *task_start(Tasktarget target, void *args, const char *name, int priority);
 void task_block(Task *task);
