@@ -219,12 +219,6 @@ void make_setup_task()
     task_init(task, "init task", 50);
     task_create(task, NULL, NULL);
 
-    ThreadFrame *frame = (ThreadFrame *)task->stack;
-    frame->ebp = 0x1111; // 这里的值不重要，用于调试定位栈顶信息
-    frame->ebx = 0x2222;
-    frame->edi = 0x3333;
-    frame->esi = 0x4444;
-    frame->addr = 0x5555;
 
     task->status = TASK_RUNNING;
     assert(task->magic == TASK_MAGIC);
