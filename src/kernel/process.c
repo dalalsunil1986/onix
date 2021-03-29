@@ -30,7 +30,7 @@ void init_tss()
     tss.ss0 = *(u32 *)&SELECTOR_KERNEL_DATA;
     tss.iobase = sizeof(tss);
 
-    Descriptor *tss_desc = gdt + SELECT_KERNEL_TSS_INDEX;
+    Descriptor *tss_desc = gdt + SELECTOR_KERNEL_TSS_INDEX;
     init_descriptor(tss_desc, get_paddr(&tss), sizeof(tss) - 1);
     tss_desc->granularity = 0;
     tss_desc->big = 0;

@@ -28,7 +28,7 @@ void init_gdt()
     gdt_ptr.base = (u32)&gdt;
     gdt_ptr.limit = sizeof(Pointer) * GDT_SIZE - 1;
 
-    Descriptor *desc = gdt + SELECT_USER_CODE_INDEX;
+    Descriptor *desc = gdt + SELECTOR_USER_CODE_INDEX;
     init_descriptor(desc, 0, 0XFFFFF);
     desc->granularity = 1;
     desc->big = 0;
@@ -37,7 +37,7 @@ void init_gdt()
     desc->DPL = PL3;
     desc->type = 0b1010;
 
-    desc = gdt + SELECT_USER_DATA_INDEX;
+    desc = gdt + SELECTOR_USER_DATA_INDEX;
     init_descriptor(desc, 0, 0XFFFFF);
     desc->granularity = 1;
     desc->big = 0;

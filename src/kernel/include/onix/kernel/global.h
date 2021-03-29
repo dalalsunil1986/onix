@@ -55,19 +55,20 @@ typedef struct Pointer
 extern Pointer gdt_ptr;
 extern Descriptor gdt[GDT_SIZE];
 
-static const int SELECT_KERNEL_CODE_INDEX = 1;
-static const int SELECT_KERNEL_DATA_INDEX = 2;
-static const int SELECT_KERNEL_VIDEO_INDEX = 3;
-static const int SELECT_KERNEL_TSS_INDEX = 4;
-static const int SELECT_USER_CODE_INDEX = 5;
-static const int SELECT_USER_DATA_INDEX = 6;
+static const int SELECTOR_KERNEL_CODE_INDEX = 1;
+static const int SELECTOR_KERNEL_DATA_INDEX = 2;
+static const int SELECTOR_KERNEL_VIDEO_INDEX = 3;
+static const int SELECTOR_KERNEL_TSS_INDEX = 4;
+static const int SELECTOR_USER_CODE_INDEX = 5;
+static const int SELECTOR_USER_DATA_INDEX = 6;
 
-static const Selector SELECTOR_KERNEL_CODE = {PL0, TI_GDT, SELECT_KERNEL_CODE_INDEX};
-static const Selector SELECTOR_KERNEL_DATA = {PL0, TI_GDT, SELECT_KERNEL_DATA_INDEX};
-static const Selector SELECTOR_KERNEL_VIDEO = {PL0, TI_GDT, SELECT_KERNEL_VIDEO_INDEX};
-static const Selector SELECTOR_KERNEL_TSS = {PL0, TI_GDT, SELECT_KERNEL_TSS_INDEX};
-static const Selector SELECTOR_USER_CODE = {PL3, TI_GDT, SELECT_KERNEL_CODE_INDEX};
-static const Selector SELECTOR_USER_DATA = {PL3, TI_GDT, SELECT_KERNEL_DATA_INDEX};
+static const int SELECTOR_KERNEL_CODE = (SELECTOR_KERNEL_CODE_INDEX << 3 | TI_GDT | PL0);
+static const int SELECTOR_KERNEL_DATA = (SELECTOR_KERNEL_DATA_INDEX << 3 | TI_GDT | PL0);
+static const int SELECTOR_KERNEL_VIDEO = (SELECTOR_KERNEL_VIDEO_INDEX << 3 | TI_GDT | PL0);
+static const int SELECTOR_KERNEL_TSS = (SELECTOR_KERNEL_TSS_INDEX << 3 | TI_GDT | PL0);
+
+static const int SELECTOR_USER_CODE = (SELECTOR_USER_CODE_INDEX << 3 | TI_GDT | PL3);
+static const int SELECTOR_USER_DATA = (SELECTOR_USER_DATA_INDEX << 3 | TI_GDT | PL3);
 
 extern void load_gdt(Pointer *gdt_ptr);
 extern void load_idt(Pointer *idt_ptr);
