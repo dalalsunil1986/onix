@@ -116,13 +116,13 @@ insd:
 
 ; memory management
 
-global get_pde:
-get_pde:
+global get_cr3:
+get_cr3:
     mov eax, cr3
     ret
 
-global set_pde
-set_pde:
+global set_cr3
+set_cr3:
     mov eax, [esp + 4];
     mov cr3, eax
     ret

@@ -30,8 +30,6 @@ Lock memory_lock;
 Bitmap pmap;
 Bitmap mmap;
 
-extern PageTable get_pde();
-
 #define DIDX(vaddr) (vaddr >> 22)
 #define TIDX(vaddr) (vaddr >> 12 & 0b1111111111)
 
@@ -86,6 +84,11 @@ static u32 scan_physical_page(u32 size)
     u32 page = scan_page(&pmap, size);
     free_pages -= size;
     return page + (base_physical_pages * PG_SIZE);
+}
+
+static PageTable get_pde()
+{
+    return (u32 *)(0xfffff000);
 }
 
 static PageTable get_pte(u32 vaddr)
@@ -234,7 +237,7 @@ static void init_kernel_mmap()
     DEBUGP("init kernel mmap\n");
 
     Task *task = running_task();
-    task->pde = get_pde();
+    task->pde = get_cr3();
 
     pmap.bits = (u8 *)PREPARE_PMAP_ADDR;
     pmap.length = PG_SIZE;

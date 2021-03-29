@@ -19,7 +19,7 @@
 
 static TSS tss;
 
-extern void set_pde(u32 addr);
+extern void set_cr3(u32 addr);
 extern void create_user_mmap(Task *task);
 extern void interrupt_exit(TaskFrame *frame);
 
@@ -84,7 +84,7 @@ void task_pde_activate(Task *task)
 {
     assert(task->pde != NULL);
     // DEBUGP("task activate 0x%08X pde 0x%08X\n", task, task->pde);
-    set_pde(task->pde);
+    set_cr3(task->pde);
 }
 
 void process_activate(Task *task)
