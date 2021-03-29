@@ -63,7 +63,7 @@ static ARDS *get_valid_ards()
     return ards;
 }
 
-static u32 scan_page(Bitmap *map, u32 size)
+static u32 scan_bitmap_page(Bitmap *map, u32 size)
 {
     assert(size > 0 && size < map->length * 8);
     int start = bitmap_scan(map, size);
@@ -81,7 +81,7 @@ static u32 scan_page(Bitmap *map, u32 size)
 
 static u32 scan_physical_page(u32 size)
 {
-    u32 page = scan_page(&pmap, size);
+    u32 page = scan_bitmap_page(&pmap, size);
     free_pages -= size;
     return page + (base_physical_pages * PG_SIZE);
 }
@@ -174,26 +174,26 @@ static void set_pages(u32 vstart, u32 pstart, u32 pages)
     }
 }
 
-static u32 scan_task_page(Task *task, u32 size)
+static u32 scan_page(Task *task, u32 size)
 {
     Bitmap *mmap = &task->vaddr.mmap;
     u32 start = task->vaddr.start;
-    u32 vstart = scan_page(mmap, size) + start;
+    u32 vstart = scan_bitmap_page(mmap, size) + start;
     DEBUGP("Scan task page mmap 0x%08X bits 0x%08X start 0x%08X\n", mmap, mmap->bits, start);
     return vstart;
 }
 
-static u32 scan_kernel_page(u32 size)
+static u32 scan_task_page(u32 size)
 {
     Task *task = running_task();
     assert(task->user == 0);
     u32 pstart = scan_physical_page(size);
-    u32 vstart = scan_task_page(task, size);
+    u32 vstart = scan_page(task, size);
     set_pages(vstart, pstart, size);
     return vstart;
 }
 
-static void free_kernel_page(Page vaddr, u32 size)
+static void free_task_page(Page vaddr, u32 size)
 {
     Task *task = running_task();
     Bitmap *mmap = &task->vaddr.mmap;
@@ -252,7 +252,7 @@ static void init_kernel_mmap()
     u32 length = available_pages / 8;
     u32 pages = round_up(length, PG_SIZE) * 2; // 用于表示物理内存的位图的页数和内核虚拟地址的页数
     u32 pstart = scan_physical_page(pages);
-    u32 vstart = scan_page(&mmap, pages) + KERNEL_BASE_PAGE;
+    u32 vstart = scan_bitmap_page(&mmap, pages) + KERNEL_BASE_PAGE;
 
     DEBUGP("pmap pages %d \n", pages);
     DEBUGP("vaddr 0x%08X paddr 0x%08X pages %d \n", vstart, pstart, pages);
@@ -287,7 +287,7 @@ Page page_alloc(u32 size)
 {
     assert(size > 0 && size < available_pages);
     acquire(&memory_lock);
-    u32 addr = scan_kernel_page(size);
+    u32 addr = scan_task_page(size);
     DEBUGP("Available memory 0x%08X \n", free_pages);
     release(&memory_lock);
     return addr;
@@ -296,7 +296,7 @@ Page page_alloc(u32 size)
 void page_free(Page vaddr, u32 size)
 {
     acquire(&memory_lock);
-    free_kernel_page(vaddr, size);
+    free_task_page(vaddr, size);
     release(&memory_lock);
 }
 
