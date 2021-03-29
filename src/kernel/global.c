@@ -30,8 +30,9 @@ void init_gdt()
 
     Descriptor *desc = gdt + SELECTOR_USER_CODE_INDEX;
     init_descriptor(desc, 0, 0XFFFFF);
+    desc->segment = 1;
     desc->granularity = 1;
-    desc->big = 0;
+    desc->big = 1;
     desc->long_mode = 0;
     desc->present = 1;
     desc->DPL = PL3;
@@ -39,8 +40,9 @@ void init_gdt()
 
     desc = gdt + SELECTOR_USER_DATA_INDEX;
     init_descriptor(desc, 0, 0XFFFFF);
+    desc->segment = 1;
     desc->granularity = 1;
-    desc->big = 0;
+    desc->big = 1;
     desc->long_mode = 0;
     desc->present = 1;
     desc->DPL = PL3;

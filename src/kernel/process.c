@@ -141,7 +141,7 @@ void test_processa()
     while (true)
     {
         DEBUGP("test process a .....\n");
-        sleep(1000);
+        sleep(100);
     }
 }
 

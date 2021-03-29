@@ -127,6 +127,7 @@ static void set_page(u32 vaddr, u32 paddr)
     DEBUGP("set page pte 0x%05X vaddr 0x%05X paddr 0x%05X idx 0x%05X \n", pte, vaddr, paddr, TIDX(paddr));
     mentry->present = 1;
     mentry->write = 1;
+    mentry->user = 1;
     mentry->index = paddr >> 12;
     u32 idx = TIDX(vaddr);
     DEBUGP("get map page 0x%08X store 0x%08X pidx 0x%X\n", pte, store, idx);
