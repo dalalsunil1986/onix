@@ -61,11 +61,11 @@ void process_start(Tasktarget target)
     frame->eax = 0;
 
     frame->gs = 0;
-    frame->ds = *(u32 *)&SELECTOR_KERNEL_DATA;
-    frame->es = *(u32 *)&SELECTOR_KERNEL_DATA;
-    frame->fs = *(u32 *)&SELECTOR_KERNEL_DATA;
-    frame->ss = *(u32 *)&SELECTOR_KERNEL_DATA;
-    frame->cs = *(u32 *)&SELECTOR_KERNEL_CODE;
+    frame->ds = SELECTOR_USER_DATA;
+    frame->es = SELECTOR_USER_DATA;
+    frame->fs = SELECTOR_USER_DATA;
+    frame->ss = SELECTOR_USER_DATA;
+    frame->cs = SELECTOR_USER_CODE;
     frame->esp = (void *)((u32)page_alloc(1) + PG_SIZE);
     frame->eip = target;
     frame->eflags = (EFLAGS_IOPL0 | EFLAGS_MBS | EFLAGS_IF);
@@ -128,7 +128,7 @@ void process_execute(Tasktarget *target, const char *name)
     // BMB;
     Task *task = page_alloc(1);
     DEBUGP("process execute 0x%08X alloc 0x%08X\n", target, task);
-    task_init(task, name, DEFAULT_PRIORITY, USER_KERNEL); // todo replace with user
+    task_init(task, name, DEFAULT_PRIORITY, USER_USER); // todo replace with user
     create_user_mmap(task);
     task_create(task, process_start, target);
     create_user_pde(task);
@@ -138,10 +138,18 @@ void process_execute(Tasktarget *target, const char *name)
 
 void test_processa()
 {
+    u32 counter = 0;
     while (true)
     {
-        DEBUGP("test process a .....\n");
-        sleep(100);
+        counter++;
+        char ch = ' ';
+        if ((counter % 2) != 0)
+        {
+            ch = 'T';
+        }
+        show_char(ch, 73, 0);
+        // DEBUGP("test process a .....\n");// 此时应该没有 io 权限无法修改 光标会报 gp 异常
+        // sleep(100);
     }
 }
 

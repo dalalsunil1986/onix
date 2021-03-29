@@ -186,7 +186,7 @@ static u32 scan_page(Task *task, u32 size)
 static u32 scan_task_page(u32 size)
 {
     Task *task = running_task();
-    assert(task->user == 0);
+    // assert(task->user == 0);
     u32 pstart = scan_physical_page(size);
     u32 vstart = scan_page(task, size);
     set_pages(vstart, pstart, size);
