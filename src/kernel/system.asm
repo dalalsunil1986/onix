@@ -121,6 +121,12 @@ get_pde:
     mov eax, cr3
     ret
 
+global set_pde
+set_pde:
+    mov eax, [esp + 4];
+    mov cr3, eax
+    ret
+
 ; routine control
 
 global halt

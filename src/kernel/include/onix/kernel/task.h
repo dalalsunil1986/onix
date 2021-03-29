@@ -86,6 +86,10 @@ void schedule();
 
 void make_setup_task();
 Task *running_task();
+void push_task(Task *task);
+void push_ready_task(Task *task);
+void task_init(Task *task, char *name, int priority, int user);
+void task_create(Task *task, Tasktarget target, void *args);
 Task *task_start(Tasktarget target, void *args, const char *name, int priority);
 void task_block(Task *task);
 void task_unblock(Task *task);

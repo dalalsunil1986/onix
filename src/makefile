@@ -109,6 +109,9 @@ $(BUILD)/queue.o: $(KERNEL)/queue.c
 $(BUILD)/ioqueue.o: $(KERNEL)/ioqueue.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/debug.o: $(KERNEL)/debug.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/global.o \
 	$(BUILD)/system.o \
@@ -131,6 +134,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/handler.o \
 	$(BUILD)/schedule.o \
 	$(BUILD)/mutex.o \
+	$(BUILD)/debug.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 

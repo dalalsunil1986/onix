@@ -54,9 +54,9 @@ void *malloc(size_t size)
         return NULL;
     }
 
-    DEBUGP("[%d] arena lock repeat %d\n", __LINE__, arena_lock.repeat);
+    DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
     acquire(&arena_lock);
-    DEBUGP("[%d] arena lock repeat %d\n", __LINE__, arena_lock.repeat);
+    DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
     ArenaDesc *desc = NULL;
     Arena *arena;
     Block *block;
@@ -74,9 +74,9 @@ void *malloc(size_t size)
         arena->count = page_count;
         arena->desc = NULL;
         addr = (void *)(arena + 1);
-        DEBUGP("[%d] arena lock repeat %d\n", __LINE__, arena_lock.repeat);
+        DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
         release(&arena_lock);
-        DEBUGP("[%d] arena lock repeat %d\n", __LINE__, arena_lock.repeat);
+        DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
         return addr;
     }
     else

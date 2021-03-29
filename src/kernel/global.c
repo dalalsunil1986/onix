@@ -27,6 +27,25 @@ void init_gdt()
     memcpy(&gdt, (void *)gdt_ptr.base, gdt_ptr.limit + 1);
     gdt_ptr.base = (u32)&gdt;
     gdt_ptr.limit = sizeof(Pointer) * GDT_SIZE - 1;
+
+    Descriptor *desc = gdt + SELECT_USER_CODE_INDEX;
+    init_descriptor(desc, 0, 0XFFFFF);
+    desc->granularity = 1;
+    desc->big = 0;
+    desc->long_mode = 0;
+    desc->present = 1;
+    desc->DPL = PL3;
+    desc->type = 0b1010;
+
+    desc = gdt + SELECT_USER_DATA_INDEX;
+    init_descriptor(desc, 0, 0XFFFFF);
+    desc->granularity = 1;
+    desc->big = 0;
+    desc->long_mode = 0;
+    desc->present = 1;
+    desc->DPL = PL3;
+    desc->type = 0b0010;
+
     load_gdt(&gdt_ptr);
 }
 

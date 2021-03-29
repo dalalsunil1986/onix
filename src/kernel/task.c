@@ -27,13 +27,18 @@ u32 init_stack_top;
 
 extern void restart(Task *init);
 extern void switch_to(Task *current, Task *next);
+extern void process_activate(Task *next);
+extern void test_process();
+
 void idle_task();
 
 static Task *idle;
 
 void push_task(Task *task)
 {
+    bool old = disable_int();
     queue_push(&tasks_queue, &task->queue_node);
+    set_interrupt_status(old);
 }
 
 Task *pop_ready_task()
@@ -51,7 +56,9 @@ Task *pop_ready_task()
 
 void push_ready_task(Task *task)
 {
+    bool old = disable_int();
     queue_push(&tasks_ready, &task->node);
+    set_interrupt_status(old);
 }
 
 void kernel_task(Tasktarget target, void *args)
@@ -79,7 +86,7 @@ void task_create(Task *task, Tasktarget target, void *args)
     frame->addr = 0x55555555;
 }
 
-void task_init(Task *task, char *name, int priority)
+void task_init(Task *task, char *name, int priority, int user)
 {
     memset(task, 0, sizeof(*task));
     strcpy(task->name, name);
@@ -89,11 +96,12 @@ void task_init(Task *task, char *name, int priority)
     task->stack = (u32)task + PG_SIZE;
     task->pde = NULL;
     task->magic = TASK_MAGIC;
-    task->user = 0;
+    task->user = user;
 
     Task *cur = running_task();
     if (task != cur)
     {
+        task->vaddr.start = cur->vaddr.start;
         task->vaddr.mmap.bits = cur->vaddr.mmap.bits;
         task->vaddr.mmap.length = cur->vaddr.mmap.length;
         task->pde = cur->pde;
@@ -102,9 +110,11 @@ void task_init(Task *task, char *name, int priority)
 
 Task *task_start(Tasktarget target, void *args, const char *name, int priority)
 {
+    Task *cur = running_task();
+    // BMB;
     Task *task = page_alloc(1);
     DEBUGP("Start task 0x%X\n", (u32)task);
-    task_init(task, name, priority);
+    task_init(task, name, priority, cur->user);
     task_create(task, target, args);
     task->status = TASK_READY;
 
@@ -158,6 +168,7 @@ void init_kernel_task()
 {
     clear();
     init_harddisk();
+    test_process();
     u32 counter = 0;
     while (true)
     {
@@ -200,7 +211,7 @@ void idle_task()
 static void make_init_task()
 {
     Task *task = (Task *)TASK_INIT_PAGE;
-    task_init(task, "init task", 50);
+    task_init(task, "init task", 50, USER_KERNEL);
     task_create(task, init_kernel_task, NULL);
 
     ThreadFrame *frame = (ThreadFrame *)task->stack;
@@ -225,7 +236,7 @@ static void make_init_task()
 void make_setup_task()
 {
     Task *task = running_task();
-    task_init(task, "init task", 50);
+    task_init(task, "init task", 50, USER_KERNEL);
     task_create(task, NULL, NULL);
 
     task->status = TASK_RUNNING;
@@ -256,7 +267,9 @@ void schedule()
 
     if (next == cur)
         return;
-
+    DEBUGP("Task schedule 0x%X name %s\n", next, next->name);
+    // BMB;
+    process_activate(next);
     switch_to(cur, next);
 }
 

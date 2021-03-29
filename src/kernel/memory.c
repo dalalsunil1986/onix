@@ -69,7 +69,10 @@ static u32 scan_page(Bitmap *map, u32 size)
 {
     assert(size > 0 && size < map->length * 8);
     int start = bitmap_scan(map, size);
-    assert(start != -1);
+    if (start == -1)
+    {
+        panic("Scan page fail!!!\n");
+    }
     for (size_t i = start; i < start + size; i++)
     {
         bitmap_set(map, i, 1);
@@ -145,22 +148,15 @@ void mmap_free(Bitmap *mmap, u32 idx)
     bitmap_set(mmap, idx, 0);
 }
 
-void create_mmap(Task *task)
+void create_user_mmap(Task *task)
 {
-    // if (task->user == 0)
-    // {
-    //     task->vaddr.start = KERNEL_BASE_PAGE;
-    //     u32 length = (0xffffffff - KERNEL_BASE_PAGE) / page;
-    //     task->vaddr.mmap.bits =
-    // }
-    // else
-    // {
-    //     task->vaddr.start = USER_VADDR_START;
-    //     u32 length = (KERNEL_ADDR_MASK - USER_VADDR_START) / PG_SIZE / 8;
-    //     u32 page_size = round_up(length, PG_SIZE);
-    //     task->vaddr.mmap.bits = page_alloc(1, page_size);
-    //     task->vaddr.mmap.length = length;
-    // }
+    DEBUGP("Create user map 0x%X\n", task);
+    task->vaddr.start = USER_VADDR_START;
+    u32 length = (KERNEL_ADDR_MASK - USER_VADDR_START) / PG_SIZE / 8;
+    u32 page_size = round_up(length, PG_SIZE);
+    task->vaddr.mmap.bits = page_alloc(page_size);
+    task->vaddr.mmap.length = length;
+    bitmap_init(&task->vaddr.mmap);
 }
 
 static void set_pages(u32 vstart, u32 pstart, u32 pages)
@@ -179,7 +175,7 @@ static u32 scan_task_page(Task *task, u32 size)
     Bitmap *mmap = &task->vaddr.mmap;
     u32 start = task->vaddr.start;
     u32 vstart = scan_page(mmap, size) + start;
-    DEBUGP("Scan task page mmap 0x%08X bits 0x%08X \n", mmap, mmap->bits);
+    DEBUGP("Scan task page mmap 0x%08X bits 0x%08X start 0x%08X\n", mmap, mmap->bits, start);
     return vstart;
 }
 
@@ -311,6 +307,7 @@ void test_memory()
 
     while (size <= 64)
     {
+        // BMB;
         Page page = page_alloc(size);
         DEBUGP("Allocate page 0x%X size\n", page);
         u32 *value = (u32 *)page;
@@ -360,12 +357,12 @@ u32 get_paddr(u32 vaddr)
 {
     PageTable pte = get_pte(vaddr);
 
-    DEBUGP("get pte 0x%X\n", (u32)pte);
+    // DEBUGP("get pte 0x%X\n", (u32)pte);
     u32 idx = TIDX(vaddr);
     PageEntry *page = (PageEntry *)&pte[idx];
     assert(page->present);
 
     u32 paddr = ((u32)page->index << 12) | vaddr & 0xfff;
-    DEBUGP("get vaddr 0x%X paddr 0x%X\n", vaddr, paddr);
+    // DEBUGP("get vaddr 0x%X paddr 0x%X\n", vaddr, paddr);
     return paddr;
 }

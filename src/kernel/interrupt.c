@@ -15,8 +15,6 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-#define EFLAGS_IF 0x00000200
-
 InterruptGate idt[IDT_SIZE];
 Pointer idt_ptr;
 InterruptHandler handler_table[IDT_SIZE];

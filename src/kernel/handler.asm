@@ -1,4 +1,4 @@
-
+%include "boot.inc"
 ; interrupt.........
 bits 32
 section .text
@@ -29,8 +29,7 @@ interrupt_%1:
 
     push %1
     call [handler_table + %1 * 4]
-    add esp, 4
-    jmp interrupt_exit; 所有的中断处理程序共用一个中断退出函数；
+    jmp __interrupt_exit; 所有的中断处理程序共用一个中断退出函数；
 
 section .data
     dd interrupt_%1
@@ -39,7 +38,13 @@ section .data
 section .text
 global interrupt_exit
 interrupt_exit:
+    ; BMB;
+    mov eax, [esp + 4]; stack top
+    mov esp, eax
     ; xchg bx, bx
+__interrupt_exit:
+    ; BMB;
+    add esp, 4
     popad
     pop gs
     pop fs

@@ -40,7 +40,6 @@ void clock_handler(int vector)
         cur->ticks = cur->priority;
         schedule();
     }
-
     __global_ticks++;
     char ch = ' ';
     if ((__global_ticks % 2) != 0)

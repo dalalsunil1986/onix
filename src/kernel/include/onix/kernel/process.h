@@ -2,6 +2,9 @@
 #define ONIX_PROCESS_H
 
 #include <onix/types.h>
+#include <onix/kernel/task.h>
+
+#define DEFAULT_PRIORITY 100
 
 typedef struct TSS
 {
@@ -36,8 +39,9 @@ typedef struct TSS
 
 static TSS tss;
 
-
 void init_process();
 void init_tss();
+void process_start(Tasktarget target);
+void test_process();
 
 #endif

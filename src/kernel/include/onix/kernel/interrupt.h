@@ -147,8 +147,6 @@ extern Pointer idt_ptr;
 extern InterruptHandler interrupt_entry_table[IDT_SIZE];
 extern InterruptHandler handler_table[IDT_SIZE];
 
-extern void interrupt_exit();
-
 extern bool enable_int();
 extern bool disable_int();
 

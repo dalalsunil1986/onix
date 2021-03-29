@@ -13,6 +13,11 @@
 #define TI_GDT 0
 #define TI_LDT 1
 
+#define EFLAGS_MBS (1 << 1)    // 此项必须要设置
+#define EFLAGS_IF (1 << 9)     // if为1,开中断
+#define EFLAGS_IOPL3 (3 << 12) // IOPL3,用于测试用户程序在非系统调用下进行IO
+#define EFLAGS_IOPL0 (0 << 12) // IOPL0
+
 /* 存储段描述符/系统段描述符 */
 typedef struct Descriptor /* 共 8 个字节 */
 {
@@ -54,11 +59,15 @@ static const int SELECT_KERNEL_CODE_INDEX = 1;
 static const int SELECT_KERNEL_DATA_INDEX = 2;
 static const int SELECT_KERNEL_VIDEO_INDEX = 3;
 static const int SELECT_KERNEL_TSS_INDEX = 4;
+static const int SELECT_USER_CODE_INDEX = 5;
+static const int SELECT_USER_DATA_INDEX = 6;
 
 static const Selector SELECTOR_KERNEL_CODE = {PL0, TI_GDT, SELECT_KERNEL_CODE_INDEX};
 static const Selector SELECTOR_KERNEL_DATA = {PL0, TI_GDT, SELECT_KERNEL_DATA_INDEX};
 static const Selector SELECTOR_KERNEL_VIDEO = {PL0, TI_GDT, SELECT_KERNEL_VIDEO_INDEX};
 static const Selector SELECTOR_KERNEL_TSS = {PL0, TI_GDT, SELECT_KERNEL_TSS_INDEX};
+static const Selector SELECTOR_USER_CODE = {PL3, TI_GDT, SELECT_KERNEL_CODE_INDEX};
+static const Selector SELECTOR_USER_DATA = {PL3, TI_GDT, SELECT_KERNEL_DATA_INDEX};
 
 extern void load_gdt(Pointer *gdt_ptr);
 extern void load_idt(Pointer *idt_ptr);
