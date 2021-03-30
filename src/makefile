@@ -125,6 +125,9 @@ $(BUILD)/syscall.o: $(LIB)/syscall.c
 $(BUILD)/stdio.o: $(LIB)/stdio.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/malloc.o: $(LIB)/malloc.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/test.o: $(KERNEL)/test.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -155,6 +158,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/__syscall.o \
 	$(BUILD)/syscall.o \
 	$(BUILD)/stdio.o \
+	$(BUILD)/malloc.o \
 	$(BUILD)/test.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
