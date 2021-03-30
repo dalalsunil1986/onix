@@ -49,6 +49,7 @@ void queue_pushback(Queue *queue, Node *node)
 
 Node *queue_popback(Queue *queue)
 {
+    assert(queue->size > 0);
     Node *node = queue->tail.prev;
     node->prev->next = &queue->tail;
     queue->tail.prev = node->prev;

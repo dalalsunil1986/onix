@@ -1,5 +1,6 @@
 #include <onix/kernel/arena.h>
 #include <onix/kernel/debug.h>
+#include <onix/kernel/printk.h>
 #include <onix/kernel/assert.h>
 #include <onix/kernel/memory.h>
 #include <onix/kernel/mutex.h>
@@ -45,8 +46,9 @@ static Arena *get_block_arena(Block *block)
 
 void *arena_malloc(size_t size)
 {
-    if (size < 0 || size > free_pages * PG_SIZE)
+    if (size > free_pages * PG_SIZE)
     {
+        printk("Size %d too large \n", size);
         return NULL;
     }
     Task *task = running_task();

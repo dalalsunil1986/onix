@@ -130,4 +130,7 @@ void init_harddisk();
 
 void harddisk_handler(int vector);
 
+void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt);
+void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt);
+
 #endif

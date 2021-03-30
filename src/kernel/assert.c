@@ -38,7 +38,7 @@ void panic(const char *format, ...)
 
     i = vsprintf(buf, format, arg);
 
-    printk("%c !!panic!! %s", MAG_CH_PANIC, buf);
+    printk("%c !!panic!! %s \n", MAG_CH_PANIC, buf);
 
     /* should never arrive here */
     __asm__ __volatile__("ud2");

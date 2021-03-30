@@ -64,8 +64,8 @@ outb:
     mov edx, [esp + 4];  port
     mov al, [esp + 8]; byte
     out dx, al
-    nop;
-    nop; a little delay
+    mov ecx, 5
+    rep nop ; a little delay
     ret
 
 global outsw
@@ -86,14 +86,13 @@ outsd:
     rep outsd
     ret
 
-
 global inb
 inb:
     mov edx, [esp + 4]; port
     xor eax, eax
     in al, dx
-    nop;
-    nop; a little delay
+    mov ecx, 5
+    rep nop ; a little delay
     ret
 
 global insw

@@ -3,7 +3,7 @@
 #include <onix/kernel/assert.h>
 #include <onix/kernel/debug.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -36,6 +36,7 @@ void sema_down(Semaphore *sema)
             panic("sema down: task bloced has been in waiters list\n");
         }
         queue_push(&sema->waiters, &task->node);
+        DEBUGP("Block %X \n", task);
         task_block(task);
     }
     sema->value--;
@@ -50,6 +51,7 @@ void sema_up(Semaphore *sema)
     if (!queue_empty(&sema->waiters))
     {
         Task *task = element_entry(Task, node, queue_pop(&sema->waiters));
+        DEBUGP("Unblock %X \n", task);
         task_unblock(task);
     }
     sema->value++;
@@ -61,16 +63,16 @@ void acquire(Lock *lock)
 {
     if (lock->holder != running_task())
     {
-        // DEBUGP("holder 0x%08X task 0x%08X\n", lock->holder, running_task());
+        DEBUGP("holder 0x%08X task 0x%08X\n", lock->holder, running_task());
         sema_down(&lock->sema);
-        // DEBUGP("holder 0x%08X task 0x%08X reapeat %d\n", lock->holder, running_task(), lock->repeat);
+        DEBUGP("holder 0x%08X task 0x%08X reapeat %d\n", lock->holder, running_task(), lock->repeat);
         lock->holder = running_task();
         assert(lock->repeat == 0);
         lock->repeat = 1;
     }
     else
     {
-        DEBUGP("reenter acquire...\n");
+        // DEBUGP("reenter acquire...\n");
         lock->repeat++;
     }
 }
@@ -86,5 +88,6 @@ void release(Lock *lock)
     assert(lock->repeat == 1);
     lock->holder = NULL;
     lock->repeat = 0;
+    // DEBUGP("release sema_up \n");
     sema_up(&lock->sema);
 }

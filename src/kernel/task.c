@@ -21,21 +21,18 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-extern IOQueue key_ioq;
-
 Queue tasks_queue;
 Queue tasks_ready;
 Queue tasks_died;
 
 u32 init_stack_top;
 
-extern void restart(Task *init);
 extern void switch_to(Task *current, Task *next);
 extern void process_activate(Task *next);
-extern void test_process();
-extern void test_task();
 
-void idle_task();
+extern void idle_task();
+extern void init_kernel_task();
+extern void keyboard_task();
 
 static Task *idle;
 
@@ -48,20 +45,25 @@ void push_task(Task *task)
 
 Task *pop_ready_task()
 {
+    bool old = disable_int();
+
     if (queue_empty(&tasks_ready))
     {
-        task_unblock(idle);
+        push_ready_task(idle);
     }
 
     assert(!queue_empty(&tasks_ready));
     Task *task = element_entry(Task, node, queue_popback(&tasks_ready));
     assert(task->magic == TASK_MAGIC);
+    set_interrupt_status(old);
     return task;
 }
 
 void push_ready_task(Task *task)
 {
     bool old = disable_int();
+    task->status = TASK_READY;
+    assert(!queue_find(&tasks_ready, &task->node));
     queue_push(&tasks_ready, &task->node);
     set_interrupt_status(old);
 }
@@ -137,7 +139,6 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
     DEBUGP("Start task 0x%X\n", (u32)task);
     task_init(task, name, priority, cur->user);
     task_create(task, target, args);
-    task->status = TASK_READY;
 
     assert(!queue_find(&tasks_queue, &task->all_node));
     push_task(task);
@@ -155,19 +156,21 @@ void task_block(Task *task)
     bool old = disable_int();
 
     assert(task->status != TASK_BLOCKED);
-    task->stack = TASK_BLOCKED;
-    schedule();
+    task->status = TASK_BLOCKED;
 
+    schedule();
     set_interrupt_status(old);
 }
 
 void task_unblock(Task *task)
 {
     bool old = disable_int();
+
     assert(task->status == TASK_BLOCKED);
-    task->status = TASK_READY;
+
     push_ready_task(task);
     schedule();
+
     set_interrupt_status(old);
 }
 
@@ -179,7 +182,7 @@ void task_yield()
 
     bool old = disable_int();
     assert(!queue_find(&tasks_ready, &task->node));
-    task->status = TASK_READY;
+
     push_ready_task(task);
     schedule();
     set_interrupt_status(old);
@@ -229,69 +232,6 @@ void task_destory(Task *task)
     DEBUGP("free pages 0x%d tasks %d died %d\n", free_pages, tasks_queue.size, tasks_died.size);
 }
 
-void init_kernel_task()
-{
-    __clear();
-    init_harddisk();
-    test_process();
-    u32 counter = 0;
-    Task *task;
-
-    // bool old = disable_int();
-    // while (tasks_queue.size < 100)
-    // {
-    //     task_start(test_task, NULL, "test task", 16);
-    //     clock_sleep(1);
-    //     DEBUGP("free pages 0x%d task size %d\n", free_pages, tasks_queue.size);
-    //     continue;
-    // }
-    // set_interrupt_status(old);
-
-    while (true)
-    {
-        // BMB;
-        // DEBUGP("init task....\n");
-        task = running_task();
-        assert(task->magic == TASK_MAGIC);
-        // BMB;
-        counter++;
-        char ch = ' ';
-        if ((counter % 2) != 0)
-        {
-            ch = 'K';
-        }
-        show_char(ch, 77, 0);
-
-        task = pop_died_task();
-        if (task != NULL)
-        {
-            task_destory(task);
-        }
-        // clock_sleep(100);
-    }
-}
-
-void idle_task()
-{
-    static u32 idle_counter = 0;
-    while (true)
-    {
-        // BMB;
-        // DEBUGP("idle task 0x%X....\n", idle_counter);
-        Task *task = running_task();
-        assert(task->magic == TASK_MAGIC);
-        idle_counter++;
-        char ch = ' ';
-        if ((idle_counter % 2) != 0)
-        {
-            ch = 'D';
-        }
-        show_char(ch, 75, 0);
-        task_block(task);
-        pause();
-    }
-}
-
 static void make_init_task()
 {
     Task *task = (Task *)TASK_INIT_PAGE;
@@ -314,7 +254,8 @@ static void make_init_task()
 
     assert(!queue_find(&tasks_queue, &task->all_node));
     push_task(task);
-    DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n", (u32)task, (u32)task->stack, init_kernel_task);
+    DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n",
+           (u32)task, (u32)task->stack, init_kernel_task);
 }
 
 void make_setup_task()
@@ -356,21 +297,9 @@ void schedule()
     // BMB;
     process_activate(next);
     // PBMB;
-    switch_to(cur, next);
-}
 
-void keyboard_task()
-{
-    while (1)
-    {
-        bool old = disable_int();
-        if (!ioqueue_empty(&key_ioq))
-        {
-            char byte = ioqueue_get(&key_ioq);
-            put_char(byte);
-        }
-        set_interrupt_status(old);
-    }
+    show_char(next->tid % 10 + 0x30, 73, 0);
+    switch_to(cur, next);
 }
 
 void init_task()
@@ -386,5 +315,4 @@ void init_task()
     make_init_task();
     idle = task_start(idle_task, NULL, "idle task", 1);
     task_start(keyboard_task, NULL, "key task", 16);
-    task_start(test_task, NULL, "test task", 16);
 }

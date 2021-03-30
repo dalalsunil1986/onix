@@ -10,13 +10,15 @@
 #include <onix/malloc.h>
 #include <onix/syscall.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
 #else
 #define DEBUGP(fmt, args...)
 #endif
+
+#define DELAY 1000
 
 static u8 harddisk_count;
 
@@ -54,6 +56,7 @@ void select_disk(Harddisk *disk)
         reg_device |= BIT_DEV_DEV;
     }
     outb(ATA_REG_DEVICE(disk->channel), reg_device);
+    clock_sleep(DELAY);
 }
 
 void select_sector(Harddisk *disk, u32 lba, u32 sec_cnt)
@@ -75,12 +78,14 @@ void select_sector(Harddisk *disk, u32 lba, u32 sec_cnt)
         reg_device |= (lba >> 24);
     }
     outb(ATA_REG_DEVICE(channel), reg_device);
+    clock_sleep(DELAY);
 }
 
 void command_out(IDEChannel *channel, u8 cmd)
 {
     channel->waiting = true;
     outb(ATA_REG_CMD(channel), cmd);
+    clock_sleep(DELAY);
 }
 
 void read_sectors(Harddisk *disk, void *buf, u8 sec_cnt)
@@ -151,6 +156,7 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         command_out(disk->channel, ATA_CMD_READ_PIO);
 
         DEBUGP("harddisk read disk sema down \n");
+        // DEBUGK("");
 
         sema_down(&disk->channel->done);
 
@@ -187,8 +193,8 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
             secs_op = sec_cnt - secs_done;
         }
         select_sector(disk, lba + secs_done, secs_op);
+
         command_out(disk->channel, ATA_CMD_WRITE_PIO);
-        sema_down(&disk->channel->done);
 
         if (!harddisk_busy_wait(disk))
         {

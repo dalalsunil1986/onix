@@ -105,6 +105,9 @@ $(BUILD)/process.o: $(KERNEL)/process.c
 $(BUILD)/task.o: $(KERNEL)/task.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/ktask.o: $(KERNEL)/ktask.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/pid.o: $(KERNEL)/pid.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -154,6 +157,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/keyboard.o \
 	$(BUILD)/harddisk.o \
 	$(BUILD)/task.o \
+	$(BUILD)/ktask.o \
 	$(BUILD)/pid.o \
 	$(BUILD)/queue.o \
 	$(BUILD)/ioqueue.o \
@@ -183,14 +187,12 @@ endif
 	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ bs=512 seek=100 count=200 conv=notrunc
 
-$(BUILD)/slave.img:
+$(BUILD)/slave.img: $(BUILD)/slave.sfdisk
 
 ifeq ("$(wildcard $(BUILD)/slave.img)", "")
 	bximage -q -hd=16 -mode=create -sectsize=512 -imgmode=flat $@
 endif
-
-fdisk: $(BUILD)/slave.img
-	fdisk $<
+	sfdisk $@ < $<
 
 bochs: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	@rm -rf $(BUILD)/harddisk.img.lock
