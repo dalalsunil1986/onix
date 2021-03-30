@@ -70,6 +70,7 @@ void acquire(Lock *lock)
     }
     else
     {
+        DEBUGP("reenter acquire...\n");
         lock->repeat++;
     }
 }

@@ -10,9 +10,10 @@
 #include <onix/kernel/ioqueue.h>
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/mutex.h>
+#include <onix/kernel/clock.h>
 #include <onix/kernel/pid.h>
 
-// #define DEBUGINFO
+#define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -24,6 +25,7 @@ extern IOQueue key_ioq;
 
 Queue tasks_queue;
 Queue tasks_ready;
+Queue tasks_died;
 
 u32 init_stack_top;
 
@@ -31,6 +33,7 @@ extern void restart(Task *init);
 extern void switch_to(Task *current, Task *next);
 extern void process_activate(Task *next);
 extern void test_process();
+extern void test_task();
 
 void idle_task();
 
@@ -39,7 +42,7 @@ static Task *idle;
 void push_task(Task *task)
 {
     bool old = disable_int();
-    queue_push(&tasks_queue, &task->queue_node);
+    queue_push(&tasks_queue, &task->all_node);
     set_interrupt_status(old);
 }
 
@@ -63,11 +66,22 @@ void push_ready_task(Task *task)
     set_interrupt_status(old);
 }
 
+Task *pop_died_task()
+{
+    if (queue_empty(&tasks_died))
+        return NULL;
+    assert(!queue_empty(&tasks_ready));
+    Task *task = element_entry(Task, node, queue_popback(&tasks_died));
+    assert(task->magic == TASK_MAGIC);
+    return task;
+}
+
 void kernel_task(Tasktarget target, void *args)
 {
     assert(!get_interrupt_status());
     enable_int();
     target(args);
+    task_exit(running_task());
 }
 
 void task_create(Task *task, Tasktarget target, void *args)
@@ -125,14 +139,14 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
     task_create(task, target, args);
     task->status = TASK_READY;
 
-    assert(!queue_find(&tasks_queue, &task->queue_node));
+    assert(!queue_find(&tasks_queue, &task->all_node));
     push_task(task);
 
     assert(task->magic == TASK_MAGIC);
     assert(!queue_find(&tasks_ready, &task->node));
     push_ready_task(task);
 
-    DEBUGP("Task create %s 0x%X stack top 0x%X target 0x%08x\n", name, (u32)task, (u32)task->stack, kernel_task);
+    DEBUGP("Task create %s 0x%X stack top 0x%X\n", name, (u32)task, (u32)task->stack);
     return task;
 }
 
@@ -171,17 +185,63 @@ void task_yield()
     set_interrupt_status(old);
 }
 
+bool task_check_pid(Node *node, pid_t pid)
+{
+    Task *task = element_entry(Task, all_node, node);
+    if (task->pid == pid)
+        return true;
+    return false;
+}
+
+Task *task_found(pid_t pid)
+{
+    Node *node = queue_traversal(&tasks_queue, task_check_pid, pid);
+    if (!node)
+        return NULL;
+
+    Task *task = element_entry(Task, all_node, node);
+    return task;
+}
+
+void task_exit(Task *task)
+{
+    DEBUGP("Task exit 0x%08X\n", task);
+    bool old = disable_int();
+    task->status = TASK_DIED;
+    if (queue_find(&tasks_ready, &task->node))
+    {
+        queue_remove(&tasks_ready, &task->node);
+    }
+    queue_remove(&tasks_queue, &task->all_node);
+    release_pid(task->id);
+    assert(!queue_find(&tasks_died, &task->node));
+    queue_push(&tasks_died, &task->node);
+    schedule();
+}
+
 void init_kernel_task()
 {
     __clear();
     init_harddisk();
     test_process();
     u32 counter = 0;
+    Task *task;
+
+    bool old = disable_int();
+    while (tasks_queue.size < 100)
+    {
+        task_start(test_task, NULL, "test task", 16);
+        clock_sleep(1);
+        DEBUGP("free pages 0x%d task size %d\n", free_pages, tasks_queue.size);
+        continue;
+    }
+    set_interrupt_status(old);
+
     while (true)
     {
         // BMB;
         // DEBUGP("init task....\n");
-        Task *task = running_task();
+        task = running_task();
         assert(task->magic == TASK_MAGIC);
         // BMB;
         counter++;
@@ -191,6 +251,15 @@ void init_kernel_task()
             ch = 'K';
         }
         show_char(ch, 77, 0);
+
+        task = pop_died_task();
+        if (task != NULL)
+        {
+            DEBUGP("free task page 0x%08X\n", task);
+            page_free(task, 1);
+            DEBUGP("free pages 0x%d tasks %d died %d\n", free_pages, tasks_queue.size, tasks_died.size);
+        }
+        clock_sleep(100);
     }
 }
 
@@ -235,7 +304,7 @@ static void make_init_task()
     task->status = TASK_RUNNING;
     assert(task->magic == TASK_MAGIC);
 
-    assert(!queue_find(&tasks_queue, &task->queue_node));
+    assert(!queue_find(&tasks_queue, &task->all_node));
     push_task(task);
     DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n", (u32)task, (u32)task->stack, init_kernel_task);
 }
@@ -272,11 +341,13 @@ void schedule()
 
     assert(((u32)next & 0xfff) == 0);
 
+    // PBMB;
     if (next == cur)
         return;
-    DEBUGP("Task schedule 0x%X name %s\n", next, next->name);
+    // DEBUGP("Task schedule 0x%X name %s\n", next, next->name);
     // BMB;
     process_activate(next);
+    // PBMB;
     switch_to(cur, next);
 }
 
@@ -301,6 +372,7 @@ void init_task()
     DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(TaskFrame));
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
+    queue_init(&tasks_died);
     init_pid();
 
     make_init_task();

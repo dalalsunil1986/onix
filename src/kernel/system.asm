@@ -142,3 +142,8 @@ pause:
     hlt
     ; BMB;
     ret
+
+global stop
+stop:
+    hlt
+    ret

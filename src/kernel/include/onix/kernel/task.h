@@ -71,7 +71,7 @@ typedef struct Task
 {
     u32 *stack;
     Node node;
-    Node queue_node;
+    Node all_node;
     TASK_STATUS status;
     u8 priority;
     u32 id;

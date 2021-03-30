@@ -8,7 +8,7 @@ void spin(char *name)
     printk("\nspinning in %s ...\n\0", name);
     while (1)
     {
-        halt();
+        stop();
     }
 }
 

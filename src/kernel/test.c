@@ -14,3 +14,9 @@ void test_processa()
         sys_sleep(200);
     }
 }
+
+void test_task()
+{
+    printf("Hello test task, exit...\n");
+    sys_sleep(1000);
+}

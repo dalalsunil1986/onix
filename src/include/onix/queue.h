@@ -23,7 +23,7 @@ typedef bool(traversal)(Node *, int arg);
 
 void queue_init(Queue *queue);
 bool queue_find(Queue *queue, Node *node);
-bool queue_remove(Node *node);
+bool queue_remove(Queue *queue, Node *node);
 void queue_push(Queue *queue, Node *node);
 void queue_pushback(Queue *queue, Node *node);
 Node *queue_pop(Queue *queue);

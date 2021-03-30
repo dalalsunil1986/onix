@@ -75,11 +75,12 @@ bool queue_find(Queue *queue, Node *node)
     return false;
 }
 
-bool queue_remove(Node *node)
+bool queue_remove(Queue *queue, Node *node)
 {
     DEBUGP("node 0x%X prev 0x%X next 0x%X\n", node, node->prev, node->next);
     node->prev->next = node->next;
     node->next->prev = node->prev;
+    queue->size--;
 }
 
 Node *queue_traversal(Queue *queue, traversal visit, int arg)
@@ -131,7 +132,7 @@ void test_queue()
     queue_push(queue, b);
     assert(queue_find(queue, a));
     assert(queue_find(queue, b));
-    queue_remove(a);
+    queue_remove(queue, a);
     assert(!queue_find(queue, a));
     assert(queue_find(queue, b));
     // BMB;

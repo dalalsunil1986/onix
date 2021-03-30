@@ -128,7 +128,7 @@ void arena_free(void *ptr)
             DEBUGP("remove block 0x%X size %d qsize %d\n", block,
                    arena->desc->block_size, arena->desc->free_list.size);
             assert(queue_find(&arena->desc->free_list, block));
-            queue_remove(block);
+            queue_remove(&arena->desc->free_list, block);
             assert(!queue_find(&arena->desc->free_list, block));
         }
         page_free(arena, 1);

@@ -10,6 +10,7 @@ extern u8 inb(u16 port);
 extern void insw(u16 port, const void *addr, u32 size);
 extern void insd(u16 port, const void *addr, u32 size);
 extern void halt();
+extern void stop();
 extern void pause();
 
 #endif
