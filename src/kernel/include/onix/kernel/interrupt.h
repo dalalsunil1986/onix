@@ -68,7 +68,7 @@ http://www.brokenthorn.com/Resources/OSDevPic.html
 #include <onix/types.h>
 #include <onix/kernel/global.h>
 
-#define IDT_SIZE 0x30
+#define IDT_SIZE 0x100
 
 #define PIC_M_CTRL 0x20 // 主片的控制端口
 #define PIC_M_DATA 0x21 // 主片的数据端口
@@ -106,6 +106,8 @@ http://www.brokenthorn.com/Resources/OSDevPic.html
 #define INT_VECTOR_PROTECTION 0xD
 #define INT_VECTOR_PAGE_FAULT 0xE
 #define INT_VECTOR_COPROC_ERR 0x10
+
+#define INT_VECTOR_SYSCALL 0x80
 
 #define IRQ_CLOCK 0    // 时钟
 #define IRQ_KEYBOARD 1 // 键盘

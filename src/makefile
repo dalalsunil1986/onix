@@ -112,6 +112,9 @@ $(BUILD)/ioqueue.o: $(KERNEL)/ioqueue.c
 $(BUILD)/debug.o: $(KERNEL)/debug.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/syscall.o: $(KERNEL)/syscall.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/global.o \
 	$(BUILD)/system.o \
@@ -135,6 +138,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/schedule.o \
 	$(BUILD)/mutex.o \
 	$(BUILD)/debug.o \
+	$(BUILD)/syscall.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 

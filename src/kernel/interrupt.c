@@ -5,6 +5,7 @@
 #include <onix/kernel/clock.h>
 #include <onix/kernel/keyboard.h>
 #include <onix/kernel/harddisk.h>
+#include <onix/kernel/syscall.h>
 #include <onix/kernel/debug.h>
 
 #define DEBUGINFO
@@ -127,6 +128,7 @@ void init_interrupt()
     init_handler();
     init_clock();
     init_keyboard();
+    init_syscall();
     test_interrupt();
     printk("Initializing interrupt finished...\n");
 }
