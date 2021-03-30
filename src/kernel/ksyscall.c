@@ -33,6 +33,16 @@ u32 __sys_write(char *str)
     printk("%s", str);
 }
 
+void __sys_sleep(u32 milliseconds)
+{
+    clock_sleep(milliseconds);
+}
+
+void __sys_default()
+{
+    printk("default syscall....\n");
+}
+
 void init_syscall()
 {
     InterruptHandler handler = syscall_handler;
@@ -41,7 +51,13 @@ void init_syscall()
     gate->offset1 = ((u32)handler & 0xffff0000) >> 16;
     gate->DPL = PL3;
 
+    for (size_t i = 0; i < SYSCALL_SIZE; i++)
+    {
+        syscall_table[i] = __sys_default;
+    }
+
     syscall_table[SYS_NR_TEST] = __sys_test;
     syscall_table[SYS_NR_GETPID] = __sys_getpid;
     syscall_table[SYS_NR_WRITE] = __sys_write;
+    syscall_table[SYS_NR_SLEEP] = __sys_sleep;
 }

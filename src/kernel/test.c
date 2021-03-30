@@ -6,17 +6,10 @@
 
 void test_processa()
 {
-    u32 counter = 0;
     while (true)
     {
-        counter++;
-        char ch = ' ';
-        if ((counter % 2) != 0)
-        {
-            ch = 'T';
-        }
-        show_char(ch, 73, 0);
         u32 id = sys_getpid();
         printf("Hello test process %d\n", id);
+        sys_sleep(200);
     }
 }

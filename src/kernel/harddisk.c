@@ -105,7 +105,7 @@ bool harddisk_busy_wait(Harddisk *disk)
         status = inb(ATA_REG_STATUS(channel));
         if (status & ATA_SR_BSY)
         {
-            __sleep(10);
+            clock_sleep(10);
         }
         else
         {
