@@ -30,7 +30,7 @@ void __sys_test()
 u32 __sys_getpid()
 {
     Task *task = running_task();
-    return task->id;
+    return task->pid;
 }
 
 void __sys_clear()

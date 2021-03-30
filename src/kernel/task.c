@@ -108,8 +108,8 @@ void task_init(Task *task, char *name, int priority, int user)
 
     memset(task, 0, sizeof(*task));
     strcpy(task->name, name);
-    task->id = allocate_pid();
-    task->pid = cur->id;
+    task->tid = allocate_pid();
+    task->pid = cur->pid;
     task->status = TASK_INIT;
     task->priority = priority;
     task->ticks = task->priority;
@@ -185,7 +185,7 @@ void task_yield()
     set_interrupt_status(old);
 }
 
-bool task_check_pid(Node *node, pid_t pid)
+bool task_check_tid(Node *node, pid_t pid)
 {
     Task *task = element_entry(Task, all_node, node);
     if (task->pid == pid)
@@ -193,12 +193,11 @@ bool task_check_pid(Node *node, pid_t pid)
     return false;
 }
 
-Task *task_found(pid_t pid)
+Task *task_found(pid_t tid)
 {
-    Node *node = queue_traversal(&tasks_queue, task_check_pid, pid);
+    Node *node = queue_traversal(&tasks_queue, task_check_tid, tid);
     if (!node)
         return NULL;
-
     Task *task = element_entry(Task, all_node, node);
     return task;
 }
@@ -213,10 +212,22 @@ void task_exit(Task *task)
         queue_remove(&tasks_ready, &task->node);
     }
     queue_remove(&tasks_queue, &task->all_node);
-    release_pid(task->id);
+    release_pid(task->tid);
     assert(!queue_find(&tasks_died, &task->node));
     queue_push(&tasks_died, &task->node);
     schedule();
+}
+
+void task_destory(Task *task)
+{
+    if (task->pid == task->tid)
+    {
+        // destory pde;
+        free_pages(task)
+    }
+    DEBUGP("free task page 0x%08X\n", task);
+    page_free(task, 1);
+    DEBUGP("free pages 0x%d tasks %d died %d\n", free_pages, tasks_queue.size, tasks_died.size);
 }
 
 void init_kernel_task()
@@ -255,11 +266,9 @@ void init_kernel_task()
         task = pop_died_task();
         if (task != NULL)
         {
-            DEBUGP("free task page 0x%08X\n", task);
-            page_free(task, 1);
-            DEBUGP("free pages 0x%d tasks %d died %d\n", free_pages, tasks_queue.size, tasks_died.size);
+            task_destory(task);
         }
-        clock_sleep(100);
+        // clock_sleep(100);
     }
 }
 

@@ -74,8 +74,9 @@ typedef struct Task
     Node all_node;
     TASK_STATUS status;
     u8 priority;
-    u32 id;
+    u32 tid;
     u32 pid;
+    u32 ppid;
     u32 ticks;
     char name[32];
     u8 user; // 0 表示内核，其他表示用户

@@ -127,13 +127,16 @@ void process_execute(Tasktarget *target, const char *name)
     DEBUGP("process execute 0x%08X name %s\n", target, name);
     // BMB;
     Task *task = page_alloc(1);
+    Task *cur = running_task();
     DEBUGP("process execute 0x%08X alloc 0x%08X\n", target, task);
-    task_init(task, name, DEFAULT_PRIORITY, USER_USER); // todo replace with user
+    task_init(task, name, DEFAULT_PRIORITY, USER_USER);
     create_user_mmap(task);
     task_create(task, process_start, target);
     create_user_pde(task);
     push_task(task);
     push_ready_task(task);
+    task->ppid = cur->pid;
+    task->pid = task->tid;
 }
 
 extern void test_processa();
