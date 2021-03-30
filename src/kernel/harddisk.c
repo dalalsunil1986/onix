@@ -8,6 +8,7 @@
 #include <onix/string.h>
 #include <onix/stdlib.h>
 #include <onix/malloc.h>
+#include <onix/syscall.h>
 
 #define DEBUGINFO
 
@@ -105,7 +106,7 @@ bool harddisk_busy_wait(Harddisk *disk)
         status = inb(ATA_REG_STATUS(channel));
         if (status & ATA_SR_BSY)
         {
-            clock_sleep(10);
+            sys_sleep(10);
         }
         else
         {

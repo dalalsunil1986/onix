@@ -6,7 +6,7 @@
 
 void test_processa()
 {
-    clear();
+    // clear();
     while (true)
     {
         u32 id = sys_getpid();
