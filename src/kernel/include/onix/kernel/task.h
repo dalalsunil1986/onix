@@ -4,6 +4,7 @@
 #include <onix/types.h>
 #include <onix/queue.h>
 #include <onix/kernel/memory.h>
+#include <onix/kernel/arena.h>
 
 #define TASK_MAGIC 0x20210323
 #define TASK_INIT_PAGE (0x10000 | KERNEL_ADDR_MASK)
@@ -80,6 +81,7 @@ typedef struct Task
     u8 user; // 0 表示内核，其他表示用户
     Vaddr vaddr;
     PageTable pde;
+    ArenaDesc adesc[DESC_COUNT];
     u32 magic;
 } Task;
 

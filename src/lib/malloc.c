@@ -1,10 +1,12 @@
 #include <onix/malloc.h>
 #include <onix/syscall.h>
 
-void *_malloc(size_t size)
+void *malloc(size_t size)
 {
+    return sys_malloc(size);
 }
 
-void _free(void *ptr)
+void free(void *ptr)
 {
+    return sys_free(ptr);
 }

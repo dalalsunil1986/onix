@@ -3,7 +3,7 @@
 
 #include <onix/types.h>
 
-void *_malloc(size_t size);
-void _free(void *ptr);
+void *malloc(size_t size);
+void free(void *ptr);
 
 #endif

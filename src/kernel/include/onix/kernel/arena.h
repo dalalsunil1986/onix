@@ -27,7 +27,8 @@ typedef struct Arena
 } Arena;
 
 void init_arena();
-extern void *malloc(size_t size);
-extern void free(void *ptr);
+void init_arena_desc(ArenaDesc *descs);
+extern void *arena_malloc(size_t size);
+extern void arena_free(void *ptr);
 
 #endif

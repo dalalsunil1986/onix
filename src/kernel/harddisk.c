@@ -7,7 +7,7 @@
 #include <onix/kernel/clock.h>
 #include <onix/string.h>
 #include <onix/stdlib.h>
-#include <onix/kernel/arena.h>
+#include <onix/malloc.h>
 
 #define DEBUGINFO
 

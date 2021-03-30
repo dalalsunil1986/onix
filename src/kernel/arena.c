@@ -14,17 +14,13 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-Lock arena_lock;
-
-ArenaDesc arena_descs[DESC_COUNT];
-
-static void init_arena_desc()
+void init_arena_desc(ArenaDesc *descs)
 {
     u32 block_size = 16;
     DEBUGP("Initializing arena desc...\n");
     for (size_t i = 0; i < DESC_COUNT; i++)
     {
-        ArenaDesc *desc = arena_descs + i;
+        ArenaDesc *desc = descs + i;
         desc->block_size = block_size;
         desc->total_block = (PG_SIZE - sizeof(Arena)) / block_size;
         queue_init(&desc->free_list);
@@ -47,16 +43,14 @@ static Arena *get_block_arena(Block *block)
     return (Arena *)((u32)block & 0xfffff000);
 }
 
-void *malloc(size_t size)
+void *arena_malloc(size_t size)
 {
     if (size < 0 || size > free_pages * PG_SIZE)
     {
         return NULL;
     }
+    Task *task = running_task();
 
-    DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
-    acquire(&arena_lock);
-    DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
     ArenaDesc *desc = NULL;
     Arena *arena;
     Block *block;
@@ -74,16 +68,13 @@ void *malloc(size_t size)
         arena->count = page_count;
         arena->desc = NULL;
         addr = (void *)(arena + 1);
-        DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
-        release(&arena_lock);
-        DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
         return addr;
     }
     else
     {
         for (size_t i = 0; i < DESC_COUNT; i++)
         {
-            desc = arena_descs + i;
+            desc = task->adesc + i;
             if (desc->block_size >= size)
                 break;
         }
@@ -113,17 +104,12 @@ void *malloc(size_t size)
         arena->count--;
         addr = (void *)block;
     }
-    DEBUGP("arena lock repeat 116 %d\n", arena_lock.repeat);
-    release(&arena_lock);
-    DEBUGP("arena lock repeat 118 %d\n", arena_lock.repeat);
     return addr;
 }
 
-void free(void *ptr)
+void arena_free(void *ptr)
 {
     assert(ptr != NULL);
-
-    acquire(&arena_lock);
 
     Block *block = ptr;
     Arena *arena = get_block_arena(block);
@@ -131,10 +117,8 @@ void free(void *ptr)
     if (arena->large == true)
     {
         page_free(arena, arena->count);
-        release(&arena_lock);
         return;
     }
-
     queue_push(&arena->desc->free_list, block);
     if (arena->desc->free_list.size == arena->desc->total_block)
     {
@@ -149,7 +133,6 @@ void free(void *ptr)
         }
         page_free(arena, 1);
     }
-    release(&arena_lock);
     return;
 }
 
@@ -157,13 +140,10 @@ static void test_arena()
 {
     DEBUGK("Test arena.....\n");
     int size = 4096;
-    DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
     u32 pages = free_pages;
 
     DEBUGP("free pages %d\n", free_pages);
-    u32 *test = malloc(size);
-
-    DEBUGP("arena lock repeat %d\n", arena_lock.repeat);
+    u32 *test = arena_malloc(size);
 
     DEBUGP("get test memory 0x%X free pages %d\n", test, free_pages);
     // BMB;
@@ -172,17 +152,15 @@ static void test_arena()
         // DEBUGP("set test memory %i\n", i);
         test[i] = i;
     }
-    free(test);
+    arena_free(test);
     DEBUGP("free pages %d\n", free_pages);
     assert(pages == free_pages);
-
-    DEBUGK("Test arena finish..... lock repeat %d\n", arena_lock.repeat);
 }
 
 void init_arena()
 {
     DEBUGP("Initializing arena...\n");
-    init_arena_desc();
-    lock_init(&arena_lock);
+    Task *task = running_task();
+    init_arena_desc(task->adesc);
     test_arena();
 }

@@ -41,7 +41,7 @@ int get_pos(int x, int y)
     return y * VGA_WIDTH + x;
 }
 
-void clear()
+void __clear()
 {
     int cpos = 0;
     char *current = (char *)V_MEM_BASE;

@@ -12,3 +12,8 @@ int printf(const char *fmt, ...)
     sys_write(buf);
     return i;
 }
+
+void clear()
+{
+    sys_clear();
+}

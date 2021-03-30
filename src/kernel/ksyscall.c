@@ -17,6 +17,11 @@
 extern void syscall_handler();
 SyscallHandler syscall_table[SYSCALL_SIZE];
 
+void __sys_default()
+{
+    printk("default syscall....\n");
+}
+
 void __sys_test()
 {
     DEBUGP("syscall test called\n");
@@ -26,6 +31,11 @@ u32 __sys_getpid()
 {
     Task *task = running_task();
     return task->id;
+}
+
+void __sys_clear()
+{
+    __clear();
 }
 
 u32 __sys_write(char *str)
@@ -38,9 +48,14 @@ void __sys_sleep(u32 milliseconds)
     clock_sleep(milliseconds);
 }
 
-void __sys_default()
+u32 __sys_malloc(size_t size)
 {
-    printk("default syscall....\n");
+    return arena_malloc(size);
+}
+
+void __sys_free(void *ptr)
+{
+    arena_free(ptr);
 }
 
 void init_syscall()
@@ -59,5 +74,8 @@ void init_syscall()
     syscall_table[SYS_NR_TEST] = __sys_test;
     syscall_table[SYS_NR_GETPID] = __sys_getpid;
     syscall_table[SYS_NR_WRITE] = __sys_write;
+    syscall_table[SYS_NR_CLEAR] = __sys_clear;
     syscall_table[SYS_NR_SLEEP] = __sys_sleep;
+    syscall_table[SYS_NR_MALLOC] = __sys_malloc;
+    syscall_table[SYS_NR_FREE] = __sys_free;
 }

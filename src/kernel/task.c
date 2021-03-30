@@ -123,6 +123,8 @@ void task_init(Task *task, char *name, int priority, int user)
     task->magic = TASK_MAGIC;
     task->user = user;
 
+    init_arena_desc(task->adesc);
+
     if (task != cur)
     {
         task->vaddr.start = cur->vaddr.start;
@@ -190,7 +192,7 @@ void task_yield()
 
 void init_kernel_task()
 {
-    clear();
+    __clear();
     init_harddisk();
     test_process();
     u32 counter = 0;
