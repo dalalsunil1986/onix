@@ -82,6 +82,7 @@ typedef struct Task
     Vaddr vaddr;
     PageTable pde;
     ArenaDesc adesc[DESC_COUNT];
+    u32 exit_code;
     u32 magic;
 } Task;
 

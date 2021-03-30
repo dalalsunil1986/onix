@@ -104,6 +104,9 @@ $(BUILD)/process.o: $(KERNEL)/process.c
 $(BUILD)/task.o: $(KERNEL)/task.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/pid.o: $(KERNEL)/pid.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/mutex.o: $(KERNEL)/mutex.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -147,6 +150,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/keyboard.o \
 	$(BUILD)/harddisk.o \
 	$(BUILD)/task.o \
+	$(BUILD)/pid.o \
 	$(BUILD)/queue.o \
 	$(BUILD)/ioqueue.o \
 	$(BUILD)/process.o \
