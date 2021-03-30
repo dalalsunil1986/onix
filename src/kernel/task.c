@@ -9,6 +9,7 @@
 #include <onix/queue.h>
 #include <onix/kernel/ioqueue.h>
 #include <onix/kernel/harddisk.h>
+#include <onix/kernel/mutex.h>
 
 // #define DEBUGINFO
 
@@ -24,6 +25,9 @@ Queue tasks_queue;
 Queue tasks_ready;
 
 u32 init_stack_top;
+
+static Lock task_id_lock;
+extern bool sys_inited;
 
 extern void restart(Task *init);
 extern void switch_to(Task *current, Task *next);
@@ -68,6 +72,23 @@ void kernel_task(Tasktarget target, void *args)
     target(args);
 }
 
+static u32 get_next_task_id()
+{
+    u32 id = 0;
+    static u32 next_task_id = 0;
+
+    if (sys_inited)
+        acquire(&task_id_lock);
+
+    id = next_task_id;
+    next_task_id++;
+
+    if (sys_inited)
+        release(&task_id_lock);
+
+    return id;
+}
+
 void task_create(Task *task, Tasktarget target, void *args)
 {
     u32 stack = task->stack;
@@ -88,8 +109,12 @@ void task_create(Task *task, Tasktarget target, void *args)
 
 void task_init(Task *task, char *name, int priority, int user)
 {
+    Task *cur = running_task();
+
     memset(task, 0, sizeof(*task));
     strcpy(task->name, name);
+    task->id = get_next_task_id();
+    task->pid = cur->id;
     task->status = TASK_INIT;
     task->priority = priority;
     task->ticks = task->priority;
@@ -98,7 +123,6 @@ void task_init(Task *task, char *name, int priority, int user)
     task->magic = TASK_MAGIC;
     task->user = user;
 
-    Task *cur = running_task();
     if (task != cur)
     {
         task->vaddr.start = cur->vaddr.start;
@@ -294,6 +318,8 @@ void init_task()
     DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(TaskFrame));
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
+    lock_init(&task_id_lock);
+
     make_init_task();
     idle = task_start(idle_task, NULL, "idle task", 1);
     task_start(keyboard_task, NULL, "key task", 16);

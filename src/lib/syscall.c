@@ -1,6 +1,11 @@
 #include <onix/syscall.h>
 
-void test_syscall()
+u32 sys_test()
 {
-    syscall0(0);
+    return syscall0(SYS_NR_TEST);
+}
+
+u32 sys_getpid()
+{
+    return syscall0(SYS_NR_GETPID);
 }

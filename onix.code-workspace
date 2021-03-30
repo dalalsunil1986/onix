@@ -39,7 +39,10 @@
 			"bitmap.h": "c",
 			"printk.h": "c",
 			"debug.h": "c",
-			"syscall.h": "c"
+			"syscall.h": "c",
+			"types.h": "c",
+			"ksyscall.h": "c",
+			"thread": "c"
 		}
 	}
 }

@@ -18,6 +18,8 @@
 #define DEBUGP(fmt, args...)
 #endif
 
+bool sys_inited = false;
+
 void __init_kernel()
 {
     // BMB;
@@ -28,6 +30,7 @@ void __init_kernel()
     init_interrupt();
     init_task();
     init_process();
+    sys_inited = true;
 }
 
 int test_function()
