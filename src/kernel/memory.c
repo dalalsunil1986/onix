@@ -199,7 +199,7 @@ static void free_task_page(Page vaddr, u32 size)
     Bitmap *mmap = &task->vaddr.mmap;
     u32 start = task->vaddr.start;
 
-    assert(task->user == 0);
+    // assert(task->user == 0);
 
     u32 vstart = (u32)vaddr;
     for (size_t i = 0; i < size; i++)
