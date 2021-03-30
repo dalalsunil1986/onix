@@ -16,7 +16,7 @@ void test_processa()
             ch = 'T';
         }
         show_char(ch, 73, 0);
-        u32 id = getpid();
+        u32 id = sys_getpid();
         printf("Hello test process %d\n", id);
     }
 }

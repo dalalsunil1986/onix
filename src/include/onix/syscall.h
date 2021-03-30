@@ -16,7 +16,7 @@ extern u32 syscall2(u32 nr, u32 arg1, u32 arg2);
 extern u32 syscall3(u32 nr, u32 arg1, u32 arg2, u32 arg3);
 
 u32 sys_test();
-u32 getpid();
-u32 write(char *str);
+u32 sys_getpid();
+u32 sys_write(char *str);
 
 #endif
