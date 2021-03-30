@@ -2,6 +2,7 @@ BUILD:= ../build
 SRC:=.
 BOOT:= $(SRC)/boot
 KERNEL:= $(SRC)/kernel
+LIB:= $(SRC)/lib
 TESTS:= $(SRC)/tests
 
 BOOT_INCLUDE:=$(SRC)/boot
@@ -50,6 +51,9 @@ $(BUILD)/handler.o: $(KERNEL)/handler.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
 
 $(BUILD)/schedule.o: $(KERNEL)/schedule.asm
+	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
+
+$(BUILD)/syscall.o: $(LIB)/syscall.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
 
 $(BUILD)/global.o: $(KERNEL)/global.c
@@ -112,7 +116,10 @@ $(BUILD)/ioqueue.o: $(KERNEL)/ioqueue.c
 $(BUILD)/debug.o: $(KERNEL)/debug.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
-$(BUILD)/syscall.o: $(KERNEL)/syscall.c
+$(BUILD)/ksyscall.o: $(KERNEL)/ksyscall.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
+$(BUILD)/test.o: $(KERNEL)/test.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
 $(BUILD)/kernel.bin: $(BUILD)/start.o \
@@ -138,7 +145,9 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/schedule.o \
 	$(BUILD)/mutex.o \
 	$(BUILD)/debug.o \
+	$(BUILD)/ksyscall.o \
 	$(BUILD)/syscall.o \
+	$(BUILD)/test.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
