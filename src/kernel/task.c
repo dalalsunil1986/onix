@@ -223,7 +223,6 @@ void task_destory(Task *task)
     if (task->pid == task->tid)
     {
         // destory pde;
-        free_pages(task)
     }
     DEBUGP("free task page 0x%08X\n", task);
     page_free(task, 1);

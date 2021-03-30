@@ -3,6 +3,7 @@ SRC:=.
 BOOT:= $(SRC)/boot
 KERNEL:= $(SRC)/kernel
 LIB:= $(SRC)/lib
+FS:= $(SRC)/fs
 TESTS:= $(SRC)/tests
 
 BOOT_INCLUDE:=$(SRC)/boot
@@ -131,6 +132,9 @@ $(BUILD)/stdio.o: $(LIB)/stdio.c
 $(BUILD)/malloc.o: $(LIB)/malloc.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/fs.o: $(FS)/fs.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/test.o: $(KERNEL)/test.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -163,6 +167,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/syscall.o \
 	$(BUILD)/stdio.o \
 	$(BUILD)/malloc.o \
+	$(BUILD)/fs.o \
 	$(BUILD)/test.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
