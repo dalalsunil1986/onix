@@ -65,7 +65,7 @@ static void ticks_to_sleep(u32 ticks)
     }
 }
 
-void sleep(u32 milliseconds)
+void __sleep(u32 milliseconds)
 {
     u32 sleep_ticks = round_up(milliseconds, INTERRUPT_MILLISECONDS);
     assert(sleep_ticks > 0);

@@ -17,6 +17,6 @@ void init_pit();
 void init_clock();
 
 void clock_handler(int vector);
-void sleep(u32 milliseconds);
+void __sleep(u32 milliseconds);
 
 #endif
