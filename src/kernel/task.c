@@ -227,15 +227,15 @@ void init_kernel_task()
     u32 counter = 0;
     Task *task;
 
-    bool old = disable_int();
-    while (tasks_queue.size < 100)
-    {
-        task_start(test_task, NULL, "test task", 16);
-        clock_sleep(1);
-        DEBUGP("free pages 0x%d task size %d\n", free_pages, tasks_queue.size);
-        continue;
-    }
-    set_interrupt_status(old);
+    // bool old = disable_int();
+    // while (tasks_queue.size < 100)
+    // {
+    //     task_start(test_task, NULL, "test task", 16);
+    //     clock_sleep(1);
+    //     DEBUGP("free pages 0x%d task size %d\n", free_pages, tasks_queue.size);
+    //     continue;
+    // }
+    // set_interrupt_status(old);
 
     while (true)
     {
@@ -378,4 +378,5 @@ void init_task()
     make_init_task();
     idle = task_start(idle_task, NULL, "idle task", 1);
     task_start(keyboard_task, NULL, "key task", 16);
+    task_start(test_task, NULL, "test task", 16);
 }
