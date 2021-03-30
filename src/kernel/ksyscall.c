@@ -1,5 +1,6 @@
 #include <onix/kernel/ksyscall.h>
 #include <onix/kernel/interrupt.h>
+#include <onix/kernel/printk.h>
 #include <onix/kernel/task.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/clock.h>
@@ -27,6 +28,11 @@ u32 __sys_getpid()
     return task->id;
 }
 
+u32 __sys_write(char *str)
+{
+    printk("%s", str);
+}
+
 void init_syscall()
 {
     InterruptHandler handler = syscall_handler;
@@ -37,4 +43,5 @@ void init_syscall()
 
     syscall_table[SYS_NR_TEST] = __sys_test;
     syscall_table[SYS_NR_GETPID] = __sys_getpid;
+    syscall_table[SYS_NR_WRITE] = __sys_write;
 }

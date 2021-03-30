@@ -42,7 +42,14 @@
 			"syscall.h": "c",
 			"types.h": "c",
 			"ksyscall.h": "c",
-			"thread": "c"
+			"thread": "c",
+			"memory_resource": "c",
+			"iosfwd": "c",
+			"new": "c",
+			"sstream": "c",
+			"streambuf": "c",
+			"stdarg.h": "c",
+			"stdio.h": "c"
 		}
 	}
 }

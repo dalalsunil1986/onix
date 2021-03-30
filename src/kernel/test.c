@@ -1,4 +1,6 @@
 #include <onix/syscall.h>
+#include <onix/stdio.h>
+
 #include <onix/kernel/printk.h>
 #include <onix/kernel/debug.h>
 
@@ -14,9 +16,7 @@ void test_processa()
             ch = 'T';
         }
         show_char(ch, 73, 0);
-        u32 id = sys_getpid();
-        show_char(id + 0x30, 71, 0);
-        // DEBUGP("test process a .....\n");// 此时应该没有 io 权限无法修改 光标会报 gp 异常
-        // sleep(100);
+        u32 id = getpid();
+        printf("Hello test process %d\n", id);
     }
 }

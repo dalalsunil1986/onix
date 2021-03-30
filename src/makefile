@@ -71,7 +71,7 @@ $(BUILD)/string.o: $(KERNEL)/string.c
 $(BUILD)/stdlib.o: $(KERNEL)/stdlib.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
-$(BUILD)/vsprintf.o: $(KERNEL)/vsprintf.c
+$(BUILD)/vsprintf.o: $(LIB)/vsprintf.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
 $(BUILD)/assert.o: $(KERNEL)/assert.c
@@ -122,6 +122,9 @@ $(BUILD)/ksyscall.o: $(KERNEL)/ksyscall.c
 $(BUILD)/syscall.o: $(LIB)/syscall.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
+$(BUILD)/stdio.o: $(LIB)/stdio.c
+	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+
 $(BUILD)/test.o: $(KERNEL)/test.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
@@ -151,6 +154,7 @@ $(BUILD)/kernel.bin: $(BUILD)/start.o \
 	$(BUILD)/ksyscall.o \
 	$(BUILD)/__syscall.o \
 	$(BUILD)/syscall.o \
+	$(BUILD)/stdio.o \
 	$(BUILD)/test.o \
 	$(BUILD)/main.o
 	$(LD) $(LDFLAGS) $^ -o $@
