@@ -5,7 +5,7 @@
 #include <onix/kernel/clock.h>
 #include <onix/kernel/keyboard.h>
 #include <onix/kernel/harddisk.h>
-#include <onix/kernel/syscall.h>
+#include <onix/kernel/ksyscall.h>
 #include <onix/kernel/debug.h>
 
 #define DEBUGINFO

@@ -1,3 +1,5 @@
+%include "boot.inc"
+
 bits 32
 section .text
 
