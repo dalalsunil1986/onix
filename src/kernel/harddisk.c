@@ -18,7 +18,7 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-#define DELAY 1000
+#define DELAY 500 // 经测试 150 一下就不响应了
 
 static u8 harddisk_count;
 
@@ -45,6 +45,7 @@ void harddisk_handler(int vector)
         sema_up(&channel->done);
         inb(ATA_REG_STATUS(channel));
     }
+
     DEBUGP("Harddisk interrupt finish!!!\n");
 }
 
@@ -56,7 +57,7 @@ void select_disk(Harddisk *disk)
         reg_device |= BIT_DEV_DEV;
     }
     outb(ATA_REG_DEVICE(disk->channel), reg_device);
-    clock_sleep(DELAY);
+    // clock_sleep(DELAY);
 }
 
 void select_sector(Harddisk *disk, u32 lba, u32 sec_cnt)
@@ -78,7 +79,7 @@ void select_sector(Harddisk *disk, u32 lba, u32 sec_cnt)
         reg_device |= (lba >> 24);
     }
     outb(ATA_REG_DEVICE(channel), reg_device);
-    clock_sleep(DELAY);
+    // clock_sleep(DELAY);
 }
 
 void command_out(IDEChannel *channel, u8 cmd)
@@ -119,6 +120,7 @@ bool harddisk_busy_wait(Harddisk *disk)
         }
         /* code */
     }
+    printk("harddisk wait timeout \n");
     return false;
 }
 
