@@ -25,7 +25,7 @@ void init_kernel_task()
     __clear();
     init_harddisk();
     // test_process();
-    init_fs();
+    // init_fs();
 
     u32 counter = 0;
     Task *task;

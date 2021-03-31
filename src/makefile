@@ -87,7 +87,7 @@ $(BUILD)/clock.o: $(KERNEL)/clock.c
 $(BUILD)/keyboard.o: $(KERNEL)/keyboard.c
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
-$(BUILD)/harddisk.o: $(KERNEL)/harddisk.c
+$(BUILD)/harddisk.o: $(KERNEL)/harddisk.c $(KERNEL_INCLUDE)/onix/kernel/harddisk.h
 	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
 
 $(BUILD)/bitmap.o: $(KERNEL)/bitmap.c
@@ -190,7 +190,7 @@ endif
 $(BUILD)/slave.img: $(BUILD)/slave.sfdisk
 
 ifeq ("$(wildcard $(BUILD)/slave.img)", "")
-	bximage -q -hd=16 -mode=create -sectsize=512 -imgmode=flat $@
+	bximage -q -hd=128 -mode=create -sectsize=512 -imgmode=flat $@
 endif
 	sfdisk $@ < $<
 

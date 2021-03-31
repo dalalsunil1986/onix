@@ -1,7 +1,12 @@
 label: dos
-label-id: 0x6152c52e
+label-id: 0x810ed4da
 device: ../build/slave.img
 unit: sectors
 sector-size: 512
 
-../build/slave.img1 : start=        2048, size=       30208, type=83
+../build/slave.img1 : start=        2048, size=        8192, type=83
+../build/slave.img2 : start=       10240, size=       16384, type=83
+../build/slave.img3 : start=       26624, size=       32768, type=83
+../build/slave.img4 : start=       59392, size=       32768, type=5
+../build/slave.img5 : start=       61440, size=       16384, type=83
+../build/slave.img6 : start=       79872, size=       12288, type=83

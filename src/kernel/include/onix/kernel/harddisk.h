@@ -61,13 +61,38 @@ refer to https://wiki.osdev.org/PCI_IDE_Controller#Parallel.2FSerial_ATA.2FATAPI
 #define ATA_DRIVE_MASTER 0xA0
 #define ATA_DRIVE_SLAVE 0xB0
 
-#define BIT_DEV_MBS 0xA0
-#define BIT_DEV_LBA 0x40
-#define BIT_DEV_DEV 0x10
+#define BIT_DEV_MBS 0b10100000
+#define BIT_DEV_LBA 0b01000000
+#define BIT_DEV_DEV 0b00010000
 
-#define MAX_LBA ((16 * 1024 * 1024 / 512) - 1)
+#define MAX_CAPACITY 128                                 // 128 M
+#define MAX_LBA ((MAX_CAPACITY * 1024 * 1024 / 512) - 1) // 16M
+
+#define MAX_PRIMARY_PART 4
+#define MAX_LOGICAL_PART 8
+#define MAR_PART (MAX_PRIMARY_PART + MAX_LOGICAL_PART)
 
 #define SECTOR_SIZE 512
+
+typedef enum FSType
+{
+    FS_UNKNOWN = 0,
+    FS_FAT12 = 1,
+    FS_XENIX_ROOT = 2,
+    FS_XENIX_USER = 3,
+    FS_FAT16B = 4,
+    FS_EXTEND = 5,
+    FS_FAT16 = 6,
+    FS_NTFS = 7,
+    // https://www.win.tue.nl/~aeb/partitions/partition_types-1.html
+    // FOR MORE INFORMATION
+} FSType;
+
+typedef enum PartType
+{
+    PART_PRIMARY,
+    PART_LOGICAL,
+} PartType;
 
 typedef struct Partition
 {
@@ -80,23 +105,26 @@ typedef struct Partition
     Bitmap block_bitmap;
     Bitmap inode_bitmap;
     Queue open_inodes;
-
+    u8 type;
 } Partition;
 
 typedef struct Harddisk
 {
     char name[8];
     struct IDEChannel *channel;
-    u8 dev_no;
-    struct Partition primary_parts[4];
-    struct Partition logical_parts[4];
+    u8 dev_idx;
+    struct Partition primary_parts[MAX_PRIMARY_PART];
+    struct Partition logical_parts[MAX_LOGICAL_PART];
+    u8 primary_count;
+    u8 logical_count;
 } Harddisk;
 
 typedef struct IDEChannel
 {
     char name[8];
+    u8 index;
     u16 bus;
-    u8 irq_no;
+    u8 irq;
     Lock lock;
     bool waiting;
     Semaphore done;
@@ -107,8 +135,8 @@ typedef struct PartitionTableEntry
 {
     u8 bootable;
     u8 start_head;
-    u8 start_sec;
-    u8 start_chs;
+    u8 start_sec : 6;
+    u16 start_chs : 10;
     u8 fs_type;
     u8 end_head;
     u8 end_sec;

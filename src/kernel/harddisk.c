@@ -19,24 +19,22 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-static u8 harddisk_count;
-
 u8 channel_count;
 IDEChannel channels[2];
 
-u32 ext_lba_base = 0;
-u8 p_no = 0;
-u8 l_no = 0;
+static u8 harddisk_count;
 
 Queue partition_queue;
 
 void harddisk_handler(int vector)
 {
     DEBUGP("Harddisk interrupt occured!!!\n");
+
     assert(vector == 0x2e || vector == 0x2f);
     u8 idx = vector - 0x2e;
     IDEChannel *channel = &channels[idx];
-    assert(channel->irq_no == vector);
+
+    assert(channel->irq == vector);
 
     if (channel->waiting)
     {
@@ -45,13 +43,14 @@ void harddisk_handler(int vector)
         sema_up(&channel->done);
         inb(ATA_REG_STATUS(channel));
     }
+
     DEBUGP("Harddisk interrupt finish!!!\n");
 }
 
 void select_disk(Harddisk *disk)
 {
     u8 reg_device = BIT_DEV_MBS | BIT_DEV_LBA;
-    if (disk->dev_no == 1)
+    if (disk->dev_idx == 1)
     {
         reg_device |= BIT_DEV_DEV;
     }
@@ -67,14 +66,10 @@ void select_sector(Harddisk *disk, u32 lba, u32 sec_cnt)
     outb(ATA_REG_LBA_MID(channel), lba >> 8);
     outb(ATA_REG_LBA_HIGH(channel), lba >> 16);
 
-    u8 reg_device = BIT_DEV_MBS | BIT_DEV_LBA;
-    if (disk->dev_no == 1)
+    u8 reg_device = BIT_DEV_MBS | BIT_DEV_LBA | (lba >> 24);
+    if (disk->dev_idx == 1)
     {
         reg_device |= BIT_DEV_DEV;
-    }
-    else
-    {
-        reg_device |= (lba >> 24);
     }
     outb(ATA_REG_DEVICE(channel), reg_device);
 }
@@ -90,13 +85,13 @@ void read_sectors(Harddisk *disk, void *buf, u8 sec_cnt)
 {
     // 由于 sec_cnt 是 8 位，实际不可能读 0 个扇区，于是用于表示 256；
     u32 size = ((sec_cnt) ? sec_cnt : 256) * SECTOR_SIZE;
-    insd(ATA_REG_DATA(disk->channel), buf, size / 4);
+    insw(ATA_REG_DATA(disk->channel), buf, size / 2); // ata 数据端口 16 位
 }
 
 void write_sectors(Harddisk *disk, void *buf, u8 sec_cnt)
 {
     u32 size = ((sec_cnt) ? sec_cnt : 256) * SECTOR_SIZE;
-    outsd(ATA_REG_DATA(disk->channel), buf, size / 4);
+    outsw(ATA_REG_DATA(disk->channel), buf, size / 2);
 }
 
 bool harddisk_busy_wait(Harddisk *disk)
@@ -110,14 +105,11 @@ bool harddisk_busy_wait(Harddisk *disk)
         if (status & ATA_SR_BSY)
         {
             sys_sleep(10);
+            continue;
         }
-        else
-        {
-            return status & ATA_SR_DRQ;
-        }
-        /* code */
+        return status & ATA_SR_DRQ;
     }
-    printk("harddisk wait timeout \n");
+    printk("harddisk wait timeout\n");
     return false;
 }
 
@@ -136,20 +128,22 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 
     select_disk(disk);
 
-    u32 secs_op = 0;
-    u32 secs_done = 0;
-    while (secs_done < sec_cnt)
+    u32 sec_op = 0;
+    u32 sec_done = 0;
+    // 尽量一次处理 256 个扇区
+    while (sec_done < sec_cnt)
     {
-        if ((secs_done + 256) <= sec_cnt)
+        if ((sec_done + 256) <= sec_cnt)
         {
-            secs_op = 256;
+            sec_op = 256;
         }
         else
         {
-            secs_op = sec_cnt - secs_done;
+            sec_op = sec_cnt - sec_done;
         }
+
         DEBUGP("read disk select sector \n");
-        select_sector(disk, lba + secs_done, secs_op);
+        select_sector(disk, lba + sec_done, sec_op);
 
         DEBUGP("read disk command out \n");
         command_out(disk->channel, ATA_CMD_READ_PIO);
@@ -163,8 +157,8 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         }
 
         DEBUGP("read disk read sectors\n");
-        read_sectors(disk, (void *)((u32)buf + secs_done * SECTOR_SIZE), secs_op);
-        secs_done += secs_op;
+        read_sectors(disk, (void *)((u32)buf + sec_done * SECTOR_SIZE), sec_op);
+        sec_done += sec_op;
     }
     release(&disk->channel->lock);
 }
@@ -179,21 +173,21 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
     DEBUGP("write disk select disk\n");
     select_disk(disk);
 
-    u32 secs_op = 0;
-    u32 secs_done = 0;
-    while (secs_done < sec_cnt)
+    u32 sec_op = 0;
+    u32 sec_done = 0;
+    while (sec_done < sec_cnt)
     {
-        if ((secs_done + 256) <= sec_cnt)
+        if ((sec_done + 256) <= sec_cnt)
         {
-            secs_op = 256;
+            sec_op = 256;
         }
         else
         {
-            secs_op = sec_cnt - secs_done;
+            sec_op = sec_cnt - sec_done;
         }
 
         DEBUGP("write disk select sector\n");
-        select_sector(disk, lba + secs_done, secs_op);
+        select_sector(disk, lba + sec_done, sec_op);
 
         DEBUGP("write disk command out \n");
         command_out(disk->channel, ATA_CMD_WRITE_PIO);
@@ -204,11 +198,11 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         }
 
         DEBUGP("write disk write sectors\n");
-        write_sectors(disk, (void *)((u32)buf + secs_done * SECTOR_SIZE), secs_op);
+        write_sectors(disk, (void *)((u32)buf + sec_done * SECTOR_SIZE), sec_op);
 
         DEBUGP("write disk sema down\n");
         sema_down(&disk->channel->done);
-        secs_done += secs_op;
+        sec_done += sec_op;
     }
     release(&disk->channel->lock);
 }
@@ -256,7 +250,8 @@ static void disk_identity(Harddisk *disk)
     u8 md_len = 40;
 
     swap_pairs_bytes(&info[sn_start], buf, sn_len);
-    DEBUGP("Disk %s info: \n    SN: %s \n", disk->name, buf);
+    DEBUGP("Disk %s info: \n", disk->name);
+    DEBUGP("     SN: %s \n", buf);
 
     memset(buf, 0, sizeof(buf));
 
@@ -268,137 +263,157 @@ static void disk_identity(Harddisk *disk)
     DEBUGP("    Capacity: %dMB\n", sectors * SECTOR_SIZE / 1024 / 1024);
 }
 
-static void partition_scan(Harddisk *disk, u32 ext_lba)
+static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
 {
-    // BMB;
-
     DEBUGP("part scan start \n");
 
     BootSector *bs = malloc(sizeof(BootSector));
-
     DEBUGP("part scan memory alloc 0x%08X\n", bs);
 
-    harddisk_read(disk, ext_lba, bs, 1);
+    harddisk_read(disk, start_lba, bs, 1);
 
-    DEBUGP("part scan read bs finish\n");
-    u8 part_idx = 0;
     PartitionTableEntry *entry = bs->entry;
 
-    for (size_t part_idx = 0; part_idx < 4; part_idx++, entry++)
+    for (u32 part_idx = 0; part_idx < 4; part_idx++, entry++)
     {
-        DEBUGP("Part idx %d fs %d entry 0x%X\n", part_idx, entry->fs_type, entry);
-        if (entry->fs_type == 0)
+        // DEBUGP("Part idx %d fs %d entry 0x%X\n", part_idx, entry->fs_type, entry);
+        if (entry->fs_type == FS_UNKNOWN)
             continue;
-        if (entry->fs_type == 0x5)
+        if (entry->fs_type == FS_EXTEND)
         {
-            if (ext_lba_base != 0)
+            if (ext_lba != 0)
             {
-                partition_scan(disk, entry->start_lba + ext_lba_base);
+                partition_scan(disk, entry->start_lba + ext_lba, ext_lba);
             }
             else
             {
-                ext_lba_base = entry->start_lba;
-                partition_scan(disk, entry->start_lba);
+                partition_scan(disk, entry->start_lba, entry->start_lba);
             }
+            continue;
         }
-        else if (entry->fs_type != 0)
+        if (ext_lba == 0)
         {
-            if (ext_lba_base == 0)
-            {
-                disk->primary_parts[p_no].start_lba = ext_lba + entry->start_lba;
-                disk->primary_parts[p_no].sec_cnt = entry->sec_cnt;
-                disk->primary_parts[p_no].disk = disk;
-                DEBUGP("part scan push primary queue \n");
-                queue_push(&partition_queue, &disk->primary_parts[p_no].node);
-                sprintf(disk->primary_parts[p_no].name, "%s%d", disk->name, p_no + 1);
-                p_no++;
-                assert(p_no < 4);
-            }
-            else
-            {
-                disk->primary_parts[l_no].start_lba = ext_lba + entry->start_lba;
-                disk->primary_parts[l_no].sec_cnt = entry->sec_cnt;
-                disk->primary_parts[l_no].disk = disk;
-                DEBUGP("part scan push logical queue \n");
-                queue_push(&partition_queue, &disk->logical_parts[l_no].node);
-                sprintf(disk->primary_parts[p_no].name, "%s%d", disk->name, l_no + 5);
-                l_no++;
-                if (l_no >= 8)
-                    return;
-            }
+            assert(disk->primary_count < MAX_PRIMARY_PART);
+
+            Partition *part = disk->primary_parts + disk->primary_count;
+
+            part->start_lba = ext_lba + entry->start_lba;
+            part->sec_cnt = entry->sec_cnt;
+            part->disk = disk;
+            part->type = PART_PRIMARY;
+            DEBUGP("part scan push primary queue \n");
+            queue_push(&partition_queue, &part->node);
+            sprintf(part->name, "%s%d", disk->name, disk->primary_count + 1);
+            disk->primary_count++;
+        }
+        else
+        {
+            if (disk->logical_count >= MAX_LOGICAL_PART)
+                continue;
+
+            Partition *part = disk->logical_parts + disk->logical_count;
+
+            part->start_lba = ext_lba + entry->start_lba;
+            part->sec_cnt = entry->sec_cnt;
+            part->disk = disk;
+            part->type = PART_LOGICAL;
+            DEBUGP("part scan push primary queue\n");
+            queue_push(&partition_queue, &part->node);
+
+            sprintf(part->name, "%s%d", disk->name, disk->logical_count + disk->primary_count + 1);
+            disk->logical_count++;
         }
     };
     free(bs);
+    DEBUGP("part scan memory free 0x%08X\n", bs);
 }
 
 static bool print_partition_info(Node *node, int arg)
 {
     Partition *part = element_entry(Partition, node, node);
-    printk("   %s start_lba:0x%x, sec_cnt:0x%x\n", part->name, part->start_lba, part->sec_cnt);
+    DEBUGP("%s type %d start_lba:0x%x, sec_cnt:0x%x\n",
+           part->name, part->type,
+           part->start_lba, part->sec_cnt);
     return false;
 }
 
-void init_harddisk()
+static void init_disk(IDEChannel *channel, u8 dev_idx)
 {
-    printk("Initializing harddisk...\n");
-    harddisk_count = *((u8 *)(0x475));
+    Harddisk *disk = channel->devices + dev_idx;
+    disk->channel = channel;
+    disk->dev_idx = dev_idx;
 
+    sprintf(disk->name, "sd%c", 'a' + channel->index * 2 + disk->dev_idx);
+    disk->logical_count = 0;
+    disk->primary_count = 0;
+    if (disk->dev_idx != 0)
+    {
+        DEBUGP("init partition scan %s\n", disk->name);
+        partition_scan(disk, 0, 0);
+    }
+}
+
+static void init_channels()
+{
+    harddisk_count = *((u8 *)(0x475));
+    assert(harddisk_count > 0);
     queue_init(&partition_queue);
 
     channel_count = round_up(harddisk_count, 2);
 
     DEBUGP("harddisk count %d channel count %d\n", harddisk_count, channel_count);
-    IDEChannel *channel;
-    u32 channel_no = 0;
-    u8 dev_no = 0;
 
-    while (channel_no < channel_count)
+    IDEChannel *channel;
+    u32 channel_idx = 0;
+    u8 dev_idx = 0;
+
+    while (channel_idx < channel_count)
     {
-        channel = channels + channel_no;
+        channel = channels + channel_idx;
+        channel->index = channel_idx;
         sprintf(channel->name, "ide%u\0", 0);
-        DEBUGP("name %s\n", channel->name);
-        switch (channel_no)
+        DEBUGP("channel name %s\n", channel->name);
+
+        switch (channel_idx)
         {
         case 0:
             channel->bus = ATA_BUS_PRIMARY;
-            channel->irq_no = ICW2_INT_VECTOR_IRQ0 + IRQ_HARDDISK;
+            channel->irq = ICW2_INT_VECTOR_IRQ0 + IRQ_HARDDISK;
             break;
         case 1:
             channel->bus = ATA_BUS_SECONDARY;
-            channel->irq_no = ICW2_INT_VECTOR_IRQ0 + IRQ_HARDDISK2;
+            channel->irq = ICW2_INT_VECTOR_IRQ0 + IRQ_HARDDISK2;
         default:
             break;
         }
+
         channel->waiting = false;
         lock_init(&channel->lock);
         sema_init(&channel->done, 0);
 
-        register_handler(IRQ_HARDDISK, harddisk_handler);
-        register_handler(IRQ_HARDDISK2, harddisk_handler);
-
-        DEBUGP("harddisk enable irq\n");
-        enable_irq(IRQ_CASCADE);
-        enable_irq(IRQ_HARDDISK);
-
-        while (dev_no < 2)
+        while (dev_idx < 2)
         {
-            Harddisk *disk = &channel->devices[dev_no];
-            disk->channel = channel;
-            disk->dev_no = dev_no;
-            sprintf(disk->name, "sd%c", 'a' + channel_no * 2 + dev_no);
-            disk_identity(disk);
-            if (dev_no != 0)
-            {
-                DEBUGP("init partition scan %s\n", disk->name);
-                partition_scan(disk, 0);
-            }
-            p_no = 0;
-            l_no = 0;
-            dev_no++;
+            init_disk(channel, dev_idx);
+            dev_idx++;
         }
-        dev_no = 0;
-        channel_no++;
+        dev_idx = 0;
+        channel_idx++;
     }
     DEBUGP("init show partition info\n");
     queue_traversal(&partition_queue, print_partition_info, NULL);
+}
+
+void init_harddisk()
+{
+    printk("Initializing harddisk...\n");
+
+    DEBUGP("harddisk enable irq\n");
+    enable_irq(IRQ_CASCADE);
+    enable_irq(IRQ_HARDDISK);
+
+    register_handler(IRQ_HARDDISK, harddisk_handler);
+    register_handler(IRQ_HARDDISK2, harddisk_handler);
+
+    init_channels();
+    printk("Initializing harddisk finish...\n");
 }
