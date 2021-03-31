@@ -165,7 +165,7 @@ void init_fs()
                     if (sb->magic == FS_MAGIC)
                     {
                         DEBUGP("%s has file system\n", part->name);
-                        partition_format(part);
+                        // partition_format(part);
                     }
                     else
                     {

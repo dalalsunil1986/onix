@@ -123,21 +123,21 @@ bool harddisk_busy_wait(Harddisk *disk)
 
 void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
-    DEBUGP("harddisk read disk %X lba %X buf %X sect %d \n", disk, lba, buf, sec_cnt);
+    DEBUGP("read disk %X lba %X buf %X sect %d \n", disk, lba, buf, sec_cnt);
 
     assert(lba < MAX_LBA);
     assert(sec_cnt > 0);
 
-    DEBUGP("harddisk read disk acquire \n");
+    DEBUGP("read disk acquire \n");
 
     acquire(&disk->channel->lock);
 
-    DEBUGP("harddisk read disk select disk \n");
+    DEBUGP("read disk select disk \n");
 
     select_disk(disk);
 
-    u32 secs_op;
-    u32 secs_done;
+    u32 secs_op = 0;
+    u32 secs_done = 0;
     while (secs_done < sec_cnt)
     {
         if ((secs_done + 256) <= sec_cnt)
@@ -148,15 +148,13 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         {
             secs_op = sec_cnt - secs_done;
         }
-        DEBUGP("harddisk read disk select sector \n");
+        DEBUGP("read disk select sector \n");
         select_sector(disk, lba + secs_done, secs_op);
 
-        DEBUGP("harddisk read disk command out \n");
+        DEBUGP("read disk command out \n");
         command_out(disk->channel, ATA_CMD_READ_PIO);
 
-        DEBUGP("harddisk read disk sema down\n");
-        // DEBUGP("");
-
+        DEBUGP("read disk sema down\n");
         sema_down(&disk->channel->done);
 
         if (!harddisk_busy_wait(disk))
@@ -164,7 +162,7 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
             panic("%s read sector %d failed!!!\n", disk->name, lba);
         }
 
-        DEBUGP("harddisk read disk read sectors \n");
+        DEBUGP("read disk read sectors\n");
         read_sectors(disk, (void *)((u32)buf + secs_done * SECTOR_SIZE), secs_op);
         secs_done += secs_op;
     }
@@ -175,12 +173,14 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
     assert(lba < MAX_LBA);
     assert(sec_cnt > 0);
-
+    DEBUGP("write disk acquire\n");
     acquire(&disk->channel->lock);
+
+    DEBUGP("write disk select disk\n");
     select_disk(disk);
 
-    u32 secs_op;
-    u32 secs_done;
+    u32 secs_op = 0;
+    u32 secs_done = 0;
     while (secs_done < sec_cnt)
     {
         if ((secs_done + 256) <= sec_cnt)
@@ -191,18 +191,22 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         {
             secs_op = sec_cnt - secs_done;
         }
+
+        DEBUGP("write disk select sector\n");
         select_sector(disk, lba + secs_done, secs_op);
 
-        DEBUGP("harddisk write disk command out \n");
+        DEBUGP("write disk command out \n");
         command_out(disk->channel, ATA_CMD_WRITE_PIO);
 
         if (!harddisk_busy_wait(disk))
         {
             panic("%s write sector %d failed!!!\n", disk->name, lba);
         }
+
+        DEBUGP("write disk write sectors\n");
         write_sectors(disk, (void *)((u32)buf + secs_done * SECTOR_SIZE), secs_op);
 
-        DEBUGP("harddisk write disk sema down\n");
+        DEBUGP("write disk sema down\n");
         sema_down(&disk->channel->done);
         secs_done += secs_op;
     }
