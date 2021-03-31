@@ -8,7 +8,7 @@
 #include <onix/kernel/ksyscall.h>
 #include <onix/kernel/debug.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK

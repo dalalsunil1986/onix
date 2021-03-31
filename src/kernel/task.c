@@ -154,23 +154,23 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
 void task_block(Task *task)
 {
     bool old = disable_int();
-
+    Task *cur = running_task();
     assert(task->status != TASK_BLOCKED);
     task->status = TASK_BLOCKED;
 
-    schedule();
+    if (cur == task)
+    {
+        schedule();
+    }
+
     set_interrupt_status(old);
 }
 
 void task_unblock(Task *task)
 {
     bool old = disable_int();
-
     assert(task->status == TASK_BLOCKED);
-
     push_ready_task(task);
-    schedule();
-
     set_interrupt_status(old);
 }
 

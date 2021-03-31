@@ -7,6 +7,7 @@
 #include <onix/kernel/clock.h>
 #include <onix/string.h>
 #include <onix/stdlib.h>
+#include <onix/queue.h>
 #include <onix/malloc.h>
 #include <onix/syscall.h>
 
@@ -17,8 +18,6 @@
 #else
 #define DEBUGP(fmt, args...)
 #endif
-
-#define DELAY 500 // 经测试 150 一下就不响应了
 
 static u8 harddisk_count;
 
@@ -41,11 +40,11 @@ void harddisk_handler(int vector)
 
     if (channel->waiting)
     {
+        DEBUGP("harddisk sema up \n");
         channel->waiting = false;
         sema_up(&channel->done);
         inb(ATA_REG_STATUS(channel));
     }
-
     DEBUGP("Harddisk interrupt finish!!!\n");
 }
 
@@ -57,7 +56,6 @@ void select_disk(Harddisk *disk)
         reg_device |= BIT_DEV_DEV;
     }
     outb(ATA_REG_DEVICE(disk->channel), reg_device);
-    // clock_sleep(DELAY);
 }
 
 void select_sector(Harddisk *disk, u32 lba, u32 sec_cnt)
@@ -79,14 +77,13 @@ void select_sector(Harddisk *disk, u32 lba, u32 sec_cnt)
         reg_device |= (lba >> 24);
     }
     outb(ATA_REG_DEVICE(channel), reg_device);
-    // clock_sleep(DELAY);
 }
 
 void command_out(IDEChannel *channel, u8 cmd)
 {
+    // DEBUGP("harddisk command out \n");
     channel->waiting = true;
     outb(ATA_REG_CMD(channel), cmd);
-    clock_sleep(DELAY);
 }
 
 void read_sectors(Harddisk *disk, void *buf, u8 sec_cnt)
@@ -157,8 +154,8 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         DEBUGP("harddisk read disk command out \n");
         command_out(disk->channel, ATA_CMD_READ_PIO);
 
-        DEBUGP("harddisk read disk sema down \n");
-        // DEBUGK("");
+        DEBUGP("harddisk read disk sema down\n");
+        // DEBUGP("");
 
         sema_down(&disk->channel->done);
 
@@ -196,6 +193,7 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         }
         select_sector(disk, lba + secs_done, secs_op);
 
+        DEBUGP("harddisk write disk command out \n");
         command_out(disk->channel, ATA_CMD_WRITE_PIO);
 
         if (!harddisk_busy_wait(disk))
@@ -203,6 +201,8 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
             panic("%s write sector %d failed!!!\n", disk->name, lba);
         }
         write_sectors(disk, (void *)((u32)buf + secs_done * SECTOR_SIZE), secs_op);
+
+        DEBUGP("harddisk write disk sema down\n");
         sema_down(&disk->channel->done);
         secs_done += secs_op;
     }
@@ -372,6 +372,7 @@ void init_harddisk()
         register_handler(IRQ_HARDDISK, harddisk_handler);
         register_handler(IRQ_HARDDISK2, harddisk_handler);
 
+        DEBUGP("harddisk enable irq\n");
         enable_irq(IRQ_CASCADE);
         enable_irq(IRQ_HARDDISK);
 
