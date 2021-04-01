@@ -115,7 +115,7 @@ int printk(const char *fmt, ...)
     int n = i;
     while (n-- > 0)
     {
-#ifndef DEBUG
+#ifndef ONIX_KERNEL_DEBUG
         put_char(buf[i - n - 1]);
 #else
 #include <stdio.h>

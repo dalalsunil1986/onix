@@ -28,7 +28,7 @@ REAL_CFLAGS = $(INCLUDE) -fno-builtin -m32 -fno-stack-protector \
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
 		-D ONIX_DEBUG
 
-DEBUG_CFLAGS = $(INCLUDE) -m32 -Wall -D DEBUG -D ONIX_DEBUG -g 
+DEBUG_CFLAGS = $(INCLUDE) -m32 -Wall -D ONIX_KERNEL_DEBUG -D ONIX_DEBUG -g 
 
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 

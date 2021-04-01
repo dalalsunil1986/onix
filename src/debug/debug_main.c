@@ -10,7 +10,6 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-
 int main()
 {
     DEBUGP("hello, debug\n");

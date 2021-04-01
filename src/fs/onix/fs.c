@@ -14,120 +14,130 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-// static void partition_format(Partition *part)
-// {
-//     u32 boot_sector_sects = 1;
-//     u32 superblock_sects = 1;
-//     u32 inode_bitmap_sects = round_up(MAX_FILE_PER_PART, BITS_PER_SECTOR);
-//     u32 inode_table_sects = round_up((sizeof(Inode) * MAX_FILE_PER_PART), SECTOR_SIZE);
+static void partition_format(Partition *part)
+{
+    u32 boot_sector_blocks = 1;
+    u32 super_block_blocks = 1;
+    u32 inode_bitmap_blocks = round_up(MAX_FILE_PER_PART, BLOCK_BITS);
+    u32 inode_table_blocks = round_up((sizeof(Inode) * MAX_FILE_PER_PART), BLOCK_SIZE);
 
-//     u32 used_sects = boot_sector_sects + superblock_sects + inode_bitmap_sects + inode_table_sects;
-//     u32 free_sects = part->sec_cnt - used_sects;
+    u32 part_blocks = (part->sec_cnt * SECTOR_SIZE) / BLOCK_SIZE;
+    u32 used_blocks = boot_sector_blocks + super_block_blocks +
+                      inode_bitmap_blocks + inode_table_blocks;
+    u32 free_blocks = part_blocks - used_blocks;
 
-//     u32 block_bitmap_sects = round_up(free_sects, BITS_PER_SECTOR);
-//     u32 block_bitmap_bit_len = free_sects - block_bitmap_sects;
-//     block_bitmap_sects = round_up(block_bitmap_bit_len, BITS_PER_SECTOR);
+    u32 block_bitmap_blocks = round_up(free_blocks, BLOCK_BITS);
+    u32 block_bitmap_bit_len = free_blocks - block_bitmap_blocks;
+    block_bitmap_blocks = round_up(block_bitmap_bit_len, BLOCK_BITS);
 
-//     SuperBlock sb;
-//     sb.magic = FS_MAGIC;
-//     sb.sec_cnt = part->sec_cnt;
-//     sb.inode_cnt = MAX_FILE_PER_PART;
-//     sb.part_lba_base = part->start_lba;
+    SuperBlock sb;
+    sb.magic = FS_MAGIC;
+    sb.sec_cnt = part->sec_cnt;
+    sb.inode_cnt = MAX_FILE_PER_PART;
+    sb.start_lba = part->start_lba;
 
-//     sb.block_bitmap_lba = sb.part_lba_base + 2;
-//     sb.block_bitmap_sects = block_bitmap_sects;
+    sb.block_bitmap_lba = sb.start_lba + 2; // 第 0 块是引导块，第一块是超级块
+    sb.block_bitmap_blocks = block_bitmap_blocks;
 
-//     sb.inode_bitmap_lba = sb.block_bitmap_lba + sb.block_bitmap_lba;
-//     sb.inode_bitmap_sects = inode_bitmap_sects;
+    sb.inode_bitmap_lba = sb.block_bitmap_lba + sb.block_bitmap_blocks;
+    sb.inode_bitmap_blocks = inode_bitmap_blocks;
 
-//     sb.inode_table_lba = sb.inode_bitmap_lba + sb.inode_bitmap_sects;
-//     sb.inode_table_sects = inode_table_sects;
+    sb.inode_table_lba = sb.inode_bitmap_lba + sb.inode_bitmap_blocks;
+    sb.inode_table_blocks = inode_table_blocks;
 
-//     sb.data_start_lba = sb.inode_table_lba + sb.inode_table_sects;
-//     sb.root_inode = 0;
-//     sb.dir_entry_size = sizeof(DirEntry);
+    sb.data_start_lba = sb.inode_table_lba + sb.inode_table_blocks;
 
-//     printk("%s info:\n", part->name);
-//     printk("   magic:0x%x\n   part_lba_base:0x%x\n   all_sectors:0x%x\n   inode_cnt:0x%x\n   block_bitmap_lba:0x%x\n   block_bitmap_sectors:0x%x\n   inode_bitmap_lba:0x%x\n   inode_bitmap_sectors:0x%x\n   inode_table_lba:0x%x\n   inode_table_sectors:0x%x\n   data_start_lba:0x%x\n",
-//            sb.magic, sb.part_lba_base, sb.sec_cnt, sb.inode_cnt, sb.block_bitmap_lba,
-//            sb.block_bitmap_sects, sb.inode_bitmap_lba, sb.inode_bitmap_sects,
-//            sb.inode_table_lba, sb.inode_table_sects, sb.data_start_lba);
+    sb.root_inode_nr = 0;
+    sb.dir_entry_size = sizeof(DirEntry);
 
-//     Harddisk *disk = part->disk;
-//     harddisk_write(disk, part->start_lba + 1, &sb, 1);
-//     printk("   super_block_lba:0x%x\n", part->start_lba + 1);
+    DEBUGP("%s info:\n", part->name);
+    DEBUGP("    magic:0x%08X\n", sb.magic);
+    DEBUGP("    start_lba:0x%X\n", sb.start_lba);
+    DEBUGP("    all_sectors:0x%X\n", sb.sec_cnt);
+    DEBUGP("    inode_cnt:0x%X\n", sb.inode_cnt);
+    DEBUGP("    block_bitmap_lba:0x%X\n", sb.block_bitmap_lba);
+    DEBUGP("    block_bitmap_blocks:0x%X\n", sb.block_bitmap_blocks);
+    DEBUGP("    inode_bitmap_lba:0x%X\n", sb.inode_bitmap_lba);
+    DEBUGP("    inode_bitmap_blocks:0x%X\n", sb.inode_bitmap_blocks);
+    DEBUGP("    inode_table_lba:0x%X\n", sb.inode_table_lba);
+    DEBUGP("    inode_table_blocks:0x%X\n", sb.inode_table_blocks);
+    DEBUGP("    data_start_lba:0x%X\n", sb.data_start_lba);
+    DEBUGP("    super_block_lba:0x%X\n", part->start_lba + 1);
 
-//     u32 buf_size = (sb.block_bitmap_sects >= sb.inode_bitmap_sects ? sb.block_bitmap_sects : sb.inode_bitmap_sects);
-//     buf_size = (buf_size >= sb.inode_table_sects ? buf_size : sb.inode_table_sects) * SECTOR_SIZE;
+    Harddisk *disk = part->disk;
+    harddisk_write(disk, part->start_lba + 1, &sb, 1);
 
-//     DEBUGP("malloc size %d\n", buf_size);
+    //     u32 buf_size = (sb.block_bitmap_sects >= sb.inode_bitmap_sects ? sb.block_bitmap_sects : sb.inode_bitmap_sects);
+    //     buf_size = (buf_size >= sb.inode_table_sects ? buf_size : sb.inode_table_sects) * SECTOR_SIZE;
 
-//     u8 *buf = malloc(buf_size);
-//     if (buf == NULL)
-//     {
-//         panic("Cannot allocate memory!!!");
-//     }
+    //     DEBUGP("malloc size %d\n", buf_size);
 
-//     DEBUGP("buffer %X\n", buf);
+    //     u8 *buf = malloc(buf_size);
+    //     if (buf == NULL)
+    //     {
+    //         panic("Cannot allocate memory!!!");
+    //     }
 
-//     /* 初始化块位图block_bitmap */
-//     buf[0] |= 0x01; // 第0个块预留给根目录,位图中先占位
-//     u32 block_bitmap_last_byte = block_bitmap_bit_len / 8;
-//     u8 block_bitmap_last_bit = block_bitmap_bit_len % 8;
-//     u32 last_size = SECTOR_SIZE - (block_bitmap_last_byte % SECTOR_SIZE);
-//     // last_size是位图所在最后一个扇区中，不足一扇区的其余部分
+    //     DEBUGP("buffer %X\n", buf);
 
-//     /* 1 先将位图最后一字节到其所在的扇区的结束全置为1,即超出实际块数的部分直接置为已占用*/
-//     memset(&buf[block_bitmap_last_byte], 0xff, last_size);
+    //     /* 初始化块位图block_bitmap */
+    //     buf[0] |= 0x01; // 第0个块预留给根目录,位图中先占位
+    //     u32 block_bitmap_last_byte = block_bitmap_bit_len / 8;
+    //     u8 block_bitmap_last_bit = block_bitmap_bit_len % 8;
+    //     u32 last_size = SECTOR_SIZE - (block_bitmap_last_byte % SECTOR_SIZE);
+    //     // last_size是位图所在最后一个扇区中，不足一扇区的其余部分
 
-//     /* 2 再将上一步中覆盖的最后一字节内的有效位重新置0 */
-//     u8 bit_idx = 0;
-//     while (bit_idx <= block_bitmap_last_bit)
-//     {
-//         buf[block_bitmap_last_byte] &= ~(1 << bit_idx++);
-//     }
-//     harddisk_write(disk, sb.block_bitmap_lba, buf, sb.block_bitmap_sects);
+    //     /* 1 先将位图最后一字节到其所在的扇区的结束全置为1,即超出实际块数的部分直接置为已占用*/
+    //     memset(&buf[block_bitmap_last_byte], 0xff, last_size);
 
-//     // 3 将inode位图初始化并写入sb.inode_bitmap_lba *
+    //     /* 2 再将上一步中覆盖的最后一字节内的有效位重新置0 */
+    //     u8 bit_idx = 0;
+    //     while (bit_idx <= block_bitmap_last_bit)
+    //     {
+    //         buf[block_bitmap_last_byte] &= ~(1 << bit_idx++);
+    //     }
+    //     harddisk_write(disk, sb.block_bitmap_lba, buf, sb.block_bitmap_sects);
 
-//     /* 先清空缓冲区*/
-//     memset(buf, 0, buf_size);
-//     buf[0] |= 0x1; // 第0个inode分给了根目录
-//     /* 由于inode_table中共4096个inode,位图inode_bitmap正好占用1扇区,
-//     * 即inode_bitmap_sects等于1, 所以位图中的位全都代表inode_table中的inode,
-//     * 无须再像block_bitmap那样单独处理最后一扇区的剩余部分,
-//     * inode_bitmap所在的扇区中没有多余的无效位 */
-//     harddisk_write(disk, sb.inode_bitmap_lba, buf, sb.inode_bitmap_sects);
+    //     // 3 将inode位图初始化并写入sb.inode_bitmap_lba *
 
-//     // 4 将inode数组初始化并写入sb.inode_table_lba
+    //     /* 先清空缓冲区*/
+    //     memset(buf, 0, buf_size);
+    //     buf[0] |= 0x1; // 第0个inode分给了根目录
+    //     /* 由于inode_table中共4096个inode,位图inode_bitmap正好占用1扇区,
+    //     * 即inode_bitmap_sects等于1, 所以位图中的位全都代表inode_table中的inode,
+    //     * 无须再像block_bitmap那样单独处理最后一扇区的剩余部分,
+    //     * inode_bitmap所在的扇区中没有多余的无效位 */
+    //     harddisk_write(disk, sb.inode_bitmap_lba, buf, sb.inode_bitmap_sects);
 
-//     /* 准备写inode_table中的第0项,即根目录所在的inode */
-//     memset(buf, 0, buf_size); // 先清空缓冲区buf
-//     Inode *i = buf;
-//     i->size = sb.dir_entry_size * 2;   // .和..
-//     i->inode = 0;                      // 根目录占inode数组中第0个inode
-//     i->sectors[0] = sb.data_start_lba; // 由于上面的memset,i_sectors数组的其它元素都初始化为0
-//     harddisk_write(disk, sb.inode_table_lba, buf, sb.inode_table_sects);
+    //     // 4 将inode数组初始化并写入sb.inode_table_lba
 
-//     // 5 将根目录初始化并写入sb.data_start_lba
-//     /* 写入根目录的两个目录项.和.. */
-//     memset(buf, 0, buf_size);
-//     DirEntry *entry = buf;
+    //     /* 准备写inode_table中的第0项,即根目录所在的inode */
+    //     memset(buf, 0, buf_size); // 先清空缓冲区buf
+    //     Inode *i = buf;
+    //     i->size = sb.dir_entry_size * 2;   // .和..
+    //     i->inode = 0;                      // 根目录占inode数组中第0个inode
+    //     i->sectors[0] = sb.data_start_lba; // 由于上面的memset,i_sectors数组的其它元素都初始化为0
+    //     harddisk_write(disk, sb.inode_table_lba, buf, sb.inode_table_sects);
 
-//     memcpy(entry->filename, ".", 1);
-//     entry->inode = 0;
-//     entry->type = FILETYPE_DIRECTORY;
-//     entry++;
+    //     // 5 将根目录初始化并写入sb.data_start_lba
+    //     /* 写入根目录的两个目录项.和.. */
+    //     memset(buf, 0, buf_size);
+    //     DirEntry *entry = buf;
 
-//     memcpy(entry->filename, "..", 2);
-//     entry->inode = 0; // 根目录的父目录依然是根目录自己
-//     entry->type = FILETYPE_DIRECTORY;
-//     harddisk_write(disk, sb.data_start_lba, buf, 1);
+    //     memcpy(entry->filename, ".", 1);
+    //     entry->inode = 0;
+    //     entry->type = FILETYPE_DIRECTORY;
+    //     entry++;
 
-//     printk("   root_dir_lba:0x%x\n", sb.data_start_lba);
-//     printk("%s format done\n", part->name);
-//     free(buf);
-// }
+    //     memcpy(entry->filename, "..", 2);
+    //     entry->inode = 0; // 根目录的父目录依然是根目录自己
+    //     entry->type = FILETYPE_DIRECTORY;
+    //     harddisk_write(disk, sb.data_start_lba, buf, 1);
+
+    //     printk("   root_dir_lba:0x%x\n", sb.data_start_lba);
+    //     printk("%s format done\n", part->name);
+    //     free(buf);
+}
 
 static void search_part_fs(Harddisk *disk, Partition *part)
 {
@@ -146,11 +156,12 @@ static void search_part_fs(Harddisk *disk, Partition *part)
     if (sb->magic == FS_MAGIC)
     {
         DEBUGP("%s has file system\n", part->name);
+        partition_format(part);
     }
     else
     {
         DEBUGP("formating %s's partition %s....\n", disk->name, part->name);
-        // partition_format(part);
+        partition_format(part);
     }
     free(sb);
 }
@@ -159,26 +170,28 @@ static void search_disk_fs(Harddisk *disk)
 {
     Partition *part = disk->primary_parts;
     u8 idx = 0;
-    do
+    while (idx < MAX_PART)
     {
-        if (idx == 4)
+        if (idx == MAX_PRIMARY_PART)
         {
             part = disk->logical_parts;
         }
         search_part_fs(disk, part);
         part++;
-    } while (idx++ < 12);
+        idx++;
+    }
 }
 
 static void search_channel_fs(IDEChannel *channel)
 {
     u8 idx = 1;
-    do
+    while (idx < 2)
     {
         Harddisk *disk = channel->devices + idx;
         DEBUGP("search disk %s \n", disk->name);
         search_disk_fs(disk);
-    } while (idx++ < 2);
+        idx++;
+    }
 }
 
 void init_fs()
@@ -187,9 +200,10 @@ void init_fs()
 
     u8 idx = 0;
     DEBUGP("searching filesystem in %d channel.....\n", channel_count);
-    do
+    while (idx < channel_count)
     {
         IDEChannel *channel = channels + idx;
         search_channel_fs(channel);
-    } while (idx++ < channel_count);
+        idx++;
+    }
 }

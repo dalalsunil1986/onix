@@ -116,7 +116,7 @@ bool harddisk_busy_wait(Harddisk *disk)
 void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
 
-#ifdef DEBUG
+#ifdef ONIX_KERNEL_DEBUG
     extern void harddisk_read(Harddisk * disk, u32 lba, void *buf, u32 sec_cnt);
     return debug_harddisk_read(disk, lba, buf, sec_cnt);
 #endif
@@ -172,7 +172,7 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
 
-#ifdef DEBUG
+#ifdef ONIX_KERNEL_DEBUG
     extern void debug_harddisk_write(Harddisk * disk, u32 lba, void *buf, u32 sec_cnt);
     return debug_harddisk_write(disk, lba, buf, sec_cnt);
 #endif
@@ -368,7 +368,7 @@ static void init_disk(IDEChannel *channel, u8 dev_idx)
 
 static u32 get_harddisk_count()
 {
-#ifdef DEBUG
+#ifdef ONIX_KERNEL_DEBUG
     return 2;
 #else
     return *((u8 *)(0x475));

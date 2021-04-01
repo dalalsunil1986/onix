@@ -1,7 +1,7 @@
 #ifndef ONIX_STDARG_H
 #define ONIX_STDARG_H
 
-#ifndef DEBUG
+#ifndef ONIX_KERNEL_DEBUG
 typedef char *va_list;
 
 #define va_start(ap, v) (ap = (va_list)&v + sizeof(char *))

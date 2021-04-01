@@ -70,7 +70,7 @@ refer to https://wiki.osdev.org/PCI_IDE_Controller#Parallel.2FSerial_ATA.2FATAPI
 
 #define MAX_PRIMARY_PART 4
 #define MAX_LOGICAL_PART 8
-#define MAR_PART (MAX_PRIMARY_PART + MAX_LOGICAL_PART)
+#define MAX_PART (MAX_PRIMARY_PART + MAX_LOGICAL_PART)
 
 #define SECTOR_SIZE 512
 

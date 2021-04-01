@@ -127,18 +127,22 @@ void debug_harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
     if (file == NULL)
     {
-        file = fopen("slave.img", "rwb");
+        file = fopen("slave.img", "rb+");
     }
     fseek(file, lba * SECTOR_SIZE, 0);
     fread(buf, SECTOR_SIZE, 1, file);
+    fclose(file);
+    file = NULL;
 }
 
 void debug_harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
     if (file == NULL)
     {
-        file = fopen("slave.img", "rwb");
+        file = fopen("slave.img", "rb+");
     }
     fseek(file, lba * SECTOR_SIZE, 0);
     fwrite(buf, SECTOR_SIZE, sec_cnt, file);
+    fclose(file);
+    file = NULL;
 }

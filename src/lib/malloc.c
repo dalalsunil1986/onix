@@ -1,7 +1,7 @@
 #include <onix/malloc.h>
 #include <onix/syscall.h>
 
-#ifndef DEBUG
+#ifndef ONIX_KERNEL_DEBUG
 void *malloc(size_t size)
 {
     return sys_malloc(size);
