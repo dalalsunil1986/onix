@@ -1,6 +1,8 @@
 
 #include <onix/types.h>
-
+#include <onix/kernel/harddisk.h>
+#include <stdio.h>
+#include <stdlib.h>
 // 伪造底层汇编函数，用于调试上层逻辑
 
 static u32 cr3;
@@ -55,7 +57,7 @@ u32 syscall3(u32 nr, u32 arg1, u32 arg2, u32 arg3)
     return 0;
 }
 
-void *running_task()
+Task *running_task()
 {
     return 0x10000;
 }
@@ -118,3 +120,25 @@ void interrupt_exit()
 
 u32 interrupt_entry_table[256];
 u32 syscall_handler[256];
+
+static FILE *file = NULL;
+
+void debug_harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
+{
+    if (file == NULL)
+    {
+        file = fopen("slave.img", "rwb");
+    }
+    fseek(file, lba * SECTOR_SIZE, 0);
+    fread(buf, SECTOR_SIZE, 1, file);
+}
+
+void debug_harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
+{
+    if (file == NULL)
+    {
+        file = fopen("slave.img", "rwb");
+    }
+    fseek(file, lba * SECTOR_SIZE, 0);
+    fwrite(buf, SECTOR_SIZE, sec_cnt, file);
+}

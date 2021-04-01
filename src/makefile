@@ -12,6 +12,7 @@ DEBUG_DIR:=$(BUILD)/debug
 BOOT_INCLUDE:=$(SRC_DIR)/boot
 ONIX_INCLUDE:=$(SRC_DIR)/include
 KERNEL_INCLUDE:=$(SRC_DIR)/kernel/include
+INCLUDE:= -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE)
 
 BOCHS=bochs
 ASM=nasm
@@ -22,11 +23,11 @@ ENTRYPOINT = 0xC0020000
 
 ASM_FLAGS= -f elf
 
-REAL_CFLAGS = -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -fno-builtin -m32 -fno-stack-protector \
+REAL_CFLAGS = $(INCLUDE) -fno-builtin -m32 -fno-stack-protector \
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
 		-D ONIX_DEBUG
 
-DEBUG_CFLAGS = -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -m32 -Wall -D DEBUG -D ONIX_DEBUG -g 
+DEBUG_CFLAGS = $(INCLUDE) -m32 -Wall -D DEBUG -D ONIX_DEBUG -g 
 
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 
@@ -120,7 +121,8 @@ REAL_OBJECTS= $(KERNEL_ASM:$(KERNEL_SRC)/%.asm=$(REAL_DIR)/%.o) \
 DEBUG_OBJECTS=$(KERNEL_C:$(KERNEL_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(LIB_C:$(LIB_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(FS_C:$(FS_SRC)/%.c=$(DEBUG_DIR)/%.o) \
-			$(DEBUG_C:$(DEBUG_SRC)/%.c=$(DEBUG_DIR)/%.o) \
+			$(DEBUG_C:$(DEBUG_SRC)/%.c=$(DEBUG_DIR)/%.o)
+# DEBUG_OBJECTS:= $(DEBUG_DIR)/debug_main.o
 
 DEBUG_TARGET:=$(BUILD)/debug.out
 
@@ -164,7 +166,7 @@ win:
 	ssh arch "cd ~/source/github/onix/src && make image" && make unlock && \
 	cd $(BUILD) && bochs -q -f bochsrc.bxrc 
 
-debug: $(BUILD)/debug.out
+debug: $(BUILD)/debug.out $(BUILD)/slave.img 
 	-
 
 clean:

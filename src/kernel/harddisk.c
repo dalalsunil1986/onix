@@ -115,6 +115,12 @@ bool harddisk_busy_wait(Harddisk *disk)
 
 void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
+
+#ifdef DEBUG
+    extern void harddisk_read(Harddisk * disk, u32 lba, void *buf, u32 sec_cnt);
+    return debug_harddisk_read(disk, lba, buf, sec_cnt);
+#endif
+
     DEBUGP("read disk %X lba %X buf %X sect %d \n", disk, lba, buf, sec_cnt);
 
     assert(lba < MAX_LBA);
@@ -165,6 +171,11 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 
 void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
+
+#ifdef DEBUG
+    extern void debug_harddisk_write(Harddisk * disk, u32 lba, void *buf, u32 sec_cnt);
+    return debug_harddisk_write(disk, lba, buf, sec_cnt);
+#endif
     assert(lba < MAX_LBA);
     assert(sec_cnt > 0);
     DEBUGP("write disk acquire\n");
@@ -268,6 +279,7 @@ static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
     DEBUGP("part scan start \n");
 
     BootSector *bs = malloc(sizeof(BootSector));
+
     DEBUGP("part scan memory alloc 0x%08X\n", bs);
 
     harddisk_read(disk, start_lba, bs, 1);
@@ -346,7 +358,7 @@ static void init_disk(IDEChannel *channel, u8 dev_idx)
     sprintf(disk->name, "sd%c", 'a' + channel->index * 2 + disk->dev_idx);
     disk->logical_count = 0;
     disk->primary_count = 0;
-    if (disk->dev_idx != 0)
+    if (disk->dev_idx != 0) // skip master.img
     {
         DEBUGP("init partition scan %s\n", disk->name);
         partition_scan(disk, 0, 0);

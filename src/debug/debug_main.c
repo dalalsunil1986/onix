@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/debug.h>
 
@@ -14,4 +13,5 @@
 int main()
 {
     DEBUGP("hello, debug\n");
+    init_harddisk();
 }
