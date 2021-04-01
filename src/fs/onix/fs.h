@@ -51,7 +51,7 @@ typedef struct Inode
     用来索引、跟踪一个文件的所有块，
     文件的元信息存储在此
     */
-    u32 inode;                   // inode 号
+    u32 nr;                      // inode 号
     u32 size;                    // 文件或目录大小
     u32 open_cnts;               // 文件被打开的次数
     bool write_deny;             // 写文件标志
@@ -72,7 +72,7 @@ typedef struct DirEntry
     文件入口描述符
     */
     char filename[MAX_FILENAME_LENGTH];
-    u32 inode; // 对应的 inode
+    u32 inode_nr; // 对应的 inode 号
     FileType type;
 } DirEntry;
 

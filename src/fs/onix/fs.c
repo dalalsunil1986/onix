@@ -111,7 +111,7 @@ static void partition_format(Partition *part)
     memset(buf, 0, buf_size); // 先清空缓冲区buf
     Inode *i = buf;
     i->size = sb.dir_entry_size * 2;  // .和..
-    i->inode = 0;                     // 根目录占inode数组中第0个inode
+    i->nr = 0;                        // 根目录占inode数组中第0个inode
     i->blocks[0] = sb.data_start_lba; // 由于上面的memset,i_sectors数组的其它元素都初始化为0
     harddisk_write(disk, sb.inode_table_lba, buf, sb.inode_table_blocks);
 
@@ -121,12 +121,12 @@ static void partition_format(Partition *part)
     DirEntry *entry = buf;
 
     memcpy(entry->filename, ".", 1);
-    entry->inode = ROOT_DIR_IDX;
+    entry->inode_nr = ROOT_DIR_IDX;
     entry->type = FILETYPE_DIRECTORY;
     entry++;
 
     memcpy(entry->filename, "..", 2);
-    entry->inode = ROOT_DIR_IDX; // 根目录的父目录依然是根目录自己
+    entry->inode_nr = ROOT_DIR_IDX; // 根目录的父目录依然是根目录自己
     entry->type = FILETYPE_DIRECTORY;
     harddisk_write(disk, sb.data_start_lba, buf, 1);
 
