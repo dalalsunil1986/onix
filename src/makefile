@@ -26,7 +26,7 @@ REAL_CFLAGS = -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -fno-builtin -m32 -fno-sta
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
 		-D ONIX_DEBUG
 
-DEBUG_CFLAGS = -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -m32 -Wall -D DEBUG -g 
+DEBUG_CFLAGS = -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -m32 -Wall -D DEBUG -D ONIX_DEBUG -g 
 
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 
@@ -174,4 +174,4 @@ clean:
 	rm -rf $(REAL_DIR)/*.o
 	rm -rf $(DEBUG_DIR)/*.o
 	rm -rf $(BUILD)/*.img*
-	rm -rf $(BUILD)/a.out
+	rm -rf $(BUILD)/debug.out

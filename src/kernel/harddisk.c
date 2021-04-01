@@ -11,7 +11,7 @@
 #include <onix/malloc.h>
 #include <onix/syscall.h>
 
-// #define DEBUGINFO
+#define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -353,9 +353,18 @@ static void init_disk(IDEChannel *channel, u8 dev_idx)
     }
 }
 
+static u32 get_harddisk_count()
+{
+#ifdef DEBUG
+    return 2;
+#else
+    return *((u8 *)(0x475));
+#endif
+}
+
 static void init_channels()
 {
-    harddisk_count = *((u8 *)(0x475));
+    harddisk_count = get_harddisk_count();
     assert(harddisk_count > 0);
     queue_init(&partition_queue);
 

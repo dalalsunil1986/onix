@@ -1,6 +1,17 @@
 #include <stdio.h>
+#include <onix/kernel/harddisk.h>
+#include <onix/kernel/debug.h>
+
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
+
 
 int main()
 {
-    printf("hello debug!!!\n");
+    DEBUGP("hello, debug\n");
 }
