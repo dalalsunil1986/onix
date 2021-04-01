@@ -14,6 +14,68 @@
 #define DEBUGP(fmt, args...)
 #endif
 
+Partition *root_part;
+extern Queue partition_queue;
+char default_part[8] = "sdb1";
+
+static void partition_mount(Node *node, char *partname)
+{
+    Partition *part = element_entry(Partition, node, node);
+
+    if (strcmp(part->name, partname)) // 若不相等直接返回
+    {
+        DEBUGP("partition name %s not match %s\n", part->name, partname);
+        return false;
+    }
+
+    DEBUGP("partition mount %s name %s\n", part->name, partname);
+
+    root_part = part;
+    Harddisk *disk = root_part->disk;
+    SuperBlock *sb = malloc(sizeof(SuperBlock));
+
+    // 读超级块
+    root_part->super_block = malloc(sizeof(SuperBlock));
+    if (root_part->super_block == NULL)
+    {
+        panic("allocate memory failed!");
+    }
+    memset(sb, 0, sizeof(SuperBlock));
+    harddisk_read(disk, root_part->start_lba + 1, sb, 1);
+    memcpy(root_part->super_block, sb, sizeof(SuperBlock));
+
+    // 读块位图
+    root_part->block_bitmap.bits = malloc(sb->block_bitmap_blocks * BLOCK_SIZE);
+    if (root_part->block_bitmap.bits == NULL)
+    {
+        panic("allocate memory failed!");
+    }
+
+    root_part->block_bitmap.length = sb->block_bitmap_blocks * BLOCK_SIZE;
+    harddisk_read(disk,
+                  sb->block_bitmap_lba,
+                  root_part->block_bitmap.bits,
+                  sb->block_bitmap_blocks);
+
+    // 读 inode 位图
+    root_part->inode_bitmap.bits = malloc(sb->inode_bitmap_blocks * BLOCK_SIZE);
+    if (root_part->inode_bitmap.bits == NULL)
+    {
+        panic("allocate memory failed!");
+    }
+    root_part->inode_bitmap.length = sb->inode_bitmap_blocks * BLOCK_SIZE;
+
+    harddisk_read(disk,
+                  sb->inode_bitmap_lba,
+                  root_part->inode_bitmap.bits,
+                  sb->inode_bitmap_blocks);
+
+    queue_init(&root_part->open_inodes);
+    free(sb);
+    DEBUGP("mount %s done!\n", part->name);
+    return true;
+}
+
 static void partition_format(Partition *part)
 {
     u32 boot_sector_blocks = 1;
@@ -201,4 +263,6 @@ void init_fs()
         search_channel_fs(channel);
         idx++;
     }
+
+    queue_traversal(&partition_queue, partition_mount, default_part);
 }
