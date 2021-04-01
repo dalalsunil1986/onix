@@ -75,7 +75,9 @@ LIB_C:= $(LIB_SRC)/malloc.c \
 	$(LIB_SRC)/syscall.c \
 	$(LIB_SRC)/vsprintf.c
 
-FS_C:= $(FS_SRC)/fs.c
+FS_C:= $(FS_SRC)/inode.c \
+		$(FS_SRC)/fs.c
+
 
 DEBUG_C:= $(DEBUG_SRC)/debug_lib.c \
 	$(DEBUG_SRC)/debug_main.c
