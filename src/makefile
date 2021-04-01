@@ -3,7 +3,7 @@ SRC_DIR:=.
 BOOT_DIR:= $(SRC_DIR)/boot
 KERNEL_SRC:= $(SRC_DIR)/kernel
 LIB_SRC:= $(SRC_DIR)/lib
-FS_SRC:= $(SRC_DIR)/fs
+FS_SRC:= $(SRC_DIR)/fs/onix
 DEBUG_SRC:= $(SRC_DIR)/debug
 
 REAL_DIR:=$(BUILD)/real
@@ -12,7 +12,8 @@ DEBUG_DIR:=$(BUILD)/debug
 BOOT_INCLUDE:=$(SRC_DIR)/boot
 ONIX_INCLUDE:=$(SRC_DIR)/include
 KERNEL_INCLUDE:=$(SRC_DIR)/kernel/include
-INCLUDE:= -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE)
+FS_INCLUDE:=$(SRC_DIR)/fs
+INCLUDE:= -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -I $(FS_INCLUDE)
 
 BOCHS=bochs
 ASM=nasm

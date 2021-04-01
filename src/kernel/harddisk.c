@@ -352,6 +352,7 @@ static bool print_partition_info(Node *node, int arg)
 static void init_disk(IDEChannel *channel, u8 dev_idx)
 {
     Harddisk *disk = channel->devices + dev_idx;
+
     disk->channel = channel;
     disk->dev_idx = dev_idx;
 

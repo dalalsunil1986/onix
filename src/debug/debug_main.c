@@ -1,5 +1,6 @@
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/debug.h>
+#include <onix/fs.h>
 
 #define DEBUGINFO
 
@@ -14,4 +15,5 @@ int main()
 {
     DEBUGP("hello, debug\n");
     init_harddisk();
+    init_fs();
 }
