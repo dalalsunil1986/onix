@@ -33,6 +33,8 @@ Bitmap mmap;
 #define DIDX(vaddr) (vaddr >> 22)
 #define TIDX(vaddr) (vaddr >> 12 & 0b1111111111)
 
+extern u32 get_cr3();
+
 static ARDS *get_valid_ards()
 {
     u32 max_size = 0;
