@@ -14,6 +14,8 @@
 #define INDIRECT_BLOCK_CNT 1
 #define INODE_BLOCK_CNT (DIRECT_BLOCK_CNT + INDIRECT_BLOCK_CNT)
 
+#define ROOT_DIR_IDX 0
+
 typedef enum FileType
 {
     FILETYPE_UNKNOWN,
