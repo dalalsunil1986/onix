@@ -1,4 +1,4 @@
-#include <onix/fsbitmap.h>
+#include <fs/onix/fsbitmap.h>
 #include <onix/bitmap.h>
 #include <onix/kernel/harddisk.h>
 

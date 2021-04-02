@@ -13,7 +13,7 @@ DEBUG_DIR:=$(BUILD)/debug
 BOOT_INCLUDE:=$(SRC_DIR)/boot
 ONIX_INCLUDE:=$(SRC_DIR)/include
 KERNEL_INCLUDE:=$(SRC_DIR)/kernel/include
-FS_INCLUDE:=$(SRC_DIR)/fs
+FS_INCLUDE:=$(SRC_DIR)
 INCLUDE:= -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -I $(FS_INCLUDE)
 
 BOCHS=bochs
@@ -80,7 +80,8 @@ FS_ONIX_C:=$(FS_ONIX_SRC)/inode.c \
 		$(FS_ONIX_SRC)/fsbitmap.c \
 		$(FS_ONIX_SRC)/fs.c
 
-FS_C:=$(FS_SRC)/file.c
+FS_C:=$(FS_SRC)/file.c \
+		$(FS_SRC)/path.c
 
 
 DEBUG_C:= $(DEBUG_SRC)/debug_lib.c \

@@ -2,7 +2,7 @@
 #define ONIX_FILE_H
 
 #include <onix/types.h>
-#include <onix/fs.h>
+#include <fs/onix/fs.h>
 
 #define MAX_OPEN_FILES 1024
 

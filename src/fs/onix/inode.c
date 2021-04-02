@@ -1,4 +1,4 @@
-#include <onix/inode.h>
+#include <fs/onix/inode.h>
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/assert.h>
 
