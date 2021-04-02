@@ -218,6 +218,20 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
     release(&disk->channel->lock);
 }
 
+void partition_read(Partition *part, u32 lba, void *buf, u32 sec_cnt)
+{
+    assert(lba + sec_cnt <= part->sec_cnt);
+    Harddisk *disk = part->disk;
+    harddisk_read(disk, part->start_lba + lba, buf, sec_cnt);
+}
+
+void partition_write(Partition *part, u32 lba, void *buf, u32 sec_cnt)
+{
+    assert(lba + sec_cnt <= part->sec_cnt);
+    Harddisk *disk = part->disk;
+    harddisk_write(disk, part->start_lba + lba, buf, sec_cnt);
+}
+
 static void swap_pairs_bytes(const char *dst, char *buf, u32 len)
 {
     u32 i = 0;

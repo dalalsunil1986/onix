@@ -42,7 +42,7 @@ static void partition_mount(Node *node, char *partname)
         panic("allocate memory failed!");
     }
     memset(sb, 0, sizeof(SuperBlock));
-    harddisk_read(disk, root_part->start_lba + BLOCK_SECTOR_COUNT, sb, BLOCK_SECTOR_COUNT);
+    partition_read(root_part, BLOCK_SECTOR_COUNT, sb, BLOCK_SECTOR_COUNT);
     memcpy(root_part->super_block, sb, sizeof(SuperBlockHolder));
 
     // 读块位图
@@ -53,10 +53,10 @@ static void partition_mount(Node *node, char *partname)
     }
 
     root_part->block_bitmap.length = sb->block_bitmap_blocks * BLOCK_SIZE;
-    harddisk_read(disk,
-                  sb->block_bitmap_lba,
-                  root_part->block_bitmap.bits,
-                  sb->block_bitmap_blocks * BLOCK_SECTOR_COUNT);
+    partition_read(root_part,
+                   sb->block_bitmap_lba,
+                   root_part->block_bitmap.bits,
+                   sb->block_bitmap_blocks * BLOCK_SECTOR_COUNT);
 
     // 读 inode 位图
     root_part->inode_bitmap.bits = malloc(sb->inode_bitmap_blocks * BLOCK_SIZE);
@@ -66,7 +66,7 @@ static void partition_mount(Node *node, char *partname)
     }
     root_part->inode_bitmap.length = sb->inode_bitmap_blocks * BLOCK_SIZE;
 
-    harddisk_read(disk,
+    partition_read(root_part,
                   sb->inode_bitmap_lba,
                   root_part->inode_bitmap.bits,
                   sb->inode_bitmap_blocks * BLOCK_SECTOR_COUNT);
@@ -101,7 +101,7 @@ static void partition_format(Partition *part)
     sb->inode_cnt = MAX_FILE_PER_PART;
     sb->start_lba = part->start_lba;
 
-    sb->block_bitmap_lba = sb->start_lba + ((boot_sector_blocks + super_block_blocks) * BLOCK_SECTOR_COUNT);
+    sb->block_bitmap_lba = ((boot_sector_blocks + super_block_blocks) * BLOCK_SECTOR_COUNT);
     sb->block_bitmap_blocks = block_bitmap_blocks;
 
     sb->inode_bitmap_lba = sb->block_bitmap_lba + sb->block_bitmap_blocks * BLOCK_SECTOR_COUNT;
@@ -133,7 +133,7 @@ static void partition_format(Partition *part)
     DEBUGP("    super_block_lba:0x%X\n", part->start_lba + BLOCK_SECTOR_COUNT);
 
     Harddisk *disk = part->disk;
-    harddisk_write(disk, part->start_lba + BLOCK_SECTOR_COUNT, sb, BLOCK_SECTOR_COUNT);
+    partition_write(part, BLOCK_SECTOR_COUNT, sb, BLOCK_SECTOR_COUNT);
 
     u32 buf_size = MAX(sb->block_bitmap_blocks, sb->inode_bitmap_blocks);
     buf_size = MAX(buf_size, sb->inode_table_blocks) * BLOCK_SIZE;
@@ -165,13 +165,13 @@ static void partition_format(Partition *part)
     {
         buf[block_bitmap_last_byte] &= ~(1 << idx++);
     }
-    harddisk_write(disk, sb->block_bitmap_lba, buf, sb->block_bitmap_blocks * BLOCK_SECTOR_COUNT);
+    partition_write(part, sb->block_bitmap_lba, buf, sb->block_bitmap_blocks * BLOCK_SECTOR_COUNT);
 
     /*3 将inode位图初始化并写入sb->inode_bitmap_lba */
 
     memset(buf, 0, buf_size);
     buf[ROOT_DIR_IDX] |= 0x1; // 第0个inode分给了根目录
-    harddisk_write(disk, sb->inode_bitmap_lba, buf, sb->inode_bitmap_blocks * BLOCK_SECTOR_COUNT);
+    partition_write(part, sb->inode_bitmap_lba, buf, sb->inode_bitmap_blocks * BLOCK_SECTOR_COUNT);
 
     /* 4 将inode数组初始化并写入sb->inode_table_lba */
 
@@ -181,7 +181,7 @@ static void partition_format(Partition *part)
     i->size = sb->dir_entry_size * 2;  // .和..
     i->nr = 0;                         // 根目录占inode数组中第0个inode
     i->blocks[0] = sb->data_start_lba; // 由于上面的memset,i_sectors数组的其它元素都初始化为0
-    harddisk_write(disk, sb->inode_table_lba, buf, sb->inode_table_blocks * BLOCK_SECTOR_COUNT);
+    partition_write(part, sb->inode_table_lba, buf, sb->inode_table_blocks * BLOCK_SECTOR_COUNT);
 
     /* 5 将根目录初始化并写入sb->data_start_lba */
     /* 写入根目录的两个目录项.和.. */
@@ -196,7 +196,7 @@ static void partition_format(Partition *part)
     memcpy(entry->filename, "..", 2);
     entry->inode_nr = ROOT_DIR_IDX; // 根目录的父目录依然是根目录自己
     entry->type = FILETYPE_DIRECTORY;
-    harddisk_write(disk, sb->data_start_lba, buf, BLOCK_SECTOR_COUNT);
+    partition_write(part, sb->data_start_lba, buf, BLOCK_SECTOR_COUNT);
 
     DEBUGP("%s format done\n", part->name);
     free(buf);
@@ -215,7 +215,7 @@ static void search_part_fs(Harddisk *disk, Partition *part)
 
     DEBUGP("search %s part %s\n", disk->name, part->name);
     memset(sb, 0, SECTOR_SIZE);
-    harddisk_read(disk, part->start_lba + BLOCK_SECTOR_COUNT, sb, 1);
+    partition_read(part, BLOCK_SECTOR_COUNT, sb, 1);
     if (sb->magic == FS_MAGIC)
     {
         DEBUGP("%s has file system\n", part->name);

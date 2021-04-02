@@ -161,4 +161,7 @@ void harddisk_handler(int vector);
 void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt);
 void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt);
 
+void partition_read(Partition *part, u32 lba, void *buf, u32 sec_cnt);
+void partition_write(Partition *part, u32 lba, void *buf, u32 sec_cnt);
+
 #endif
