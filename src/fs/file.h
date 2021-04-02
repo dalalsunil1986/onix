@@ -22,4 +22,9 @@ typedef enum std_fd
     stderr = 2
 } std_fd;
 
+#ifdef ONIX_KERNEL_DEBUG
+#define fs_function _
+#define file_open _file_open
+#endif
+
 #endif

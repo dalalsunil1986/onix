@@ -80,8 +80,9 @@ FS_ONIX_C:=$(FS_ONIX_SRC)/inode.c \
 		$(FS_ONIX_SRC)/fsbitmap.c \
 		$(FS_ONIX_SRC)/fs.c
 
-FS_C:=$(FS_SRC)/file.c \
-		$(FS_SRC)/path.c
+FS_C:= 	$(FS_SRC)/path.c \
+		$(FS_SRC)/dir.c \
+		$(FS_SRC)/file.c
 
 
 DEBUG_C:= $(DEBUG_SRC)/debug_lib.c \
