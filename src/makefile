@@ -3,7 +3,8 @@ SRC_DIR:=.
 BOOT_DIR:= $(SRC_DIR)/boot
 KERNEL_SRC:= $(SRC_DIR)/kernel
 LIB_SRC:= $(SRC_DIR)/lib
-FS_SRC:= $(SRC_DIR)/fs/onix
+FS_SRC:= $(SRC_DIR)/fs
+FS_ONIX_SRC:= $(SRC_DIR)/fs/onix
 DEBUG_SRC:= $(SRC_DIR)/debug
 
 REAL_DIR:=$(BUILD)/real
@@ -75,8 +76,10 @@ LIB_C:= $(LIB_SRC)/malloc.c \
 	$(LIB_SRC)/syscall.c \
 	$(LIB_SRC)/vsprintf.c
 
-FS_C:= $(FS_SRC)/inode.c \
-		$(FS_SRC)/fs.c
+FS_ONIX_C:=$(FS_ONIX_SRC)/inode.c \
+		$(FS_ONIX_SRC)/fs.c \
+
+FS_C:=$(FS_SRC)/file.c
 
 
 DEBUG_C:= $(DEBUG_SRC)/debug_lib.c \
@@ -101,6 +104,9 @@ $(REAL_DIR)/%.o: $(LIB_SRC)/%.c
 $(REAL_DIR)/%.o: $(FS_SRC)/%.c
 	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
+$(REAL_DIR)/%.o: $(FS_ONIX_SRC)/%.c
+	$(CC) $(REAL_CFLAGS) -c $< -o $@
+
 $(DEBUG_DIR)/%.o: $(KERNEL_SRC)/%.c
 	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
@@ -109,6 +115,9 @@ $(DEBUG_DIR)/%.o: $(LIB_SRC)/%.c
 
 $(DEBUG_DIR)/%.o: $(FS_SRC)/%.c
 	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
+
+$(DEBUG_DIR)/%.o: $(FS_ONIX_SRC)/%.c
+	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
 $(DEBUG_DIR)/%.o: $(DEBUG_SRC)/%.c
 	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
@@ -119,13 +128,15 @@ REAL_OBJECTS= $(KERNEL_ASM:$(KERNEL_SRC)/%.asm=$(REAL_DIR)/%.o) \
 			$(LIB_ASM:$(LIB_SRC)/%.asm=$(REAL_DIR)/%.o) \
 			$(KERNEL_C:$(KERNEL_SRC)/%.c=$(REAL_DIR)/%.o) \
 			$(LIB_C:$(LIB_SRC)/%.c=$(REAL_DIR)/%.o) \
-			$(FS_C:$(FS_SRC)/%.c=$(REAL_DIR)/%.o)
+			$(FS_C:$(FS_SRC)/%.c=$(REAL_DIR)/%.o) \
+			$(FS_ONIX_C:$(FS_ONIX_SRC)/%.c=$(REAL_DIR)/%.o)
 
 DEBUG_OBJECTS=$(KERNEL_C:$(KERNEL_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(LIB_C:$(LIB_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(FS_C:$(FS_SRC)/%.c=$(DEBUG_DIR)/%.o) \
+			$(FS_C:$(FS_SRC)/%.c=$(REAL_DIR)/%.o) \
+			$(FS_ONIX_C:$(FS_ONIX_SRC)/%.c=$(REAL_DIR)/%.o) \
 			$(DEBUG_C:$(DEBUG_SRC)/%.c=$(DEBUG_DIR)/%.o)
-# DEBUG_OBJECTS:= $(DEBUG_DIR)/debug_main.o
 
 DEBUG_TARGET:=$(BUILD)/debug.out
 

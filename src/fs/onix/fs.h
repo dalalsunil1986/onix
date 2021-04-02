@@ -24,6 +24,12 @@ typedef enum FileType
     FILETYPE_DIRECTORY,
 } FileType;
 
+typedef enum BitmapType
+{
+    INODE_BITMAP,
+    BLOCK_BITMAP
+} BitmapType;
+
 typedef struct SuperBlock
 {
     u32 magic;

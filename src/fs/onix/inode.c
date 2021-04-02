@@ -1,5 +1,6 @@
 #include <onix/inode.h>
 #include <onix/kernel/harddisk.h>
+#include <onix/kernel/assert.h>
 
 static void inode_locate(Partition *part, u32 nr, InodePosition *pos)
 {
