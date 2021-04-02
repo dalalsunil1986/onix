@@ -103,7 +103,9 @@
 			"malloc.h": "c",
 			"fs.h": "c",
 			"inode.h": "c",
-			"fsbitmap.h": "c"
+			"fsbitmap.h": "c",
+			"path.h": "c",
+			"libgen.h": "c"
 		}
 	}
 }
