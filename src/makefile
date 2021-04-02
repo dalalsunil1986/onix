@@ -77,7 +77,8 @@ LIB_C:= $(LIB_SRC)/malloc.c \
 	$(LIB_SRC)/vsprintf.c
 
 FS_ONIX_C:=$(FS_ONIX_SRC)/inode.c \
-		$(FS_ONIX_SRC)/fs.c \
+		$(FS_ONIX_SRC)/fsbitmap.c \
+		$(FS_ONIX_SRC)/fs.c
 
 FS_C:=$(FS_SRC)/file.c
 
