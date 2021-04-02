@@ -16,7 +16,7 @@ int main()
     DEBUGP("hello, debug\n");
     // init_harddisk();
     // init_fs();
-    char path[] = "/hello//world//onix/path\\\\\\there/is\\a wonderful land\\path.c";
+    char path[] = "/hello//world//onix/path\\\\\\there/is\\a wonderful land\\path.c\\\\//";
     char name[16] = {0};
     char *dir = path;
     while (dir)
@@ -27,4 +27,5 @@ int main()
     }
 
     DEBUGP("path depth %d\n", path_depth(path));
+    DEBUGP("path basename %s\n", basename(path, name));
 }

@@ -11,17 +11,33 @@ char *dirname(char *path, char *name)
 {
     if (path[0] == 0)
         return NULL;
-    if (is_split(path[0]))
-    {
-        while (is_split(*(++path)))
-            ;
-    }
+    char *ptr = path - 1;
+    while (is_split(*(++ptr)))
+        ;
 
-    while (!is_split(*path) && *path != 0)
+    while (!is_split(*ptr) && *ptr != 0)
     {
-        *name++ = *path++;
+        *name++ = *ptr++;
     }
-    return path;
+    return ptr;
+}
+
+char *basename(char *path, char *name)
+{
+    u32 length = strlen(path);
+    bool split_flag = false;
+
+    while (is_split(path[--length]))
+        ;
+    u32 last = length + 1;
+
+    while (!is_split(path[--length]))
+        ;
+    u32 start = length + 1;
+    u32 size = last - start;
+    memcpy(name, path + start, size);
+    name[size] = 0;
+    return name;
 }
 
 u32 path_depth(char *path)
