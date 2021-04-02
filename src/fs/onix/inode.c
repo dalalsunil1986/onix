@@ -50,6 +50,54 @@ void inode_sync(Partition *part, Inode *inode, void *buf)
     harddisk_write(part->disk, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
 }
 
+Inode *inode_open(Partition *part, u32 nr)
+{
+    Node *node = part->open_inodes.head.next;
+    Inode *inode;
+
+    while (node != &part->open_inodes.tail)
+    {
+        inode = element_entry(Inode, node, node);
+        if (inode->nr == nr)
+        {
+            inode->open_cnts++;
+            return inode;
+        }
+        node = node->next;
+    }
+
+    InodePosition pos;
+    inode_locate(part, nr, &pos);
+
+    inode = malloc(sizeof(Inode));
+
+    int block_count = 1;
+    if (pos.cross)
+        block_count = 2;
+
+    char *buf = malloc(BLOCK_SIZE * block_count);
+    harddisk_read(part->disk, pos.sec_lba, buf, BLOCK_SIZE * block_count * BLOCK_SECTOR_COUNT);
+
+    memcpy(inode, buf + pos.offset, sizeof(Inode));
+
+    queue_push(&part->open_inodes, &inode->node);
+    inode->open_cnts = 1;
+
+    free(buf);
+    return inode;
+}
+
+void inode_close(Partition *part, Inode *inode)
+{
+    bool old = disable_int();
+    if (--(inode->open_cnts) == 0)
+    {
+        queue_remove(&part->open_inodes, &inode->node);
+        free(inode);
+    }
+    set_interrupt_status(old);
+}
+
 void inode_init(u32 nr, Inode *inode)
 {
     inode->nr = nr;

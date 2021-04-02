@@ -201,14 +201,14 @@ static void search_part_fs(Harddisk *disk, Partition *part)
     if (part->sec_cnt <= 0)
         return;
 
-    SuperBlock *sb = malloc(SECTOR_SIZE);
+    SuperBlock *sb = malloc(sizeof(SuperBlock));
     if (sb == NULL)
     {
         panic("alloc memory failed!!!");
     }
 
     DEBUGP("search %s part %s\n", disk->name, part->name);
-    memset(sb, 0, SECTOR_SIZE);
+    memset(sb, 0, sizeof(SuperBlock));
     harddisk_read(disk, part->start_lba + 1, sb, 1);
     if (sb->magic == FS_MAGIC)
     {
