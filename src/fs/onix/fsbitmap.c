@@ -53,3 +53,21 @@ bool bitmap_sync(Partition *part, u32 idx, BitmapType type)
     partition_write(part, sec_lba, bitmap_offset, 1);
     return true;
 }
+
+int32 inode_bitmap_alloc_sync(Partition *part)
+{
+    u32 idx = inode_bitmap_alloc(part);
+    if (idx == -1)
+        return -1;
+    bitmap_sync(part, idx, INODE_BITMAP);
+    return idx;
+}
+
+int32 block_bitmap_alloc_sync(Partition *part)
+{
+    u32 idx = block_bitmap_alloc(part);
+    if (idx == -1)
+        return -1;
+    bitmap_sync(part, idx, BLOCK_BITMAP);
+    return idx;
+}

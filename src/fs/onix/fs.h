@@ -4,8 +4,7 @@
 #include <onix/types.h>
 #include <onix/queue.h>
 
-#define MAX_FILENAME_LENGTH 64
-#define MAX_PATH_LENGTH 1024
+#define MAX_FILENAME_LENGTH 56
 #define MAX_FILE_PER_PART 4096
 #define SECTOR_SIZE 512
 #define BLOCK_SECTOR_COUNT 2
@@ -14,6 +13,7 @@
 #define FS_MAGIC 0x20210330
 #define DIRECT_BLOCK_CNT 12
 #define INDIRECT_BLOCK_CNT 1
+#define INDIRECT_BLOCK_IDX DIRECT_BLOCK_CNT
 #define INODE_BLOCK_CNT (DIRECT_BLOCK_CNT + INDIRECT_BLOCK_CNT)
 #define INODE_ALL_BLOCKS DIRECT_BLOCK_CNT + (BLOCK_SIZE / sizeof(u32))
 
@@ -76,14 +76,14 @@ typedef struct Inode
     Node node;
 } Inode;
 
-typedef struct Dir
+typedef struct Dir // 只存在于内存中的结构
 {
     Inode *inode;
     u32 dir_offset;         // 记录在目录内的偏移
     u32 buffer[BLOCK_SIZE]; // 目录的数据缓存
 } Dir;
 
-typedef struct DirEntry
+typedef struct DirEntry // 硬盘上的结构，同样可以存在于内存中
 {
     /*
     文件入口描述符

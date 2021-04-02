@@ -158,7 +158,10 @@ static void partition_format(Partition *part)
     DEBUGP("buffer %X\n", buf);
 
     /* 初始化块位图block_bitmap */
-    buf[ROOT_DIR_IDX] |= 0x01; // 第0个块预留给根目录,位图中先占位
+    buf[ROOT_DIR_IDX] |= 0b11; // 第0块占位不做处理，第1个块预留给根目录,位图中先占位
+                               // 由于 0 表示不存在，所以这里就这样处理了
+                               // 尽管可以利用其他机制来利用这块区域
+                               // 但是以文件系统的尿性，不稀罕！！！ 哈哈哈哈哈
     u32 block_bitmap_last_byte = block_bitmap_bits / 8;
     u8 block_bitmap_last_bit = block_bitmap_bits % 8;
     u32 last_size = BLOCK_SIZE - (block_bitmap_last_byte % BLOCK_SIZE);
@@ -186,9 +189,9 @@ static void partition_format(Partition *part)
     /* 准备写inode_table中的第0项,即根目录所在的inode */
     memset(buf, 0, buf_size); // 先清空缓冲区buf
     Inode *i = buf;
-    i->size = sb->dir_entry_size * 2;  // .和..
-    i->nr = 0;                         // 根目录占inode数组中第0个inode
-    i->blocks[0] = sb->data_start_lba; // 由于上面的memset,i_sectors数组的其它元素都初始化为0
+    i->size = sb->dir_entry_size * 2; // .和..
+    i->nr = 0;                        // 根目录占inode数组中第0个inode
+    i->blocks[0] = 1;                 // 由于上面的memset,i_sectors数组的其它元素都初始化为0
     partition_write(part, sb->inode_table_lba, buf, sb->inode_table_blocks * BLOCK_SECTOR_COUNT);
 
     /* 5 将根目录初始化并写入sb->data_start_lba */
@@ -204,7 +207,8 @@ static void partition_format(Partition *part)
     memcpy(entry->filename, "..", 2);
     entry->inode_nr = ROOT_DIR_IDX; // 根目录的父目录依然是根目录自己
     entry->type = FILETYPE_DIRECTORY;
-    partition_write(part, sb->data_start_lba, buf, BLOCK_SECTOR_COUNT);
+    partition_write(part, sb->data_start_lba + BLOCK_SECTOR_COUNT, buf, BLOCK_SECTOR_COUNT);
+    // 写入第一块
 
     DEBUGP("%s format done\n", part->name);
     free(buf);
@@ -265,6 +269,8 @@ static void search_channel_fs(IDEChannel *channel)
     }
 }
 
+extern void init_dir();
+
 void init_fs()
 {
     extern u8 channel_count;
@@ -277,6 +283,6 @@ void init_fs()
         search_channel_fs(channel);
         idx++;
     }
-
     queue_traversal(&partition_queue, partition_mount, default_part);
+    init_dir();
 }

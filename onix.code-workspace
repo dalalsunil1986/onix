@@ -106,7 +106,8 @@
 			"fsbitmap.h": "c",
 			"path.h": "c",
 			"libgen.h": "c",
-			"fsdir.h": "c"
+			"fsdir.h": "c",
+			"fsblock.h": "c"
 		}
 	}
 }
