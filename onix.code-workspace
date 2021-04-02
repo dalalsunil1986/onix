@@ -105,7 +105,8 @@
 			"inode.h": "c",
 			"fsbitmap.h": "c",
 			"path.h": "c",
-			"libgen.h": "c"
+			"libgen.h": "c",
+			"fsdir.h": "c"
 		}
 	}
 }

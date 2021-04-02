@@ -63,7 +63,7 @@ void inode_sync(Partition *part, Inode *inode)
     partition_read(part, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
     memcpy((buf + pos.offset), &pure_inode, sizeof(Inode));
     partition_write(part, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
-    DEBUGP("part 0x%X lba line %d\n", part, (part->start_lba + pos.sec_lba) * SECTOR_SIZE / 16);
+    // DEBUGP("part 0x%X lba line %d\n", part, (part->start_lba + pos.sec_lba) * SECTOR_SIZE / 16);
 }
 
 Inode *inode_open(Partition *part, u32 nr)

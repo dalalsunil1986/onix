@@ -11,7 +11,7 @@
 #include <onix/malloc.h>
 #include <onix/syscall.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK

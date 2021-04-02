@@ -6,7 +6,7 @@
 #include <onix/malloc.h>
 #include <onix/string.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -18,7 +18,30 @@ Partition *root_part;
 extern Queue partition_queue;
 char default_part[8] = "sdb1";
 
-static void partition_mount(Node *node, char *partname)
+void print_format_info(Partition *part, SuperBlock *sb)
+{
+    u32 part_blocks = (part->sec_cnt * SECTOR_SIZE) / BLOCK_SIZE;
+    u32 used_blocks = 2 + sb->inode_bitmap_blocks + sb->inode_table_blocks;
+    u32 free_blocks = part_blocks - used_blocks;
+    DEBUGK("%s info:\n", part->name);
+    DEBUGK("    magic:0x%08X\n", sb->magic);
+    DEBUGK("    start_lba:0x%X\n", sb->start_lba);
+    DEBUGK("    all_sectors:0x%x\n", sb->sec_cnt);
+    DEBUGK("    part_blocks:0x%x\n", part_blocks);
+    DEBUGK("    used_blocks:0x%x\n", used_blocks);
+    DEBUGK("    free_blocks:0x%x\n", free_blocks);
+    DEBUGK("    inode_cnt:0x%x\n", sb->inode_cnt);
+    DEBUGK("    block_bitmap_lba:0x%X\n", sb->block_bitmap_lba);
+    DEBUGK("    block_bitmap_blocks:0x%X\n", sb->block_bitmap_blocks);
+    DEBUGK("    inode_bitmap_lba:0x%X\n", sb->inode_bitmap_lba);
+    DEBUGK("    inode_bitmap_blocks:0x%X\n", sb->inode_bitmap_blocks);
+    DEBUGK("    inode_table_lba:0x%X\n", sb->inode_table_lba);
+    DEBUGK("    inode_table_blocks:0x%X\n", sb->inode_table_blocks);
+    DEBUGK("    data_start_lba:0x%X\n", sb->data_start_lba);
+    DEBUGK("    super_block_lba:0x%X\n", part->start_lba + BLOCK_SECTOR_COUNT);
+}
+
+static bool partition_mount(Node *node, char *partname)
 {
     Partition *part = element_entry(Partition, node, node);
 
@@ -67,9 +90,9 @@ static void partition_mount(Node *node, char *partname)
     root_part->inode_bitmap.length = sb->inode_bitmap_blocks * BLOCK_SIZE;
 
     partition_read(root_part,
-                  sb->inode_bitmap_lba,
-                  root_part->inode_bitmap.bits,
-                  sb->inode_bitmap_blocks * BLOCK_SECTOR_COUNT);
+                   sb->inode_bitmap_lba,
+                   root_part->inode_bitmap.bits,
+                   sb->inode_bitmap_blocks * BLOCK_SECTOR_COUNT);
 
     queue_init(&root_part->open_inodes);
     free(sb);
@@ -115,22 +138,7 @@ static void partition_format(Partition *part)
     sb->root_inode_nr = 0;
     sb->dir_entry_size = sizeof(DirEntry);
 
-    DEBUGP("%s info:\n", part->name);
-    DEBUGP("    magic:0x%08X\n", sb->magic);
-    DEBUGP("    start_lba:0x%X\n", sb->start_lba);
-    DEBUGP("    all_sectors:%d\n", sb->sec_cnt);
-    DEBUGP("    part_blocks:%d\n", part_blocks);
-    DEBUGP("    used_blocks:%d\n", used_blocks);
-    DEBUGP("    free_blocks:%d\n", free_blocks);
-    DEBUGP("    inode_cnt:%d\n", sb->inode_cnt);
-    DEBUGP("    block_bitmap_lba:0x%X\n", sb->block_bitmap_lba);
-    DEBUGP("    block_bitmap_blocks:0x%X\n", sb->block_bitmap_blocks);
-    DEBUGP("    inode_bitmap_lba:0x%X\n", sb->inode_bitmap_lba);
-    DEBUGP("    inode_bitmap_blocks:0x%X\n", sb->inode_bitmap_blocks);
-    DEBUGP("    inode_table_lba:0x%X\n", sb->inode_table_lba);
-    DEBUGP("    inode_table_blocks:0x%X\n", sb->inode_table_blocks);
-    DEBUGP("    data_start_lba:0x%X\n", sb->data_start_lba);
-    DEBUGP("    super_block_lba:0x%X\n", part->start_lba + BLOCK_SECTOR_COUNT);
+    print_format_info(part, sb);
 
     Harddisk *disk = part->disk;
     partition_write(part, BLOCK_SECTOR_COUNT, sb, BLOCK_SECTOR_COUNT);
@@ -221,7 +229,7 @@ static void search_part_fs(Harddisk *disk, Partition *part)
         DEBUGP("%s has file system\n", part->name);
         // partition_format(part);
     }
-    else
+    else if (!strcmp(part->name, default_part)) // todo remove default part if need...
     {
         DEBUGP("formating %s's partition %s....\n", disk->name, part->name);
         partition_format(part);
