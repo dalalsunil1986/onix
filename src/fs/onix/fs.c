@@ -215,7 +215,7 @@ static void search_part_fs(Harddisk *disk, Partition *part)
 
     DEBUGP("search %s part %s\n", disk->name, part->name);
     memset(sb, 0, SECTOR_SIZE);
-    harddisk_read(disk, part->start_lba + 1, sb, 1);
+    harddisk_read(disk, part->start_lba + BLOCK_SECTOR_COUNT, sb, 1);
     if (sb->magic == FS_MAGIC)
     {
         DEBUGP("%s has file system\n", part->name);

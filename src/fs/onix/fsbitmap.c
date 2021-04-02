@@ -17,7 +17,7 @@ int32 block_bitmap_alloc(Partition *part)
     if (idx == -1)
         return -1;
     bitmap_set(&part->block_bitmap, idx, 1);
-    return part->super_block->data_start_lba + idx * BLOCK_SECTOR_COUNT;
+    return idx;
 }
 
 bool bitmap_sync(Partition *part, u32 idx, BitmapType type)

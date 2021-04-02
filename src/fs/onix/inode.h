@@ -3,6 +3,7 @@
 
 #include <onix/types.h>
 #include <fs/onix/fs.h>
+#include <onix/kernel/harddisk.h>
 
 typedef struct InodePosition
 {

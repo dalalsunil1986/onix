@@ -130,7 +130,7 @@ void debug_harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         file = fopen("slave.img", "rb+");
     }
     fseek(file, lba * SECTOR_SIZE, 0);
-    fread(buf, SECTOR_SIZE, 1, file);
+    fread(buf, SECTOR_SIZE, sec_cnt, file);
     fclose(file);
     file = NULL;
 }
