@@ -1,6 +1,7 @@
 #include <fs/onix/inode.h>
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/assert.h>
+#include <onix/string.h>
 
 static void inode_locate(Partition *part, u32 nr, InodePosition *pos)
 {
@@ -23,11 +24,14 @@ static void inode_locate(Partition *part, u32 nr, InodePosition *pos)
     pos->offset = offset_in_block;
 }
 
-void inode_sync(Partition *part, Inode *inode, void *buf)
+void inode_sync(Partition *part, Inode *inode)
 {
     u32 nr = inode->nr;
     InodePosition pos;
     inode_locate(part, nr, &pos);
+
+    char *buf[2 * BLOCK_SECTOR_COUNT];
+    memset(buf, 0, 2 * BLOCK_SECTOR_COUNT);
 
     assert(pos.sec_lba <= (part->start_lba + part->sec_cnt));
 
