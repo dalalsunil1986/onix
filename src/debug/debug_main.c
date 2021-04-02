@@ -40,13 +40,27 @@ void test_inode()
     init_harddisk();
     init_fs();
     Partition *part = root_part;
-    u32 idx = inode_bitmap_alloc(part);
-    DEBUGP("Alloc inode bit %d\n", idx);
-    bitmap_sync(part, idx, INODE_BITMAP);
+    u32 idx;
+    // u32 idx = inode_bitmap_alloc(part);
+    // DEBUGP("Alloc inode bit %d\n", idx);
+    // bitmap_sync(part, idx, INODE_BITMAP);
 
-    u32 lba = block_bitmap_alloc(part);
-    DEBUGP("Alloc block bit %d\n", lba);
-    bitmap_sync(part, idx, BLOCK_BITMAP);
+    // u32 lba = block_bitmap_alloc(part);
+    // DEBUGP("Alloc block bit %d\n", lba);
+    // bitmap_sync(part, idx, BLOCK_BITMAP);
+    for (size_t nr = 0; nr < 20; nr++)
+    {
+        Inode *inode = inode_open(part, nr);
+        for (size_t i = 0; i < DIRECT_BLOCK_CNT; i++)
+        {
+            idx = inode_bitmap_alloc(part);
+            bitmap_sync(part, idx, INODE_BITMAP);
+            inode->blocks[i] = idx;
+            inode->size += BLOCK_SIZE;
+        }
+        inode_sync(part, inode);
+        inode_close(part, inode);
+    }
 }
 
 int main()

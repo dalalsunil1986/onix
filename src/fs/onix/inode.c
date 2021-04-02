@@ -2,6 +2,15 @@
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/assert.h>
 #include <onix/string.h>
+#include <onix/kernel/debug.h>
+
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 static void inode_locate(Partition *part, u32 nr, InodePosition *pos)
 {
@@ -10,6 +19,7 @@ static void inode_locate(Partition *part, u32 nr, InodePosition *pos)
     u32 inode_table_lba = part->super_block->inode_table_lba;
 
     u32 inode_size = sizeof(Inode);
+
     u32 offset_size = nr * inode_size;
     u32 offset_blocks = offset_size / BLOCK_SIZE;
     u32 offset_in_block = offset_size % BLOCK_SIZE;
@@ -20,7 +30,7 @@ static void inode_locate(Partition *part, u32 nr, InodePosition *pos)
     {
         pos->cross = true;
     }
-    pos->sec_lba = inode_table_lba + offset_blocks;
+    pos->sec_lba = inode_table_lba + offset_blocks * BLOCK_SECTOR_COUNT;
     pos->offset = offset_in_block;
 }
 
@@ -30,10 +40,10 @@ void inode_sync(Partition *part, Inode *inode)
     InodePosition pos;
     inode_locate(part, nr, &pos);
 
-    char *buf[2 * BLOCK_SECTOR_COUNT];
-    memset(buf, 0, 2 * BLOCK_SECTOR_COUNT);
+    char *buf[BLOCK_SIZE * BLOCK_SECTOR_COUNT];
+    memset(buf, 0, BLOCK_SIZE * BLOCK_SECTOR_COUNT);
 
-    assert(pos.sec_lba <= (part->start_lba + part->sec_cnt));
+    assert(pos.sec_lba <= part->sec_cnt);
 
     Inode pure_inode;
 
@@ -50,9 +60,10 @@ void inode_sync(Partition *part, Inode *inode)
         block_count = 2;
     }
 
-    harddisk_read(part->disk, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
+    partition_read(part, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
     memcpy((buf + pos.offset), &pure_inode, sizeof(Inode));
-    harddisk_write(part->disk, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
+    partition_write(part, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
+    DEBUGP("part 0x%X lba line %d\n", part, (part->start_lba + pos.sec_lba) * SECTOR_SIZE / 16);
 }
 
 Inode *inode_open(Partition *part, u32 nr)
@@ -81,12 +92,13 @@ Inode *inode_open(Partition *part, u32 nr)
         block_count = 2;
 
     char *buf = malloc(BLOCK_SIZE * block_count);
-    harddisk_read(part->disk, pos.sec_lba, buf, BLOCK_SIZE * block_count * BLOCK_SECTOR_COUNT);
+    partition_read(part, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
 
     memcpy(inode, buf + pos.offset, sizeof(Inode));
 
     queue_push(&part->open_inodes, &inode->node);
     inode->open_cnts = 1;
+    inode->nr = nr;
 
     free(buf);
     return inode;

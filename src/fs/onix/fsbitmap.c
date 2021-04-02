@@ -1,6 +1,15 @@
 #include <fs/onix/fsbitmap.h>
 #include <onix/bitmap.h>
 #include <onix/kernel/harddisk.h>
+#include <onix/kernel/debug.h>
+
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 int32 inode_bitmap_alloc(Partition *part)
 {
