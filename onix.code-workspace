@@ -101,7 +101,8 @@
 			"cstdbool": "c",
 			"typeinfo": "c",
 			"malloc.h": "c",
-			"fs.h": "c"
+			"fs.h": "c",
+			"inode.h": "c"
 		}
 	}
 }
