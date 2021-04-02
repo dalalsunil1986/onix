@@ -41,6 +41,6 @@ bool bitmap_sync(Partition *part, u32 idx, BitmapType type)
     default:
         break;
     }
-    harddisk_write(part->disk, sec_lba, bitmap_offset, 1);
+    partition_write(part, sec_lba, bitmap_offset, 1);
     return true;
 }
