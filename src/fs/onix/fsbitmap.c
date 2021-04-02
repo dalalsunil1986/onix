@@ -17,28 +17,30 @@ int32 block_bitmap_alloc(Partition *part)
     if (idx == -1)
         return -1;
     bitmap_set(&part->block_bitmap, idx, 1);
-    return part->super_block->data_start_lba + idx;
+    return part->super_block->data_start_lba + idx * BLOCK_SECTOR_COUNT;
 }
 
-u32 bitmap_sync(Partition *part, u32 idx, BitmapType type)
+bool bitmap_sync(Partition *part, u32 idx, BitmapType type)
 {
-    u32 offset_block = idx / BLOCK_SIZE / 8;
-    u32 offset_size = offset_block * BLOCK_SIZE;
+    u32 offset_sects = idx / SECTOR_SIZE / 8;
+    u32 offset_size = offset_sects * SECTOR_SIZE;
     u32 sec_lba;
+
     u8 *bitmap_offset;
 
     switch (type)
     {
     case INODE_BITMAP:
-        sec_lba = part->super_block->inode_bitmap_lba + offset_block;
+        sec_lba = part->super_block->inode_bitmap_lba + offset_sects;
         bitmap_offset = part->inode_bitmap.bits + offset_size;
         break;
     case BLOCK_BITMAP:
-        sec_lba = part->super_block->block_bitmap_lba + offset_block;
+        sec_lba = part->super_block->block_bitmap_lba + offset_sects;
         bitmap_offset = part->block_bitmap.bits + offset_size;
         break;
     default:
         break;
     }
-    harddisk_write(part->disk, sec_lba, bitmap_offset, BLOCK_SECTOR_COUNT);
+    harddisk_write(part->disk, sec_lba, bitmap_offset, 1);
+    return true;
 }
