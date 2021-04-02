@@ -7,7 +7,7 @@
 #define MAX_FILENAME_LENGTH 64
 #define MAX_FILE_PER_PART 4096
 #define SECTOR_SIZE 512
-#define BLOCK_SECTOR_COUNT 1
+#define BLOCK_SECTOR_COUNT 2
 #define BLOCK_SIZE (SECTOR_SIZE * BLOCK_SECTOR_COUNT)
 #define BLOCK_BITS (BLOCK_SIZE * 8)
 #define FS_MAGIC 0x20210330
@@ -49,8 +49,16 @@ typedef struct SuperBlock
     u32 data_start_lba; // 数据区开始的 lba 地址
     u32 root_inode_nr;  // 根目录所在的 inode 号
     u32 dir_entry_size; // 目录项大小
-    u8 placeholder[460];
 } _packed SuperBlock;
+
+typedef struct SuperBlockHolder
+{
+    union m
+    {
+        SuperBlock super_block;
+        char placeholder[BLOCK_SIZE];
+    } m;
+} _packed SuperBlockHolder;
 
 typedef struct Inode
 {
