@@ -297,3 +297,73 @@ rollback:
         break;
     }
 }
+
+int32 onix_file_read(Partition *part, File *file, const void *content, int32 count)
+{
+    assert(count > 0);
+
+    u32 block_start = file->offset / BLOCK_SIZE; // 起始块
+
+    assert(block_start < INODE_ALL_BLOCKS);
+
+    u32 block_remain_bytes = file->offset % BLOCK_SIZE;                                // 起始块已占用空间
+    u32 block_left_bytes = block_remain_bytes ? (BLOCK_SIZE - block_remain_bytes) : 0; // 起始块剩余空间
+
+    Inode *inode = file->inode;
+
+    u32 blocks[INODE_ALL_BLOCKS] = {0};
+    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
+
+    u32 lba = 0;
+    if (inode->blocks[INDIRECT_BLOCK_IDX])
+    {
+        // 一级间接表存在，读入；
+        lba = get_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
+        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
+    }
+
+    if (!blocks[block_start])
+        return EOF;
+
+    u32 idx = block_start;
+    char buf[BLOCK_SIZE] = {0};
+    u32 bytes = 0;
+    if (block_remain_bytes)
+    {
+        lba = get_block_lba(part, blocks[idx]);
+        partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
+        if (count <= block_left_bytes)
+        {
+            memcpy(content, buf + block_remain_bytes, count);
+            file->offset += count;
+            return count;
+        }
+        memcpy(content, buf + block_remain_bytes, block_left_bytes);
+        count -= block_left_bytes;
+        content += block_left_bytes;
+        bytes += block_left_bytes;
+        file->offset += block_left_bytes;
+        idx++;
+    }
+    while (blocks[idx])
+    {
+        lba = get_block_lba(part, blocks[idx]);
+        if (count >= BLOCK_SIZE)
+        {
+            partition_read(part, lba, content, BLOCK_SECTOR_COUNT);
+            content += BLOCK_SIZE;
+            bytes += BLOCK_SIZE;
+            file->offset += BLOCK_SIZE;
+        }
+        else
+        {
+            partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
+            memcpy(content, buf, count);
+            bytes += count;
+            file->offset += count;
+            return bytes;
+        }
+        idx++;
+    }
+    return bytes;
+}

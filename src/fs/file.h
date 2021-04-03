@@ -6,6 +6,7 @@
 
 #define MAX_OPEN_FILES 1024
 #define FILE_NULL -1
+#define EOF -1 // END OF FILE
 
 typedef int32 fd_t;
 

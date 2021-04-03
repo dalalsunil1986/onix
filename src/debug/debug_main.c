@@ -107,6 +107,12 @@ void test_file()
 
     onix_file_write(part, file, buf, sizeof(buf));
 
+    memset(buf, 0, sizeof(buf));
+
+    file->offset = 0;
+
+    onix_file_read(part, file, buf, sizeof(buf));
+
     onix_file_close(part, file);
 }
 
