@@ -4,9 +4,6 @@
 #include <fs/onix/fs.h>
 #include <onix/kernel/harddisk.h>
 
-#define ONIX_INODE_FAILURE ({printk("Onix inode allocate fail!!!\n"); return -1; })
-#define ONIX_BLOCK_FAILURE ({printk("Onix block allocate fail!!!\n"); return -1; })
-
 int32 inode_bitmap_alloc(Partition *part);
 int32 block_bitmap_alloc(Partition *part);
 

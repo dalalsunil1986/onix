@@ -3,11 +3,14 @@
 #include <onix/string.h>
 #include <fs/onix/fs.h>
 #include <fs/path.h>
+#include <fs/file.h>
 #include <fs/onix/inode.h>
 #include <fs/onix/fs.h>
 #include <fs/onix/fsbitmap.h>
 #include <fs/onix/fsblock.h>
 #include <fs/onix/fsdir.h>
+#include <fs/onix/fsfile.h>
+#include <onix/malloc.h>
 
 #define DEBUGINFO
 
@@ -71,23 +74,31 @@ void test_inode()
 
 void test_dir()
 {
-    DEBUGP("size of entry %d\n", sizeof(DirEntry));
-    char buf[BLOCK_SIZE];
-    Dir *root_dir = open_root_dir(part);
-    u32 nr = inode_bitmap_alloc_sync(part);
-    DirEntry entry;
-    char filename[] = "hello";
-    bool exists = search_dir_entry(part, root_dir, filename, &entry);
-    if (!exists)
-    {
-        DEBUGP("file %s is not exists, then create it.\n");
-        create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
-        sync_dir_entry(root_dir, &entry, buf);
-    }
-    else
-    {
-        DEBUGP("file %s is exists, congratulations!!!\n");
-    }
+    // DEBUGP("size of entry %d\n", sizeof(DirEntry));
+    // char buf[BLOCK_SIZE];
+    // Dir *root_dir = open_root_dir(part);
+    // u32 nr = inode_bitmap_alloc_sync(part);
+    // DirEntry entry;
+    // char filename[] = "hello";
+    // bool exists = search_dir_entry(part, root_dir, filename, &entry);
+    // if (!exists)
+    // {
+    //     DEBUGP("file %s is not exists, then create it.\n");
+    //     create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
+    //     sync_dir_entry(root_dir, &entry, buf);
+    // }
+    // else
+    // {
+    //     DEBUGP("file %s is exists, congratulations!!!\n");
+    // }
+}
+
+void test_file()
+{
+    File holder;
+    File *file = &holder;
+    Dir *root = open_root_dir(part);
+    file_create(part, root, file, "A file.txt", 1);
 }
 
 int main()
@@ -96,6 +107,7 @@ int main()
     init_fs();
     part = root_part;
     print_format_info(part, part->super_block);
-    // test_inode();
-    test_dir();
+    // // test_inode();
+    // test_dir();
+    test_file();
 }

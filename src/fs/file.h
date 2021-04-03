@@ -5,6 +5,7 @@
 #include <fs/onix/fs.h>
 
 #define MAX_OPEN_FILES 1024
+#define FILE_NULL -1
 
 typedef int32 fd_t;
 

@@ -107,7 +107,8 @@
 			"path.h": "c",
 			"libgen.h": "c",
 			"fsdir.h": "c",
-			"fsblock.h": "c"
+			"fsblock.h": "c",
+			"file.h": "c"
 		}
 	}
 }
