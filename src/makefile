@@ -33,9 +33,7 @@ DEBUG_CFLAGS = $(INCLUDE) -m32 -Wall -D ONIX_KERNEL_DEBUG -D ONIX_DEBUG -g
 
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 
-.PHONY: clean image unlock win fdisk
-
-all: dirs $(BOCHS_TARGET)
+all: dirs $(REAL_TARGET)
 
 dirs:
 	@mkdir -p $(REAL_DIR) $(DEBUG_DIR) 
@@ -152,6 +150,8 @@ $(DEBUG_TARGET): $(DEBUG_OBJECTS)
 	$(CC) $(DEBUG_CFLAGS) $^ -o $@
 	@#echo $(DEBUG_OBJECTS)
 
+# ----------------------------harddisk.img--------------------------------- #
+
 $(BUILD)/harddisk.img: $(BUILD)/boot.bin \
 	$(BUILD)/loader.bin \
 	$(BUILD)/kernel.bin
@@ -163,12 +163,16 @@ endif
 	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ bs=512 seek=100 count=200 conv=notrunc
 
+# ----------------------------slave.img--------------------------------- #
+
 $(BUILD)/slave.img: $(BUILD)/slave.sfdisk
 
 ifeq ("$(wildcard $(BUILD)/slave.img)", "")
 	bximage -q -hd=128 -mode=create -sectsize=512 -imgmode=flat $@
 endif
 	sfdisk $@ < $<
+
+# ----------------------------boch debug--------------------------------- #
 
 bochs: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	@rm -rf $(BUILD)/harddisk.img.lock
@@ -188,6 +192,10 @@ win:
 debug: $(BUILD)/debug.out $(BUILD)/slave.img 
 	-
 
+sect: $(BUILD)/slave.img
+	$(eval START=$(shell python -c "print($(s)*512)"))
+	@xxd -u -a -g 1 -s $(START) -l 512 $<
+
 clean:
 	rm -rf $(BUILD)/boot.bin
 	rm -rf $(BUILD)/loader.bin
@@ -196,3 +204,5 @@ clean:
 	rm -rf $(DEBUG_DIR)/*.o
 	rm -rf $(BUILD)/*.img*
 	rm -rf $(BUILD)/debug.out
+
+.PHONY: clean image bochs unlock win
