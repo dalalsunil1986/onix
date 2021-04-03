@@ -1,5 +1,6 @@
 #include <fs/onix/fsbitmap.h>
 #include <onix/bitmap.h>
+#include <onix/kernel/assert.h>
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/debug.h>
 
@@ -70,4 +71,28 @@ int32 block_bitmap_alloc_sync(Partition *part)
         return -1;
     bitmap_sync(part, idx, BLOCK_BITMAP);
     return idx;
+}
+
+void inode_bitmap_rollback(Partition *part, u32 idx)
+{
+    assert(idx < part->inode_bitmap.length * 8);
+    bitmap_set(&part->inode_bitmap, idx, 0);
+}
+
+void block_bitmap_rollback(Partition *part, u32 idx)
+{
+    assert(idx < part->block_bitmap.length * 8);
+    bitmap_set(&part->block_bitmap, idx, 0);
+}
+
+void inode_bitmap_rollback_sync(Partition *part, u32 idx)
+{
+    inode_bitmap_rollback(part, idx);
+    bitmap_sync(part, idx, INODE_BITMAP);
+}
+
+void block_bitmap_rollback_sync(Partition *part, u32 idx)
+{
+    block_bitmap_rollback(part, idx);
+    bitmap_sync(part, idx, BLOCK_BITMAP);
 }
