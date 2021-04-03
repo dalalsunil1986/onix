@@ -78,6 +78,7 @@ FS_ONIX_C:=$(FS_ONIX_SRC)/inode.c \
 		$(FS_ONIX_SRC)/fsbitmap.c \
 		$(FS_ONIX_SRC)/fsdir.c \
 		$(FS_ONIX_SRC)/fsblock.c \
+		$(FS_ONIX_SRC)/fsfile.c \
 		$(FS_ONIX_SRC)/fs.c
 
 FS_C:= 	$(FS_SRC)/path.c \
@@ -205,4 +206,4 @@ clean:
 	rm -rf $(BUILD)/*.img*
 	rm -rf $(BUILD)/debug.out
 
-.PHONY: clean image bochs unlock win
+.PHONY: clean image bochs unlock win sect
