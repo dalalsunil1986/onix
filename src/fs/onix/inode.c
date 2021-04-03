@@ -12,7 +12,7 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-static void inode_locate(Partition *part, u32 nr, InodePosition *pos)
+static void onix_inode_locate(Partition *part, u32 nr, InodePosition *pos)
 {
     assert(nr < MAX_FILE_PER_PART);
 
@@ -23,25 +23,19 @@ static void inode_locate(Partition *part, u32 nr, InodePosition *pos)
     u32 offset_size = nr * inode_size;
     u32 offset_blocks = offset_size / BLOCK_SIZE;
     u32 offset_in_block = offset_size % BLOCK_SIZE;
-    u32 left_in_block = BLOCK_SIZE - offset_in_block;
 
-    pos->cross = false;
-    if (left_in_block < inode_size)
-    {
-        pos->cross = true;
-    }
     pos->sec_lba = inode_table_lba + offset_blocks * BLOCK_SECTOR_COUNT;
     pos->offset = offset_in_block;
 }
 
-void inode_sync(Partition *part, Inode *inode)
+void onix_inode_sync(Partition *part, Inode *inode)
 {
     u32 nr = inode->nr;
     InodePosition pos;
-    inode_locate(part, nr, &pos);
+    onix_inode_locate(part, nr, &pos);
 
-    char *buf[BLOCK_SIZE * BLOCK_SECTOR_COUNT];
-    memset(buf, 0, BLOCK_SIZE * BLOCK_SECTOR_COUNT);
+    char *buf[BLOCK_SIZE];
+    memset(buf, 0, BLOCK_SIZE);
 
     assert(pos.sec_lba <= part->sec_cnt);
 
@@ -54,19 +48,13 @@ void inode_sync(Partition *part, Inode *inode)
     pure_inode.node.prev = NULL;
     pure_inode.node.next = NULL;
 
-    u8 block_count = 1;
-    if (pos.cross)
-    {
-        block_count = 2;
-    }
-
-    partition_read(part, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
+    partition_read(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
     memcpy((buf + pos.offset), &pure_inode, sizeof(Inode));
-    partition_write(part, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
+    partition_write(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
     // DEBUGP("part 0x%X lba line %d\n", part, (part->start_lba + pos.sec_lba) * SECTOR_SIZE / 16);
 }
 
-Inode *inode_open(Partition *part, u32 nr)
+Inode *onix_inode_open(Partition *part, u32 nr)
 {
     Node *node = part->open_inodes.head.next;
     Inode *inode;
@@ -83,16 +71,12 @@ Inode *inode_open(Partition *part, u32 nr)
     }
 
     InodePosition pos;
-    inode_locate(part, nr, &pos);
+    onix_inode_locate(part, nr, &pos);
 
     inode = malloc(sizeof(Inode));
 
-    int block_count = 1;
-    if (pos.cross)
-        block_count = 2;
-
-    char *buf = malloc(BLOCK_SIZE * block_count);
-    partition_read(part, pos.sec_lba, buf, block_count * BLOCK_SECTOR_COUNT);
+    char *buf = malloc(BLOCK_SIZE);
+    partition_read(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
 
     memcpy(inode, buf + pos.offset, sizeof(Inode));
 
@@ -104,7 +88,7 @@ Inode *inode_open(Partition *part, u32 nr)
     return inode;
 }
 
-void inode_close(Partition *part, Inode *inode)
+void onix_inode_close(Partition *part, Inode *inode)
 {
     bool old = disable_int();
     if (--(inode->open_cnts) == 0)
@@ -115,7 +99,7 @@ void inode_close(Partition *part, Inode *inode)
     set_interrupt_status(old);
 }
 
-void inode_init(u32 nr, Inode *inode)
+void onix_inode_init(u32 nr, Inode *inode)
 {
     inode->nr = nr;
     inode->size = 0;

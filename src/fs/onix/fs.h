@@ -16,6 +16,7 @@
 #define INDIRECT_BLOCK_IDX DIRECT_BLOCK_CNT
 #define INODE_BLOCK_CNT (DIRECT_BLOCK_CNT + INDIRECT_BLOCK_CNT)
 #define INODE_ALL_BLOCKS DIRECT_BLOCK_CNT + (BLOCK_SIZE / sizeof(u32))
+#define MAX_FILE_SIZE (INODE_ALL_BLOCKS * BLOCK_SIZE)
 
 #define ROOT_DIR_IDX 0
 
@@ -72,9 +73,10 @@ typedef struct Inode
     u32 size;                    // 文件或目录大小
     u32 open_cnts;               // 文件被打开的次数
     bool write_deny;             // 写文件标志
+    Node node;                   // 链表节点
     u32 blocks[INODE_BLOCK_CNT]; // 0-11 直接快 12 一级间接块
-    Node node;
-} Inode;
+    char unused[55];             // 用来撑场面，凑够 128 字节 未来可做扩展
+} _packed Inode;
 
 typedef struct Dir // 只存在于内存中的结构
 {

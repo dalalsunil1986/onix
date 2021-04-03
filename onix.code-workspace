@@ -108,7 +108,8 @@
 			"libgen.h": "c",
 			"fsdir.h": "c",
 			"fsblock.h": "c",
-			"file.h": "c"
+			"file.h": "c",
+			"fsfile.h": "c"
 		}
 	}
 }

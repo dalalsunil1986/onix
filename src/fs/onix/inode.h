@@ -7,14 +7,13 @@
 
 typedef struct InodePosition
 {
-    bool cross;
     u32 sec_lba;
     u32 offset;
 } InodePosition;
 
-void inode_init(u32 nr, Inode *inode);
-Inode *inode_open(Partition *part, u32 nr);
-void inode_close(Partition *part, Inode *inode);
-void inode_sync(Partition *part, Inode *inode);
+void onix_inode_init(u32 nr, Inode *inode);
+Inode *onix_inode_open(Partition *part, u32 nr);
+void onix_inode_close(Partition *part, Inode *inode);
+void onix_inode_sync(Partition *part, Inode *inode);
 
 #endif

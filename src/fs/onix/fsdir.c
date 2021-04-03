@@ -24,7 +24,7 @@ Dir *open_root_dir(Partition *part)
     {
         return &root_dir;
     }
-    root_dir.inode = inode_open(part, part->super_block->root_inode_nr);
+    root_dir.inode = onix_inode_open(part, part->super_block->root_inode_nr);
     root_dir.dir_offset = 0;
     return &root_dir;
 }
@@ -37,7 +37,7 @@ Dir *dir_open(Partition *part, u32 nr)
         printk("dir open allocate memroy fail!!!\n");
         return NULL;
     }
-    dir->inode = inode_open(part, nr);
+    dir->inode = onix_inode_open(part, nr);
     dir->dir_offset = 0;
     return dir;
 }
@@ -46,7 +46,7 @@ void dir_close(Partition *part, Dir *dir)
 {
     if (dir == &root_dir)
         return;
-    inode_close(part, dir->inode);
+    onix_inode_close(part, dir->inode);
     free(dir);
 }
 
@@ -187,7 +187,7 @@ bool sync_dir_entry(Dir *parent, DirEntry *entry, void *buf)
         }
         else if (idx >= INDIRECT_BLOCK_IDX && flag) // 一级间接块
         {
-            blocks[idx - 1] = block_bitmap_idx;
+            blocks[idx] = block_bitmap_idx;
             lba = get_block_lba(part, dir_inode->blocks[INDIRECT_BLOCK_IDX]);
             partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
             continue;
@@ -201,9 +201,9 @@ bool sync_dir_entry(Dir *parent, DirEntry *entry, void *buf)
             printk("alloc block bitmap failed\n");
             return false;
         }
+
+        assert(idx == INDIRECT_BLOCK_IDX);
         blocks[idx] = block_bitmap_idx;
-        lba = get_block_lba(part, dir_inode->blocks[INDIRECT_BLOCK_IDX]);
-        partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
         flag = true;
         continue;
     }

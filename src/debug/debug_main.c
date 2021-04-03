@@ -100,9 +100,13 @@ void test_file()
     Dir *root = open_root_dir(part);
     onix_file_create(part, root, file, "A file.txt", 1);
 
+    char buf[] = "hello world this is a file content\0";
     DEBUGP("create file nr %d\n", file->inode->nr);
 
     onix_file_open(part, file, file->inode->nr, O_R | O_W);
+
+    onix_file_write(part, file, buf, sizeof(buf));
+
     onix_file_close(part, file);
 }
 
