@@ -28,7 +28,7 @@ bool onix_file_create(Partition *part, Dir *parent, File *file, char *name, File
         return false;
     }
 
-    u32 nr = inode_bitmap_alloc(part);
+    u32 nr = onix_inode_bitmap_alloc(part);
     if (nr == -1)
     {
         printk("Onix inode allocate failed!!!\n");
@@ -62,7 +62,7 @@ bool onix_file_create(Partition *part, Dir *parent, File *file, char *name, File
     }
     onix_inode_sync(part, parent->inode);
     onix_inode_sync(part, inode);
-    bitmap_sync(part, nr, INODE_BITMAP);
+    onix_bitmap_sync(part, nr, INODE_BITMAP);
     queue_push(&part->open_inodes, &inode->node);
     inode->open_cnts = 1;
     success = true;
@@ -73,7 +73,7 @@ rollback:
     case 2:
         free(inode);
     case 1:
-        inode_bitmap_rollback(part, nr);
+        onix_inode_bitmap_rollback(part, nr);
     case 0:
         free(buf);
     default:
@@ -207,7 +207,7 @@ int32 onix_file_write(Partition *part, File *file, const void *content, int32 co
     idx = 0;
     while (idx < need_blocks)
     {
-        block_idx = inode_bitmap_alloc(part);
+        block_idx = onix_inode_bitmap_alloc(part);
         if (block_idx == -1)
         {
             printk("Onix inode block allocate failed.\n");
@@ -278,7 +278,7 @@ int32 onix_file_write(Partition *part, File *file, const void *content, int32 co
     idx = 0;
     while (new_blocks[idx])
     {
-        bitmap_sync(part, new_blocks[idx], BLOCK_BITMAP);
+        onix_bitmap_sync(part, new_blocks[idx], BLOCK_BITMAP);
         idx++;
     }
     return bytes;
@@ -289,7 +289,7 @@ rollback:
         idx = 0;
         while (new_blocks[idx])
         {
-            block_bitmap_rollback(part, new_blocks[idx]);
+            onix_block_bitmap_rollback(part, new_blocks[idx]);
             idx++;
         }
         return bytes;

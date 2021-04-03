@@ -12,7 +12,7 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-int32 inode_bitmap_alloc(Partition *part)
+int32 onix_inode_bitmap_alloc(Partition *part)
 {
     int32 idx = bitmap_scan(&part->inode_bitmap, 1);
     if (idx == -1)
@@ -21,7 +21,7 @@ int32 inode_bitmap_alloc(Partition *part)
     return idx;
 }
 
-int32 block_bitmap_alloc(Partition *part)
+int32 onix_block_bitmap_alloc(Partition *part)
 {
     int32 idx = bitmap_scan(&part->block_bitmap, 1);
     if (idx == -1)
@@ -30,7 +30,7 @@ int32 block_bitmap_alloc(Partition *part)
     return idx;
 }
 
-bool bitmap_sync(Partition *part, u32 idx, BitmapType type)
+bool onix_bitmap_sync(Partition *part, u32 idx, BitmapType type)
 {
     u32 offset_sects = idx / SECTOR_SIZE / 8;
     u32 offset_size = offset_sects * SECTOR_SIZE;
@@ -55,44 +55,44 @@ bool bitmap_sync(Partition *part, u32 idx, BitmapType type)
     return true;
 }
 
-int32 inode_bitmap_alloc_sync(Partition *part)
+int32 onix_inode_bitmap_alloc_sync(Partition *part)
 {
-    u32 idx = inode_bitmap_alloc(part);
+    u32 idx = onix_inode_bitmap_alloc(part);
     if (idx == -1)
         return -1;
-    bitmap_sync(part, idx, INODE_BITMAP);
+    onix_bitmap_sync(part, idx, INODE_BITMAP);
     return idx;
 }
 
-int32 block_bitmap_alloc_sync(Partition *part)
+int32 onix_block_bitmap_alloc_sync(Partition *part)
 {
-    u32 idx = block_bitmap_alloc(part);
+    u32 idx = onix_block_bitmap_alloc(part);
     if (idx == -1)
         return -1;
-    bitmap_sync(part, idx, BLOCK_BITMAP);
+    onix_bitmap_sync(part, idx, BLOCK_BITMAP);
     return idx;
 }
 
-void inode_bitmap_rollback(Partition *part, u32 idx)
+void onix_inode_bitmap_rollback(Partition *part, u32 idx)
 {
     assert(idx < part->inode_bitmap.length * 8);
     bitmap_set(&part->inode_bitmap, idx, 0);
 }
 
-void block_bitmap_rollback(Partition *part, u32 idx)
+void onix_block_bitmap_rollback(Partition *part, u32 idx)
 {
     assert(idx < part->block_bitmap.length * 8);
     bitmap_set(&part->block_bitmap, idx, 0);
 }
 
-void inode_bitmap_rollback_sync(Partition *part, u32 idx)
+void onix_inode_bitmap_rollback_sync(Partition *part, u32 idx)
 {
-    inode_bitmap_rollback(part, idx);
-    bitmap_sync(part, idx, INODE_BITMAP);
+    onix_inode_bitmap_rollback(part, idx);
+    onix_bitmap_sync(part, idx, INODE_BITMAP);
 }
 
-void block_bitmap_rollback_sync(Partition *part, u32 idx)
+void onix_block_bitmap_rollback_sync(Partition *part, u32 idx)
 {
-    block_bitmap_rollback(part, idx);
-    bitmap_sync(part, idx, BLOCK_BITMAP);
+    onix_block_bitmap_rollback(part, idx);
+    onix_bitmap_sync(part, idx, BLOCK_BITMAP);
 }

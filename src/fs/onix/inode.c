@@ -1,4 +1,6 @@
 #include <fs/onix/inode.h>
+#include <fs/onix/fsblock.h>
+#include <fs/onix/fsbitmap.h>
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/assert.h>
 #include <onix/string.h>
@@ -97,6 +99,43 @@ void onix_inode_close(Partition *part, Inode *inode)
         free(inode);
     }
     set_interrupt_status(old);
+}
+
+void onix_inode_erase(Partition *part, u32 nr)
+{
+    InodePosition pos;
+    onix_inode_locate(part, nr, &pos);
+    char buf[BLOCK_SIZE];
+    partition_read(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
+    memset(buf + pos.offset, 0, sizeof(Inode));
+    partition_write(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
+}
+
+void onix_inode_delete(Partition *part, u32 nr)
+{
+    Inode *inode = onix_inode_open(part, nr);
+    assert(inode->nr == nr);
+
+    u32 blocks[INODE_ALL_BLOCKS];
+    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
+
+    u32 lba = 0;
+    u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
+    if (indirect_idx)
+    {
+        lba = get_block_lba(part, indirect_idx);
+        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
+        assert(indirect_idx > 0);
+        onix_block_bitmap_rollback_sync(part, indirect_idx);
+    }
+    u32 idx = 0;
+    while (blocks[idx])
+    {
+        onix_block_bitmap_rollback_sync(part, blocks[idx]);
+        idx++;
+    }
+    onix_inode_bitmap_rollback_sync(part, nr);
+    onix_inode_close(part, inode);
 }
 
 void onix_inode_init(u32 nr, Inode *inode)

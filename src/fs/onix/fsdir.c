@@ -174,7 +174,7 @@ bool sync_dir_entry(Dir *parent, DirEntry *entry, void *buf)
             continue;
         }
 
-        block_bitmap_idx = block_bitmap_alloc_sync(part);
+        block_bitmap_idx = onix_block_bitmap_alloc_sync(part);
         if (block_bitmap_idx == -1)
         {
             printk("allocate block bitmap failed ...\n");
@@ -193,7 +193,7 @@ bool sync_dir_entry(Dir *parent, DirEntry *entry, void *buf)
             continue;
         }
         dir_inode->blocks[idx] = block_bitmap_idx;
-        u32 bitmap_idx = block_bitmap_alloc_sync(part);
+        u32 bitmap_idx = onix_block_bitmap_alloc_sync(part);
         if (block_lba == -1)
         {
             bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);

@@ -47,20 +47,20 @@ void test_inode()
 {
     u32 idx = 5;
 
-    idx = inode_bitmap_alloc(part);
+    idx = onix_inode_bitmap_alloc(part);
     DEBUGP("Alloc inode bit %d\n", idx);
-    bitmap_sync(part, idx, INODE_BITMAP);
+    onix_bitmap_sync(part, idx, INODE_BITMAP);
 
-    u32 lba = block_bitmap_alloc(part);
+    u32 lba = onix_block_bitmap_alloc(part);
     DEBUGP("Alloc block bit %d\n", lba);
-    bitmap_sync(part, idx, BLOCK_BITMAP);
+    onix_bitmap_sync(part, idx, BLOCK_BITMAP);
 
     // for (size_t nr = 0; nr < 20; nr++)
     // {
     //     Inode *inode = inode_open(part, nr);
     //     for (size_t i = 0; i < DIRECT_BLOCK_CNT; i++)
     //     {
-    //         idx = inode_bitmap_alloc(part);
+    //         idx = onix_inode_bitmap_alloc(part);
     //         bitmap_sync(part, idx, INODE_BITMAP);
     //         inode->blocks[i] = idx;
     //         inode->size += BLOCK_SIZE;
@@ -77,7 +77,7 @@ void test_dir()
     // DEBUGP("size of entry %d\n", sizeof(DirEntry));
     // char buf[BLOCK_SIZE];
     // Dir *root_dir = open_root_dir(part);
-    // u32 nr = inode_bitmap_alloc_sync(part);
+    // u32 nr = onix_inode_bitmap_alloc_sync(part);
     // DirEntry entry;
     // char filename[] = "hello";
     // bool exists = search_dir_entry(part, root_dir, filename, &entry);
