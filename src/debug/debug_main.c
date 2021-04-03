@@ -76,16 +76,16 @@ void test_dir()
 {
     // DEBUGP("size of entry %d\n", sizeof(DirEntry));
     // char buf[BLOCK_SIZE];
-    // Dir *root_dir = open_root_dir(part);
+    // Dir *root_dir = onix_open_root_dir(part);
     // u32 nr = onix_inode_bitmap_alloc_sync(part);
     // DirEntry entry;
     // char filename[] = "hello";
-    // bool exists = search_dir_entry(part, root_dir, filename, &entry);
+    // bool exists = onix_search_dir_entry(part, root_dir, filename, &entry);
     // if (!exists)
     // {
     //     DEBUGP("file %s is not exists, then create it.\n");
-    //     create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
-    //     sync_dir_entry(root_dir, &entry, buf);
+    //     onix_create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
+    //     onix_sync_dir_entry(root_dir, &entry, buf);
     // }
     // else
     // {
@@ -97,7 +97,7 @@ void test_file()
 {
     File holder;
     File *file = &holder;
-    Dir *root = open_root_dir(part);
+    Dir *root = onix_open_root_dir(part);
     onix_file_create(part, root, file, "A file.txt", 1);
 
     char buf[] = "hello world this is a file content\0";

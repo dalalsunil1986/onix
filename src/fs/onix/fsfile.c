@@ -52,9 +52,9 @@ bool onix_file_create(Partition *part, Dir *parent, File *file, char *name, File
     DirEntry entry;
     memset(&entry, 0, sizeof(DirEntry));
 
-    create_dir_entry(name, nr, FILETYPE_REGULAR, &entry);
+    onix_create_dir_entry(name, nr, FILETYPE_REGULAR, &entry);
 
-    if (!sync_dir_entry(parent, &entry, buf))
+    if (!onix_sync_dir_entry(part, parent, &entry, buf))
     {
         printk("Onix sync directory fail!!!\n");
         step = 2;

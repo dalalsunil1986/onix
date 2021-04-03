@@ -18,7 +18,7 @@
 Dir root_dir;
 extern Partition *root_part;
 
-Dir *open_root_dir(Partition *part)
+Dir *onix_open_root_dir(Partition *part)
 {
     if (root_dir.inode != NULL)
     {
@@ -29,7 +29,7 @@ Dir *open_root_dir(Partition *part)
     return &root_dir;
 }
 
-Dir *dir_open(Partition *part, u32 nr)
+Dir *onix_dir_open(Partition *part, u32 nr)
 {
     Dir *dir = malloc(sizeof(Dir));
     if (dir == NULL)
@@ -42,7 +42,7 @@ Dir *dir_open(Partition *part, u32 nr)
     return dir;
 }
 
-void dir_close(Partition *part, Dir *dir)
+void onix_dir_close(Partition *part, Dir *dir)
 {
     if (dir == &root_dir)
         return;
@@ -50,7 +50,7 @@ void dir_close(Partition *part, Dir *dir)
     free(dir);
 }
 
-bool search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry)
+bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry)
 {
     u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
     if (blocks == NULL)
@@ -113,7 +113,7 @@ bool search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry)
     return false;
 }
 
-void create_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry)
+void onix_create_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry)
 {
     assert(strlen(filename) <= MAX_FILENAME_LENGTH);
     memset(entry->filename, 0, sizeof(entry->filename));
@@ -122,7 +122,7 @@ void create_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry)
     entry->type = type;
 }
 
-bool sync_dir_entry(Dir *parent, DirEntry *entry, void *buf)
+bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry, void *buf)
 {
     Inode *dir_inode = parent->inode;
     u32 dir_size = dir_inode->size;
@@ -146,7 +146,6 @@ bool sync_dir_entry(Dir *parent, DirEntry *entry, void *buf)
 
     u32 lba = 0;
     int32 block_bitmap_idx = -1;
-    Partition *part = root_part;
 
     idx = 0;
     bool flag = false;
@@ -211,8 +210,23 @@ bool sync_dir_entry(Dir *parent, DirEntry *entry, void *buf)
     return false;
 }
 
+bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry, u32 nr, void *buf)
+{
+    Inode *inode = parent->inode;
+    u32 blocks[INODE_ALL_BLOCKS];
+    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
+    u32 lba = 0;
+    u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
+    if (indirect_idx)
+    {
+        lba = get_block_lba(part, indirect_idx);
+        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
+    }
+    // todo unfinished... delete dir entry.
+}
+
 void init_dir()
 {
     root_dir.inode = NULL;
-    open_root_dir(root_part);
+    onix_open_root_dir(root_part);
 }
