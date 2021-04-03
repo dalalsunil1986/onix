@@ -195,7 +195,15 @@ debug: $(BUILD)/debug.out $(BUILD)/slave.img
 
 sect: $(BUILD)/slave.img
 	$(eval START=$(shell python -c "print($(s)*512)"))
-	@xxd -u -a -g 1 -s $(START) -l 512 $<
+	xxd -u -g 1 -s $(START) -l 512 $<
+
+block: $(BUILD)/slave.img
+	$(eval START=$(shell python -c "print($(s)*512)"))
+	xxd -u -g 1 -s $(START) -l 1024 $<
+
+offset: $(BUILD)/slave.img
+	$(eval START=$(shell python -c "print($(s)*512 + $(o))"))
+	xxd -u -g 1 -s $(START) -l 512 $<
 
 clean:
 	rm -rf $(BUILD)/boot.bin
@@ -206,4 +214,4 @@ clean:
 	rm -rf $(BUILD)/*.img*
 	rm -rf $(BUILD)/debug.out
 
-.PHONY: clean image bochs unlock win sect
+.PHONY: clean image bochs unlock win sect offset block

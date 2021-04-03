@@ -53,7 +53,6 @@ void onix_inode_sync(Partition *part, Inode *inode)
     partition_read(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
     memcpy((buf + pos.offset), &pure_inode, sizeof(Inode));
     partition_write(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
-    // DEBUGP("part 0x%X lba line %d\n", part, (part->start_lba + pos.sec_lba) * SECTOR_SIZE / 16);
 }
 
 Inode *onix_inode_open(Partition *part, u32 nr)
@@ -145,10 +144,9 @@ void onix_inode_init(u32 nr, Inode *inode)
     inode->open_cnts = 0;
     inode->write_deny = false;
 
-    u8 idx = 0;
-    while (idx < INODE_BLOCK_CNT)
-    {
-        inode->blocks[idx] = 0;
-        idx++;
-    }
+    memset(inode->blocks, 0, sizeof(inode->blocks));
+
+    // fuck，内存没有初始化
+    // 还以为我哪儿写错了，调试了半天
+    memset(inode->unused, 0, sizeof(inode->unused)); 
 }

@@ -11,5 +11,6 @@ bool onix_file_open(Partition *part, File *file, u32 nr, FileFlag flag);
 bool onix_file_close(Partition *part, File *file);
 int32 onix_file_write(Partition *part, File *file, const void *content, int32 count);
 int32 onix_file_read(Partition *part, File *file, const void *content, int32 count);
+int32 onix_file_lseek(File *file, int32 offset, Whence whence);
 
 #endif

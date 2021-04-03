@@ -182,7 +182,7 @@ int32 onix_file_write(Partition *part, File *file, const void *content, int32 co
         {
             // 写完了
             file->offset += bytes;
-            return bytes;
+            goto sync_inode;
         }
         left_blocks--;
         last_idx++;
@@ -226,7 +226,6 @@ int32 onix_file_write(Partition *part, File *file, const void *content, int32 co
         if (blocks[idx] == 0)
         {
             blocks[idx] = new_blocks[new_block_idx++];
-            inode->size += BLOCK_SIZE;
         }
         lba = get_block_lba(part, blocks[idx]);
         if (count >= BLOCK_SIZE)
@@ -273,6 +272,11 @@ int32 onix_file_write(Partition *part, File *file, const void *content, int32 co
             blocks[idx] = new_blocks[new_block_idx++];
             flag = true;
         }
+    }
+sync_inode:
+    if (file->offset > file->inode->size)
+    {
+        file->inode->size = file->offset;
     }
     onix_inode_sync(part, inode);
     idx = 0;
@@ -366,4 +370,29 @@ int32 onix_file_read(Partition *part, File *file, const void *content, int32 cou
         idx++;
     }
     return bytes;
+}
+
+int32 onix_file_lseek(File *file, int32 offset, Whence whence)
+{
+    u32 filesize = file->inode->size;
+    u32 pos = 0;
+    switch (whence)
+    {
+    case SEEK_SET:
+        pos = offset;
+        break;
+    case SEEK_CUR:
+        pos = file->offset + offset;
+        break;
+    case SEEK_END:
+        pos = filesize + offset;
+    default:
+        break;
+    }
+    if (pos < 0 || pos > (filesize - 1))
+    {
+        return EOF;
+    }
+    file->offset = pos;
+    return file->offset;
 }

@@ -46,51 +46,51 @@ void test_path()
 void test_inode()
 {
     u32 idx = 5;
-
+    u32 lba = 0;
     idx = onix_inode_bitmap_alloc(part);
     DEBUGP("Alloc inode bit %d\n", idx);
     onix_bitmap_sync(part, idx, INODE_BITMAP);
 
-    u32 lba = onix_block_bitmap_alloc(part);
+    lba = onix_block_bitmap_alloc(part);
     DEBUGP("Alloc block bit %d\n", lba);
     onix_bitmap_sync(part, idx, BLOCK_BITMAP);
 
-    // for (size_t nr = 0; nr < 20; nr++)
-    // {
-    //     Inode *inode = inode_open(part, nr);
-    //     for (size_t i = 0; i < DIRECT_BLOCK_CNT; i++)
-    //     {
-    //         idx = onix_inode_bitmap_alloc(part);
-    //         bitmap_sync(part, idx, INODE_BITMAP);
-    //         inode->blocks[i] = idx;
-    //         inode->size += BLOCK_SIZE;
-    //     }
-    //     inode_sync(part, inode);
-    //     inode_close(part, inode);
-    // }
-    // u32 lba = get_block_lba(part, idx);
-    // DEBUGP("data block lba 0x%08X idx %d\n", lba, idx);
+    for (size_t nr = 0; nr < 20; nr++)
+    {
+        Inode *inode = onix_inode_open(part, nr);
+        for (size_t i = 0; i < DIRECT_BLOCK_CNT; i++)
+        {
+            idx = onix_inode_bitmap_alloc(part);
+            onix_bitmap_sync(part, idx, INODE_BITMAP);
+            inode->blocks[i] = idx;
+            inode->size += BLOCK_SIZE;
+        }
+        onix_inode_sync(part, inode);
+        onix_inode_close(part, inode);
+    }
+    lba = get_block_lba(part, idx);
+    DEBUGP("data block lba 0x%08X idx %d\n", lba, idx);
 }
 
 void test_dir()
 {
-    // DEBUGP("size of entry %d\n", sizeof(DirEntry));
-    // char buf[BLOCK_SIZE];
-    // Dir *root_dir = onix_open_root_dir(part);
-    // u32 nr = onix_inode_bitmap_alloc_sync(part);
-    // DirEntry entry;
-    // char filename[] = "hello";
-    // bool exists = onix_search_dir_entry(part, root_dir, filename, &entry);
-    // if (!exists)
-    // {
-    //     DEBUGP("file %s is not exists, then create it.\n");
-    //     onix_create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
-    //     onix_sync_dir_entry(root_dir, &entry, buf);
-    // }
-    // else
-    // {
-    //     DEBUGP("file %s is exists, congratulations!!!\n");
-    // }
+    DEBUGP("size of entry %d\n", sizeof(DirEntry));
+    char buf[BLOCK_SIZE];
+    Dir *root_dir = onix_open_root_dir(part);
+    u32 nr = onix_inode_bitmap_alloc_sync(part);
+    DirEntry entry;
+    char filename[] = "hello";
+    bool exists = onix_search_dir_entry(part, root_dir, filename, &entry);
+    if (!exists)
+    {
+        DEBUGP("file %s is not exists, then create it.\n");
+        onix_create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
+        onix_sync_dir_entry(part, root_dir, &entry, buf);
+    }
+    else
+    {
+        DEBUGP("file %s is exists, congratulations!!!\n");
+    }
 }
 
 void test_file()
@@ -122,7 +122,7 @@ int main()
     init_fs();
     part = root_part;
     print_format_info(part, part->super_block);
-    // // test_inode();
+    // test_inode();
     // test_dir();
-    test_file();
+    // test_file();
 }

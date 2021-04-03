@@ -75,8 +75,8 @@ typedef struct Inode
     bool write_deny;             // 写文件标志
     Node node;                   // 链表节点
     u32 blocks[INODE_BLOCK_CNT]; // 0-11 直接快 12 一级间接块
-    char unused[55];             // 用来撑场面，凑够 128 字节 未来可做扩展
-} _packed Inode;
+    u32 unused[13];             // 用来撑场面，凑够 128 字节 未来可做扩展
+} Inode;
 
 typedef struct Dir // 只存在于内存中的结构
 {

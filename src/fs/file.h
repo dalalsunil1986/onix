@@ -19,11 +19,18 @@ typedef struct File
 
 typedef enum FileFlag
 {
-    O_R,    // 只读
-    O_W,    // 只写
-    O_RW,   // 读写
-    O_C = 4 // 创建
+    O_R = 1,  // 只读
+    O_W = 2,  // 只写
+    O_RW = 4, // 读写
+    O_C = 8   // 创建
 } FileFlag;
+
+typedef enum Whence
+{
+    SEEK_SET = 1,
+    SEEK_CUR,
+    SEEK_END
+} Whence;
 
 typedef enum std_fd
 {
