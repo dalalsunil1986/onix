@@ -98,7 +98,12 @@ void test_file()
     File holder;
     File *file = &holder;
     Dir *root = open_root_dir(part);
-    file_create(part, root, file, "A file.txt", 1);
+    onix_file_create(part, root, file, "A file.txt", 1);
+
+    DEBUGP("create file nr %d\n", file->inode->nr);
+
+    onix_file_open(part, file, file->inode->nr, O_R | O_W);
+    onix_file_close(part, file);
 }
 
 int main()

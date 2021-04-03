@@ -16,6 +16,14 @@ typedef struct File
     Inode *inode;
 } File;
 
+typedef enum FileFlag
+{
+    O_R,    // 只读
+    O_W,    // 只写
+    O_RW,   // 读写
+    O_C = 4 // 创建
+} FileFlag;
+
 typedef enum std_fd
 {
     stdin = 0,
