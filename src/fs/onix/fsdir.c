@@ -67,14 +67,14 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
     }
 
     u32 idx = 0;
-    while (idx < DIRECT_BLOCK_CNT)
+    u32 lba = 0;
+
+    memcpy(blocks, dir->inode->blocks, INODE_BLOCK_CNT * sizeof(u32));
+    u32 indirect_idx = dir->inode->blocks[INDIRECT_BLOCK_IDX];
+    if (indirect_idx)
     {
-        blocks[idx] = dir->inode->blocks[idx];
-        idx++;
-    }
-    if (dir->inode->blocks[idx] != 0)
-    {
-        partition_read(part, get_block_lba(part, idx), blocks + 12, BLOCK_SECTOR_COUNT);
+        lba = get_block_lba(part, indirect_idx);
+        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
     }
 
     DirEntry *dir_ptr = buf;
@@ -122,7 +122,7 @@ void onix_create_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entr
     entry->type = type;
 }
 
-bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry, void *buf)
+bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
 {
     Inode *dir_inode = parent->inode;
     u32 dir_size = dir_inode->size;
@@ -136,15 +136,20 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry, void *bu
     u32 idx = 0;
     u32 blocks[INODE_ALL_BLOCKS] = {0};
 
-    while (idx < DIRECT_BLOCK_CNT)
+    memcpy(blocks, dir_inode->blocks, INODE_BLOCK_CNT * sizeof(u32));
+    u32 lba = 0;
+    u32 indirect_idx = dir_inode->blocks[INDIRECT_BLOCK_IDX];
+    if (indirect_idx)
     {
-        blocks[idx] = dir_inode->blocks[idx];
-        idx++;
+        lba = get_block_lba(part, indirect_idx);
+        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
     }
+
+    char buf[BLOCK_SIZE];
+    memset(buf, 0, sizeof(buf));
 
     DirEntry *dir_entry = buf;
 
-    u32 lba = 0;
     int32 block_bitmap_idx = -1;
 
     idx = 0;
@@ -202,7 +207,8 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry, void *bu
         }
 
         assert(idx == INDIRECT_BLOCK_IDX);
-        blocks[idx] = block_bitmap_idx;
+        dir_inode->blocks[idx] = block_bitmap_idx;
+        onix_inode_sync(part, dir_inode);
         flag = true;
         continue;
     }
@@ -210,11 +216,11 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry, void *bu
     return false;
 }
 
-bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry, u32 nr, void *buf)
+bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry, u32 nr)
 {
     Inode *inode = parent->inode;
     u32 blocks[INODE_ALL_BLOCKS];
-    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
+    memcpy(blocks, inode->blocks, INODE_BLOCK_CNT * sizeof(u32));
     u32 lba = 0;
     u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
     if (indirect_idx)
@@ -222,6 +228,10 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry, u32 nr
         lba = get_block_lba(part, indirect_idx);
         partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
     }
+
+    char buf[BLOCK_SIZE];
+    memset(buf, 0, sizeof(buf));
+
     // todo unfinished... delete dir entry.
 }
 

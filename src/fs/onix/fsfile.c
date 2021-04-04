@@ -54,7 +54,7 @@ bool onix_file_create(Partition *part, Dir *parent, File *file, char *name, File
 
     onix_create_dir_entry(name, nr, FILETYPE_REGULAR, &entry);
 
-    if (!onix_sync_dir_entry(part, parent, &entry, buf))
+    if (!onix_sync_dir_entry(part, parent, &entry))
     {
         printk("Onix sync directory fail!!!\n");
         step = 2;

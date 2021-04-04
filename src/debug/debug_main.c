@@ -85,7 +85,7 @@ void test_dir()
     {
         DEBUGP("file %s is not exists, then create it.\n");
         onix_create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
-        onix_sync_dir_entry(part, root_dir, &entry, buf);
+        onix_sync_dir_entry(part, root_dir, &entry);
     }
     else
     {
@@ -123,6 +123,6 @@ int main()
     part = root_part;
     print_format_info(part, part->super_block);
     // test_inode();
-    // test_dir();
+    test_dir();
     // test_file();
 }
