@@ -5,12 +5,15 @@
 #include <onix/queue.h>
 #include <onix/kernel/memory.h>
 #include <onix/kernel/arena.h>
+#include <fs/file.h>
 
 #define TASK_MAGIC 0x20210323
 #define TASK_INIT_PAGE (0x10000 | KERNEL_ADDR_MASK)
 
 #define TASK_INDEX_IDLE 0
 #define TASK_INDEX_INIT 0
+
+#define TASK_MAX_OPEN_FILES 32
 
 typedef void Tasktarget(void *);
 
@@ -83,6 +86,7 @@ typedef struct Task
     Vaddr vaddr;
     PageTable pde;
     ArenaDesc adesc[DESC_COUNT];
+    fd_t file_table[TASK_MAX_OPEN_FILES];
     u32 exit_code;
     u32 magic;
 } Task;

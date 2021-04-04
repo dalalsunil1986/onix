@@ -44,4 +44,7 @@ typedef enum std_fd
 #define file_open _file_open
 #endif
 
+fd_t get_free_global_fd();
+int32 sys_open(const char *pathname, FileFlag flags);
+
 #endif

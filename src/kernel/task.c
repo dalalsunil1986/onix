@@ -104,6 +104,42 @@ void task_create(Task *task, Tasktarget target, void *args)
     frame->addr = 0x55555555;
 }
 
+void init_file_table(Task *task)
+{
+    task->file_table[0] = stdin;
+    task->file_table[1] = stdout;
+    task->file_table[2] = stderr;
+
+    u8 idx = 3;
+    while (idx < TASK_MAX_OPEN_FILES)
+    {
+        task->file_table[idx] = FILE_NULL;
+        idx++;
+    }
+}
+
+
+fd_t task_install_fd(fd_t fd)
+{
+    Task *task = running_task();
+    fd_t idx = 3;
+    while (idx < TASK_MAX_OPEN_FILES)
+    {
+        if (task->file_table[idx] == FILE_NULL)
+        {
+            task->file_table[idx] = fd;
+            break;
+        }
+        idx++;
+    }
+    if (idx == TASK_MAX_OPEN_FILES)
+    {
+        printk("Exceed task max open files\n");
+        return FILE_NULL;
+    }
+    return idx;
+}
+
 void task_init(Task *task, char *name, int priority, int user)
 {
     Task *cur = running_task();
@@ -121,6 +157,7 @@ void task_init(Task *task, char *name, int priority, int user)
     task->user = user;
 
     init_arena_desc(task->adesc);
+    init_file_table(task);
 
     if (task != cur)
     {
