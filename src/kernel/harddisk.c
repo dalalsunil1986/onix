@@ -266,9 +266,8 @@ static void disk_identity(Harddisk *disk)
 static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
 {
     DEBUGP("part scan start \n");
-
-    BootSector *bs = malloc(sizeof(BootSector));
-    DEBUGP("part scan memory alloc 0x%08X\n", bs);
+    BootSector holder;
+    BootSector *bs = &holder;
 
     harddisk_read(disk, start_lba, bs, 1);
 
@@ -324,8 +323,6 @@ static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
             disk->logical_count++;
         }
     };
-    free(bs);
-    DEBUGP("part scan memory free 0x%08X\n", bs);
 }
 
 static bool print_partition_info(Node *node, int arg)
