@@ -10,6 +10,7 @@
 #include <onix/kernel/process.h>
 #include <onix/queue.h>
 #include <onix/kernel/mutex.h>
+#include <onix/kernel/harddisk.h>
 
 #define DEBUGINFO
 
@@ -32,6 +33,7 @@ void __init_kernel()
     init_interrupt();
     init_task();
     init_process();
+    init_harddisk();
     sys_inited = true;
 }
 

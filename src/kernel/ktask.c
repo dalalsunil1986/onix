@@ -22,8 +22,8 @@ extern void init_fs();
 
 void init_kernel_task()
 {
-    __clear();
-    init_harddisk();
+    // __clear();
+    // init_harddisk();
     // test_process();
     // init_fs();
 
