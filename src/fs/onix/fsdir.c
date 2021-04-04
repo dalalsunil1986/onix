@@ -106,7 +106,7 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
         }
         idx++;
         dir_ptr = buf;
-        memset(buf, 0, SECTOR_SIZE);
+        memset(buf, 0, BLOCK_SIZE);
     }
     free(buf);
     free(blocks);
@@ -216,8 +216,44 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
     return false;
 }
 
-bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry, u32 nr)
+static bool onix_delete_dir_block(Partition *part, Inode *inode, u32 *blocks, u32 block_idx)
 {
+    u32 idx = block_idx;
+    u32 lba;
+    if (inode->nr == part->super_block->root_inode_nr && idx == 0)
+        // 根目录的第一个块不能删
+        return;
+
+    onix_block_bitmap_rollback_sync(part, idx);
+
+    if (idx < DIRECT_BLOCK_CNT)
+    {
+        inode->blocks[idx] = 0;
+        return true;
+    }
+    idx = INDIRECT_BLOCK_IDX;
+    u32 iblock_count = 0;
+    while (idx < INODE_ALL_BLOCKS)
+    {
+        if (blocks[idx])
+            iblock_count++;
+    }
+    if (iblock_count == 1)
+    {
+        inode->blocks[INDIRECT_BLOCK_IDX] = 0;
+        return;
+    }
+    blocks[block_idx] = 0;
+    lba = get_block_lba(part, inode->blocks[INDIRECT_BLOCK_CNT]);
+    partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SIZE);
+    return true;
+}
+
+bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
+{
+    assert(strcmp(entry->filename, "."));  // 不是当前目录
+    assert(strcmp(entry->filename, "..")); // 不是父目录
+
     Inode *inode = parent->inode;
     u32 blocks[INODE_ALL_BLOCKS];
     memcpy(blocks, inode->blocks, INODE_BLOCK_CNT * sizeof(u32));
@@ -232,7 +268,85 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry, u32 nr
     char buf[BLOCK_SIZE];
     memset(buf, 0, sizeof(buf));
 
-    // todo unfinished... delete dir entry.
+    DirEntry *dir_ptr = buf;
+    DirEntry *found_entry = NULL;
+
+    u32 dir_entry_size = part->super_block->dir_entry_size;
+    u32 dir_entry_cnt = BLOCK_SIZE / dir_entry_size;
+
+    u32 idx = 0;
+
+    while (idx < INODE_ALL_BLOCKS)
+    {
+        if (blocks[idx] == 0)
+        {
+            idx++;
+            continue;
+        }
+
+        partition_read(part, get_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
+        u32 entry_idx = 0;
+        u32 file_count = 0;
+        u32 dir_count = 0;
+
+        while (entry_idx < dir_entry_cnt)
+        {
+            dir_ptr = buf + dir_entry_size * entry_idx;
+            if (dir_ptr->type == FILETYPE_UNKNOWN)
+            {
+                entry_idx++;
+                continue;
+            }
+            if (!strcmp(dir_ptr->filename, "."))
+            {
+                entry_idx++;
+                continue;
+            }
+            if (!strcmp(dir_ptr->filename, ".."))
+            {
+                entry_idx++;
+                continue;
+            }
+
+            if (!strcmp(dir_ptr->filename, entry->filename))
+            {
+                found_entry = dir_ptr;
+            }
+            if (dir_ptr->type == FILETYPE_REGULAR)
+            {
+                file_count++;
+                entry_idx++;
+                continue;
+            }
+            else if (dir_ptr->type == FILETYPE_DIRECTORY)
+            {
+                dir_count++;
+                entry_idx++;
+                continue;
+            }
+        }
+
+        if (!found_entry)
+        {
+            idx++;
+            continue;
+        }
+
+        if (file_count + dir_count == 1)
+        {
+            onix_delete_dir_block(part, inode, blocks, idx);
+        }
+        // 删除目录项
+        memset(found_entry, 0, dir_entry_size);
+        partition_write(part, get_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
+
+        // 同步父目录大小
+        assert(inode->size >= dir_entry_size);
+        inode->size -= dir_entry_size;
+        onix_inode_sync(part, inode);
+        return true;
+    }
+    return false;
 }
 
 void init_dir()

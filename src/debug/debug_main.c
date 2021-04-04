@@ -91,6 +91,9 @@ void test_dir()
     {
         DEBUGP("file %s is exists, congratulations!!!\n");
     }
+
+    DEBUGP("delete dir entry ....\n");
+    onix_delete_dir_entry(part, root_dir, &entry);
 }
 
 void test_file()
