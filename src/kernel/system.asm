@@ -126,6 +126,12 @@ set_cr3:
     mov cr3, eax
     ret
 
+global get_esp:
+get_esp:
+    mov eax, esp
+    ret
+
+
 ; routine control
 
 global halt
