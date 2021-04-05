@@ -5,6 +5,7 @@
 #include <onix/queue.h>
 
 #define MAX_FILENAME_LENGTH 56
+#define MAX_PATH_LEN (MAX_FILENAME_LENGTH * 128)
 #define MAX_FILE_PER_PART 4096
 #define SECTOR_SIZE 512
 #define BLOCK_SECTOR_COUNT 2
@@ -75,7 +76,7 @@ typedef struct Inode
     bool write_deny;             // 写文件标志
     Node node;                   // 链表节点
     u32 blocks[INODE_BLOCK_CNT]; // 0-11 直接快 12 一级间接块
-    u32 unused[13];             // 用来撑场面，凑够 128 字节 未来可做扩展
+    u32 unused[13];              // 用来撑场面，凑够 128 字节 未来可做扩展
 } Inode;
 
 typedef struct Dir // 只存在于内存中的结构
@@ -94,6 +95,13 @@ typedef struct DirEntry // 硬盘上的结构，同样可以存在于内存中
     u32 inode_nr; // 对应的 inode 号
     FileType type;
 } DirEntry;
+
+typedef struct SearchRecord
+{
+    char parent_path[MAX_PATH_LEN];
+    Dir *parent;
+    FileType type;
+} SearchRecord;
 
 void init_fs();
 

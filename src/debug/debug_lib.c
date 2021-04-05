@@ -57,9 +57,12 @@ u32 syscall3(u32 nr, u32 arg1, u32 arg2, u32 arg3)
     return 0;
 }
 
+Task task;
+
 Task *running_task()
 {
-    return 0x10000;
+    task.magic = TASK_MAGIC;
+    return &task;
 }
 
 void switch_to(void *current, void *next)

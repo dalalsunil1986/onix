@@ -106,9 +106,9 @@ void task_create(Task *task, Tasktarget target, void *args)
 
 void init_file_table(Task *task)
 {
-    task->file_table[0] = stdin;
-    task->file_table[1] = stdout;
-    task->file_table[2] = stderr;
+    task->file_table[0] = onix_stdin;
+    task->file_table[1] = onix_stdout;
+    task->file_table[2] = onix_stderr;
 
     u8 idx = 3;
     while (idx < TASK_MAX_OPEN_FILES)
@@ -117,7 +117,6 @@ void init_file_table(Task *task)
         idx++;
     }
 }
-
 
 fd_t task_install_fd(fd_t fd)
 {

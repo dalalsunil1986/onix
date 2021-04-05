@@ -5,6 +5,7 @@
 #include <fs/onix/fs.h>
 
 #define MAX_OPEN_FILES 1024
+#define MAX_PATH_LEN 2048
 #define FILE_NULL -1
 #define EOF -1 // END OF FILE
 
@@ -34,15 +35,10 @@ typedef enum Whence
 
 typedef enum std_fd
 {
-    stdin = 0,
-    stdout = 1,
-    stderr = 2
+    onix_stdin = 0,
+    onix_stdout = 1,
+    onix_stderr = 2
 } std_fd;
-
-#ifdef ONIX_KERNEL_DEBUG
-#define fs_function _
-#define file_open _file_open
-#endif
 
 fd_t get_free_global_fd();
 int32 sys_open(const char *pathname, FileFlag flags);

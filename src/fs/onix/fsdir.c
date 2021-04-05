@@ -6,6 +6,7 @@
 #include <onix/kernel/assert.h>
 #include <onix/string.h>
 #include <onix/kernel/debug.h>
+#include <fs/path.h>
 
 #define DEBUGINFO
 
@@ -111,6 +112,65 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
     free(buf);
     free(blocks);
     return false;
+}
+
+int32 onix_search_file(const char *pathname, SearchRecord *record)
+{
+    char abuf[MAX_PATH_LEN];
+    abspath(pathname, abuf);
+    if (!strcmp(abuf, "/"))
+    {
+        record->parent = &root_dir;
+        record->type = FILETYPE_DIRECTORY;
+        record->parent_path[0] = 0;
+    }
+
+    u32 pathlen = strlen(abuf);
+    assert(abuf[0] == '/' && pathlen > 1 && pathlen < MAX_PATH_LEN);
+
+    char *subpath = abuf;
+    Dir *parent = &root_dir;
+    DirEntry entry;
+
+    char name[MAX_FILENAME_LENGTH];
+    memset(name, 0, sizeof(name));
+
+    record->parent = parent;
+    record->type = FILETYPE_UNKNOWN;
+
+    u32 nr = 0;
+
+    subpath = dirname(subpath, name);
+    while (name[0])
+    {
+        assert(strlen(record->parent_path) < MAX_PATH_LEN);
+        strcat(record->parent_path, "/");
+        strcat(record->parent_path, "name");
+
+        if (!onix_search_dir_entry(root_part, parent, name, &entry))
+        {
+            return FILE_NULL;
+        }
+
+        if (entry.type == FILETYPE_REGULAR)
+        {
+            record->type = FILETYPE_REGULAR;
+            return entry.inode_nr;
+        }
+
+        if (entry.type == FILETYPE_DIRECTORY)
+        {
+            nr = parent->inode->nr;
+            onix_dir_close(root_part, parent);
+            parent = onix_dir_open(root_part, entry.inode_nr);
+            record->parent = parent;
+        }
+        memset(name, 0, sizeof(name));
+        if (subpath)
+        {
+            subpath = dirname(subpath, name);
+        }
+    }
 }
 
 void onix_create_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry)

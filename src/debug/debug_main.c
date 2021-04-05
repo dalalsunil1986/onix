@@ -92,6 +92,11 @@ void test_dir()
         DEBUGP("file %s is exists, congratulations!!!\n");
     }
 
+    SearchRecord record;
+
+    fd_t fd = onix_search_file(filename, &record);
+    DEBUGP("search file %s fd %d\n", filename, fd);
+
     DEBUGP("delete dir entry ....\n");
     onix_delete_dir_entry(part, root_dir, &entry);
 }

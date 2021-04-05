@@ -70,3 +70,10 @@ u32 path_depth(char *path)
     }
     return depth;
 }
+
+char *abspath(char *path, char *buf)
+{
+    // todo make abspath
+    buf[0] = '/';
+    strcpy(buf + 1, path);
+}
