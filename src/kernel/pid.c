@@ -7,8 +7,6 @@
 
 u8 bits[BITS_LEN];
 
-extern bool sys_inited;
-
 typedef struct PIDPool
 {
     Bitmap map;

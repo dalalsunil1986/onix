@@ -1,14 +1,20 @@
 BUILD:= ../build
-SRC:=.
-BOOT:= $(SRC)/boot
-KERNEL:= $(SRC)/kernel
-LIB:= $(SRC)/lib
-FS:= $(SRC)/fs
-TESTS:= $(SRC)/tests
+SRC_DIR:=.
+BOOT_DIR:= $(SRC_DIR)/boot
+KERNEL_SRC:= $(SRC_DIR)/kernel
+LIB_SRC:= $(SRC_DIR)/lib
+FS_SRC:= $(SRC_DIR)/fs
+FS_ONIX_SRC:= $(SRC_DIR)/fs/onix
+DEBUG_SRC:= $(SRC_DIR)/debug
 
-BOOT_INCLUDE:=$(SRC)/boot
-INCLUDE:=$(SRC)/include
-KERNEL_INCLUDE:=$(SRC)/kernel/include
+REAL_DIR:=$(BUILD)/real
+DEBUG_DIR:=$(BUILD)/debug
+
+BOOT_INCLUDE:=$(SRC_DIR)/boot
+ONIX_INCLUDE:=$(SRC_DIR)/include
+KERNEL_INCLUDE:=$(SRC_DIR)/kernel/include
+FS_INCLUDE:=$(SRC_DIR)
+INCLUDE:= -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -I $(FS_INCLUDE)
 
 BOCHS=bochs
 ASM=nasm
@@ -19,162 +25,133 @@ ENTRYPOINT = 0xC0020000
 
 ASM_FLAGS= -f elf
 
-DEBUG_FLAGS = -D ONIX_DEBUG
-# DEBUG_FLAGS =
-
-CFLAGS = -I $(INCLUDE) -c -fno-builtin -m32 -fno-stack-protector \
+REAL_CFLAGS = $(INCLUDE) -fno-builtin -m32 -fno-stack-protector \
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
-		$(DEBUG_FLAGS)
+		-D ONIX_DEBUG
 
-TESTS_CFLAG = -I $(INCLUDE) -m32 -Wall $(DEBUG_FLAGS)
+DEBUG_CFLAGS = $(INCLUDE) -m32 -Wall -D ONIX_KERNEL_DEBUG -D ONIX_DEBUG -g 
 
 LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
 
-.PHONY: clean image unlock win fdisk
+all: dirs $(REAL_TARGET)
 
-kernel: $(BUILD)/kernel.bin
-	# ps -ef | grep bochsrc-gdb | grep -v grep | awk '{print $$2}' | xargs -r kill -9
-	-
+dirs:
+	@mkdir -p $(REAL_DIR) $(DEBUG_DIR) 
 
-$(BUILD)/boot.bin: $(BOOT)/boot.asm
+KERNEL_ASM:= $(KERNEL_SRC)/start.asm \
+	$(KERNEL_SRC)/system.asm \
+	$(KERNEL_SRC)/handler.asm \
+	$(KERNEL_SRC)/schedule.asm
+
+KERNEL_C:= $(KERNEL_SRC)/arena.c \
+	$(KERNEL_SRC)/assert.c \
+	$(KERNEL_SRC)/bitmap.c \
+	$(KERNEL_SRC)/clock.c \
+	$(KERNEL_SRC)/debug.c \
+	$(KERNEL_SRC)/global.c \
+	$(KERNEL_SRC)/harddisk.c \
+	$(KERNEL_SRC)/interrupt.c \
+	$(KERNEL_SRC)/ioqueue.c \
+	$(KERNEL_SRC)/keyboard.c \
+	$(KERNEL_SRC)/ksyscall.c \
+	$(KERNEL_SRC)/ktask.c \
+	$(KERNEL_SRC)/main.c \
+	$(KERNEL_SRC)/memory.c \
+	$(KERNEL_SRC)/mutex.c \
+	$(KERNEL_SRC)/pid.c \
+	$(KERNEL_SRC)/printk.c \
+	$(KERNEL_SRC)/process.c \
+	$(KERNEL_SRC)/queue.c \
+	$(KERNEL_SRC)/stdlib.c \
+	$(KERNEL_SRC)/string.c \
+	$(KERNEL_SRC)/task.c \
+	$(KERNEL_SRC)/test.c \
+
+LIB_ASM:=$(LIB_SRC)/__syscall.asm
+
+LIB_C:= $(LIB_SRC)/malloc.c \
+	$(LIB_SRC)/stdio.c \
+	$(LIB_SRC)/syscall.c \
+	$(LIB_SRC)/vsprintf.c
+
+FS_ONIX_C:=$(FS_ONIX_SRC)/inode.c \
+		$(FS_ONIX_SRC)/fsbitmap.c \
+		$(FS_ONIX_SRC)/fsdir.c \
+		$(FS_ONIX_SRC)/fsblock.c \
+		$(FS_ONIX_SRC)/fsfile.c \
+		$(FS_ONIX_SRC)/fs.c
+
+FS_C:= 	$(FS_SRC)/path.c \
+		$(FS_SRC)/dir.c \
+		$(FS_SRC)/file.c
+
+
+DEBUG_C:= $(DEBUG_SRC)/debug_lib.c \
+	$(DEBUG_SRC)/debug_main.c
+
+# for boot.bin / loader.bin
+$(BUILD)/%.bin: $(BOOT_DIR)/%.asm
 	$(ASM) -I $(BOOT_INCLUDE) $< -o $@
 
-$(BUILD)/loader.bin: $(BOOT)/loader.asm
-	$(ASM) -I $(BOOT_INCLUDE) $< -o $@
-
-$(BUILD)/start.o: $(KERNEL)/start.asm
+$(REAL_DIR)/%.o: $(KERNEL_SRC)/%.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
 
-$(BUILD)/system.o: $(KERNEL)/system.asm
+$(REAL_DIR)/%.o: $(LIB_SRC)/%.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
 
-$(BUILD)/handler.o: $(KERNEL)/handler.asm
-	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
+$(REAL_DIR)/%.o: $(KERNEL_SRC)/%.c
+	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
-$(BUILD)/schedule.o: $(KERNEL)/schedule.asm
-	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
+$(REAL_DIR)/%.o: $(LIB_SRC)/%.c
+	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
-$(BUILD)/__syscall.o: $(LIB)/__syscall.asm
-	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
+$(REAL_DIR)/%.o: $(FS_SRC)/%.c
+	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
-$(BUILD)/global.o: $(KERNEL)/global.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+$(REAL_DIR)/%.o: $(FS_ONIX_SRC)/%.c
+	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
-$(BUILD)/main.o: $(KERNEL)/main.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+$(DEBUG_DIR)/%.o: $(KERNEL_SRC)/%.c
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
-$(BUILD)/printk.o: $(KERNEL)/printk.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+$(DEBUG_DIR)/%.o: $(LIB_SRC)/%.c
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
-$(BUILD)/string.o: $(KERNEL)/string.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+$(DEBUG_DIR)/%.o: $(FS_SRC)/%.c
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
-$(BUILD)/stdlib.o: $(KERNEL)/stdlib.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+$(DEBUG_DIR)/%.o: $(FS_ONIX_SRC)/%.c
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
-$(BUILD)/vsprintf.o: $(LIB)/vsprintf.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+$(DEBUG_DIR)/%.o: $(DEBUG_SRC)/%.c
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
-$(BUILD)/assert.o: $(KERNEL)/assert.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+REAL_TARGET:=$(BUILD)/kernel.bin
 
-$(BUILD)/interrupt.o: $(KERNEL)/interrupt.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+REAL_OBJECTS= $(KERNEL_ASM:$(KERNEL_SRC)/%.asm=$(REAL_DIR)/%.o) \
+			$(LIB_ASM:$(LIB_SRC)/%.asm=$(REAL_DIR)/%.o) \
+			$(KERNEL_C:$(KERNEL_SRC)/%.c=$(REAL_DIR)/%.o) \
+			$(LIB_C:$(LIB_SRC)/%.c=$(REAL_DIR)/%.o) \
+			$(FS_C:$(FS_SRC)/%.c=$(REAL_DIR)/%.o) \
+			$(FS_ONIX_C:$(FS_ONIX_SRC)/%.c=$(REAL_DIR)/%.o)
 
-$(BUILD)/clock.o: $(KERNEL)/clock.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+DEBUG_OBJECTS=$(KERNEL_C:$(KERNEL_SRC)/%.c=$(DEBUG_DIR)/%.o) \
+			$(LIB_C:$(LIB_SRC)/%.c=$(DEBUG_DIR)/%.o) \
+			$(FS_C:$(FS_SRC)/%.c=$(DEBUG_DIR)/%.o) \
+			$(FS_C:$(FS_SRC)/%.c=$(DEBUG_DIR)/%.o) \
+			$(FS_ONIX_C:$(FS_ONIX_SRC)/%.c=$(DEBUG_DIR)/%.o) \
+			$(DEBUG_C:$(DEBUG_SRC)/%.c=$(DEBUG_DIR)/%.o)
 
-$(BUILD)/keyboard.o: $(KERNEL)/keyboard.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
+DEBUG_TARGET:=$(BUILD)/debug.out
 
-$(BUILD)/harddisk.o: $(KERNEL)/harddisk.c $(KERNEL_INCLUDE)/onix/kernel/harddisk.h
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/bitmap.o: $(KERNEL)/bitmap.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/memory.o: $(KERNEL)/memory.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/arena.o: $(KERNEL)/arena.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/process.o: $(KERNEL)/process.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/task.o: $(KERNEL)/task.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/ktask.o: $(KERNEL)/ktask.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/pid.o: $(KERNEL)/pid.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/mutex.o: $(KERNEL)/mutex.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/queue.o: $(KERNEL)/queue.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/ioqueue.o: $(KERNEL)/ioqueue.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/debug.o: $(KERNEL)/debug.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/ksyscall.o: $(KERNEL)/ksyscall.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/syscall.o: $(LIB)/syscall.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/stdio.o: $(LIB)/stdio.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/malloc.o: $(LIB)/malloc.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/fs.o: $(FS)/fs.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/test.o: $(KERNEL)/test.c
-	$(CC) $(CFLAGS) -I $(KERNEL_INCLUDE) $< -o $@
-
-$(BUILD)/kernel.bin: $(BUILD)/start.o \
-	$(BUILD)/global.o \
-	$(BUILD)/system.o \
-	$(BUILD)/string.o \
-	$(BUILD)/stdlib.o \
-	$(BUILD)/printk.o \
-	$(BUILD)/vsprintf.o \
-	$(BUILD)/assert.o \
-	$(BUILD)/interrupt.o \
-	$(BUILD)/bitmap.o \
-	$(BUILD)/memory.o \
-	$(BUILD)/arena.o \
-	$(BUILD)/clock.o \
-	$(BUILD)/keyboard.o \
-	$(BUILD)/harddisk.o \
-	$(BUILD)/task.o \
-	$(BUILD)/ktask.o \
-	$(BUILD)/pid.o \
-	$(BUILD)/queue.o \
-	$(BUILD)/ioqueue.o \
-	$(BUILD)/process.o \
-	$(BUILD)/handler.o \
-	$(BUILD)/schedule.o \
-	$(BUILD)/mutex.o \
-	$(BUILD)/debug.o \
-	$(BUILD)/ksyscall.o \
-	$(BUILD)/__syscall.o \
-	$(BUILD)/syscall.o \
-	$(BUILD)/stdio.o \
-	$(BUILD)/malloc.o \
-	$(BUILD)/fs.o \
-	$(BUILD)/test.o \
-	$(BUILD)/main.o
+$(REAL_TARGET): $(REAL_OBJECTS)
 	$(LD) $(LDFLAGS) $^ -o $@
+
+$(DEBUG_TARGET): $(DEBUG_OBJECTS)
+	$(CC) $(DEBUG_CFLAGS) $^ -o $@
+	@#echo $(DEBUG_OBJECTS)
+
+# ----------------------------harddisk.img--------------------------------- #
 
 $(BUILD)/harddisk.img: $(BUILD)/boot.bin \
 	$(BUILD)/loader.bin \
@@ -187,12 +164,16 @@ endif
 	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 	dd if=$(BUILD)/kernel.bin of=$@ bs=512 seek=100 count=200 conv=notrunc
 
+# ----------------------------slave.img--------------------------------- #
+
 $(BUILD)/slave.img: $(BUILD)/slave.sfdisk
 
 ifeq ("$(wildcard $(BUILD)/slave.img)", "")
 	bximage -q -hd=128 -mode=create -sectsize=512 -imgmode=flat $@
 endif
 	sfdisk $@ < $<
+
+# ----------------------------boch debug--------------------------------- #
 
 bochs: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	@rm -rf $(BUILD)/harddisk.img.lock
@@ -209,11 +190,28 @@ win:
 	ssh arch "cd ~/source/github/onix/src && make image" && make unlock && \
 	cd $(BUILD) && bochs -q -f bochsrc.bxrc 
 
+debug: $(BUILD)/debug.out $(BUILD)/slave.img 
+	-
+
+sect: $(BUILD)/slave.img
+	$(eval START=$(shell python -c "print($(s)*512)"))
+	xxd -u -g 1 -s $(START) -l 512 $<
+
+block: $(BUILD)/slave.img
+	$(eval START=$(shell python -c "print($(s)*512)"))
+	xxd -u -g 1 -s $(START) -l 1024 $<
+
+offset: $(BUILD)/slave.img
+	$(eval START=$(shell python -c "print($(s)*512 + $(o))"))
+	xxd -u -g 1 -s $(START) -l 512 $<
+
 clean:
 	rm -rf $(BUILD)/boot.bin
 	rm -rf $(BUILD)/loader.bin
 	rm -rf $(BUILD)/kernel.bin
-	rm -rf $(BUILD)/*.o
+	rm -rf $(REAL_DIR)/*.o
+	rm -rf $(DEBUG_DIR)/*.o
 	rm -rf $(BUILD)/*.img*
-	rm -rf $(BUILD)/test
+	rm -rf $(BUILD)/debug.out
 
+.PHONY: clean image bochs unlock win sect offset block

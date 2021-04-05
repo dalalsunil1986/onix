@@ -70,7 +70,7 @@ refer to https://wiki.osdev.org/PCI_IDE_Controller#Parallel.2FSerial_ATA.2FATAPI
 
 #define MAX_PRIMARY_PART 4
 #define MAX_LOGICAL_PART 8
-#define MAR_PART (MAX_PRIMARY_PART + MAX_LOGICAL_PART)
+#define MAX_PART (MAX_PRIMARY_PART + MAX_LOGICAL_PART)
 
 #define SECTOR_SIZE 512
 
@@ -160,5 +160,8 @@ void harddisk_handler(int vector);
 
 void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt);
 void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt);
+
+void partition_read(Partition *part, u32 lba, void *buf, u32 sec_cnt);
+void partition_write(Partition *part, u32 lba, void *buf, u32 sec_cnt);
 
 #endif

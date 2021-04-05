@@ -115,6 +115,12 @@ bool harddisk_busy_wait(Harddisk *disk)
 
 void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
+
+#ifdef ONIX_KERNEL_DEBUG
+    extern void harddisk_read(Harddisk * disk, u32 lba, void *buf, u32 sec_cnt);
+    return debug_harddisk_read(disk, lba, buf, sec_cnt);
+#endif
+
     DEBUGP("read disk %X lba %X buf %X sect %d \n", disk, lba, buf, sec_cnt);
 
     assert(lba < MAX_LBA);
@@ -165,6 +171,11 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 
 void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
+
+#ifdef ONIX_KERNEL_DEBUG
+    extern void debug_harddisk_write(Harddisk * disk, u32 lba, void *buf, u32 sec_cnt);
+    return debug_harddisk_write(disk, lba, buf, sec_cnt);
+#endif
     assert(lba < MAX_LBA);
     assert(sec_cnt > 0);
     DEBUGP("write disk acquire\n");
@@ -205,6 +216,21 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
         sec_done += sec_op;
     }
     release(&disk->channel->lock);
+}
+
+void partition_read(Partition *part, u32 lba, void *buf, u32 sec_cnt)
+{
+    assert(lba + sec_cnt <= part->sec_cnt);
+    Harddisk *disk = part->disk;
+    harddisk_read(disk, part->start_lba + lba, buf, sec_cnt);
+}
+
+void partition_write(Partition *part, u32 lba, void *buf, u32 sec_cnt)
+{
+    assert(lba + sec_cnt <= part->sec_cnt);
+    Harddisk *disk = part->disk;
+    harddisk_write(disk, part->start_lba + lba, buf, sec_cnt);
+    DEBUGK("part 0x%X lba 0x%X\n", part, (part->start_lba + lba));
 }
 
 static void swap_pairs_bytes(const char *dst, char *buf, u32 len)
@@ -268,6 +294,9 @@ static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
     DEBUGP("part scan start \n");
     BootSector holder;
     BootSector *bs = &holder;
+
+    Task *task = running_task();
+    assert(task->magic == TASK_MAGIC);
 
     harddisk_read(disk, start_lba, bs, 1);
 
@@ -337,22 +366,32 @@ static bool print_partition_info(Node *node, int arg)
 static void init_disk(IDEChannel *channel, u8 dev_idx)
 {
     Harddisk *disk = channel->devices + dev_idx;
+
     disk->channel = channel;
     disk->dev_idx = dev_idx;
 
     sprintf(disk->name, "sd%c", 'a' + channel->index * 2 + disk->dev_idx);
     disk->logical_count = 0;
     disk->primary_count = 0;
-    if (disk->dev_idx != 0)
+    if (disk->dev_idx != 0) // skip master.img
     {
         DEBUGP("init partition scan %s\n", disk->name);
         partition_scan(disk, 0, 0);
     }
 }
 
+static u32 get_harddisk_count()
+{
+#ifdef ONIX_KERNEL_DEBUG
+    return 2;
+#else
+    return *((u8 *)(0x475));
+#endif
+}
+
 static void init_channels()
 {
-    harddisk_count = *((u8 *)(0x475));
+    harddisk_count = get_harddisk_count();
     assert(harddisk_count > 0);
     queue_init(&partition_queue);
 

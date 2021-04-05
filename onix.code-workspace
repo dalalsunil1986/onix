@@ -101,7 +101,15 @@
 			"cstdbool": "c",
 			"typeinfo": "c",
 			"malloc.h": "c",
-			"fs.h": "c"
+			"fs.h": "c",
+			"inode.h": "c",
+			"fsbitmap.h": "c",
+			"path.h": "c",
+			"libgen.h": "c",
+			"fsdir.h": "c",
+			"fsblock.h": "c",
+			"file.h": "c",
+			"fsfile.h": "c"
 		}
 	}
 }

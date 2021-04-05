@@ -47,6 +47,7 @@ static void init_idt()
 
         gate->offset0 = (u32)handler & 0xffff;
         gate->offset1 = ((u32)handler & 0xffff0000) >> 16;
+        gate->segment = 0;
         gate->selector = 8;
         gate->present = 1;
         gate->type = 0b1110;

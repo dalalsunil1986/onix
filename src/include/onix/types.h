@@ -9,7 +9,9 @@ static const bool false = 0;
 static const bool true = 1;
 #endif
 
+#ifndef NULL
 #define NULL 0
+#endif
 
 typedef unsigned int size_t;
 
