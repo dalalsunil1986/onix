@@ -38,11 +38,9 @@ _start:
     jmp restart
 
 extern init_stack_top
-extern test_function
 extern kernel_task
 
 restart:
-    call test_function
     mov eax, [init_stack_top]
     mov esp, eax
     jmp kernel_task
