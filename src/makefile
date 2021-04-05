@@ -26,8 +26,9 @@ ENTRYPOINT = 0xC0020000
 ASM_FLAGS= -f elf
 
 REAL_CFLAGS = $(INCLUDE) -fno-builtin -m32 -fno-stack-protector \
-		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra \
-		-D ONIX_DEBUG
+		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -w \
+		-D ONIX_DEBUG \
+		# -Wall -Wextra
 
 DEBUG_CFLAGS = $(INCLUDE) -m32 -w -D ONIX_KERNEL_DEBUG -D ONIX_DEBUG -g 
 
@@ -86,6 +87,8 @@ FS_C:= 	$(FS_SRC)/path.c \
 		$(FS_SRC)/dir.c \
 		$(FS_SRC)/file.c
 
+REAL_DEBUG_C:= $(DEBUG_SRC)/debug_main.c
+
 
 DEBUG_C:= $(DEBUG_SRC)/debug_lib.c \
 	$(DEBUG_SRC)/debug_main.c
@@ -112,6 +115,9 @@ $(REAL_DIR)/%.o: $(FS_SRC)/%.c
 $(REAL_DIR)/%.o: $(FS_ONIX_SRC)/%.c
 	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
+$(REAL_DIR)/debug_main.o: $(REAL_DEBUG_C)
+	$(CC) $(REAL_CFLAGS) -c $< -o $@
+
 $(DEBUG_DIR)/%.o: $(KERNEL_SRC)/%.c
 	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
@@ -134,7 +140,8 @@ REAL_OBJECTS= $(KERNEL_ASM:$(KERNEL_SRC)/%.asm=$(REAL_DIR)/%.o) \
 			$(KERNEL_C:$(KERNEL_SRC)/%.c=$(REAL_DIR)/%.o) \
 			$(LIB_C:$(LIB_SRC)/%.c=$(REAL_DIR)/%.o) \
 			$(FS_C:$(FS_SRC)/%.c=$(REAL_DIR)/%.o) \
-			$(FS_ONIX_C:$(FS_ONIX_SRC)/%.c=$(REAL_DIR)/%.o)
+			$(FS_ONIX_C:$(FS_ONIX_SRC)/%.c=$(REAL_DIR)/%.o) \
+			$(REAL_DIR)/debug_main.o
 
 DEBUG_OBJECTS=$(KERNEL_C:$(KERNEL_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(LIB_C:$(LIB_SRC)/%.c=$(DEBUG_DIR)/%.o) \

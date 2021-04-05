@@ -46,11 +46,14 @@ void test_path()
 
 void test_inode()
 {
+    PBMB;
     u32 idx = 5;
     u32 lba = 0;
     idx = onix_inode_bitmap_alloc(part);
     DEBUGP("Alloc inode bit %d\n", idx);
     onix_bitmap_sync(part, idx, INODE_BITMAP);
+
+    PBMB;
 
     lba = onix_block_bitmap_alloc(part);
     DEBUGP("Alloc block bit %d\n", lba);
@@ -61,8 +64,7 @@ void test_inode()
         Inode *inode = onix_inode_open(part, nr);
         for (size_t i = 0; i < DIRECT_BLOCK_CNT; i++)
         {
-            idx = onix_inode_bitmap_alloc(part);
-            onix_bitmap_sync(part, idx, INODE_BITMAP);
+            idx = onix_inode_bitmap_alloc_sync(part);
             inode->blocks[i] = idx;
             inode->size += BLOCK_SIZE;
         }
@@ -134,14 +136,19 @@ void test_sys_open()
     DEBUGP("sys open file %d\n", fd);
 }
 
+#ifdef ONIX_KERNEL_DEBUG
 int main()
 {
     init_harddisk();
     init_fs();
+#else
+void test_function()
+{
+#endif
     part = root_part;
     print_format_info(part, part->super_block);
     // test_inode();
     // test_dir();
     // test_file();
-    test_sys_open();
+    // test_sys_open();
 }

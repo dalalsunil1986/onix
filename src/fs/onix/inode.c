@@ -36,7 +36,7 @@ void onix_inode_sync(Partition *part, Inode *inode)
     InodePosition pos;
     onix_inode_locate(part, nr, &pos);
 
-    char *buf[BLOCK_SIZE];
+    char *buf = malloc(BLOCK_SIZE); // todo rollback;
     memset(buf, 0, BLOCK_SIZE);
 
     assert(pos.sec_lba <= part->sec_cnt);
@@ -53,6 +53,7 @@ void onix_inode_sync(Partition *part, Inode *inode)
     partition_read(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
     memcpy((buf + pos.offset), &pure_inode, sizeof(Inode));
     partition_write(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
+    free(buf);
 }
 
 Inode *onix_inode_open(Partition *part, u32 nr)
@@ -77,6 +78,8 @@ Inode *onix_inode_open(Partition *part, u32 nr)
     inode = malloc(sizeof(Inode));
 
     char *buf = malloc(BLOCK_SIZE);
+    // todo rollback....
+
     partition_read(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
 
     memcpy(inode, buf + pos.offset, sizeof(Inode));
@@ -148,5 +151,5 @@ void onix_inode_init(u32 nr, Inode *inode)
 
     // fuck，内存没有初始化
     // 还以为我哪儿写错了，调试了半天
-    memset(inode->unused, 0, sizeof(inode->unused)); 
+    memset(inode->unused, 0, sizeof(inode->unused));
 }

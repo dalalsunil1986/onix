@@ -21,6 +21,8 @@
 #define DEBUGP(fmt, args...)
 #endif
 
+extern void test_function();
+
 void __init_kernel()
 {
     // BMB;
@@ -34,4 +36,9 @@ void __init_kernel()
     init_process();
     init_harddisk();
     init_fs();
+
+#ifndef ONIX_KERNEL_DEBUG
+    test_function();
+    PBMB;
+#endif
 }
