@@ -26,7 +26,7 @@ void memset(void *dest, char ch, size_t size)
     }
 }
 
-void strcpy(char *dest, char *src)
+char * strcpy(char *dest, char *src)
 {
     int i = 0;
     while (src[i])
@@ -35,6 +35,20 @@ void strcpy(char *dest, char *src)
         i++;
     }
     dest[i] = 0;
+    return dest;
+}
+
+char *strcat(char *dest, char *src)
+{
+    char *ptr = dest;
+    while (*ptr)
+        ptr++;
+    while (*src)
+    {
+        *(ptr++) = *(src++);
+    }
+    *ptr = 0;
+    return dest;
 }
 
 int strcmp(const char *str1, const char *str2)
