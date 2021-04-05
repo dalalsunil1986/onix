@@ -1,4 +1,5 @@
 #include <onix/string.h>
+#include <onix/queue.h>
 #include <onix/kernel/global.h>
 #include <onix/kernel/printk.h>
 #include <onix/kernel/debug.h>
@@ -8,9 +9,9 @@
 #include <onix/kernel/pid.h>
 #include <onix/kernel/task.h>
 #include <onix/kernel/process.h>
-#include <onix/queue.h>
 #include <onix/kernel/mutex.h>
 #include <onix/kernel/harddisk.h>
+#include <fs/onix/fs.h>
 
 #define DEBUGINFO
 
@@ -19,8 +20,6 @@
 #else
 #define DEBUGP(fmt, args...)
 #endif
-
-bool sys_inited = false;
 
 void __init_kernel()
 {
@@ -34,7 +33,7 @@ void __init_kernel()
     init_task();
     init_process();
     init_harddisk();
-    sys_inited = true;
+    init_fs();
 }
 
 int test_function()
