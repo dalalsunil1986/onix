@@ -74,6 +74,11 @@ u32 path_depth(char *path)
 char *abspath(char *path, char *buf)
 {
     // todo make abspath
-    buf[0] = '/';
-    strcpy(buf + 1, path);
+    u32 start = 0;
+    if (path[0] != '/')
+    {
+        buf[0] = '/';
+        start = 1;
+    }
+    strcpy(buf + start, path);
 }

@@ -14,8 +14,8 @@ typedef int32 fd_t;
 typedef struct File
 {
     u32 offset;
-    u32 flag;
-    Inode *inode;
+    u32 flags;
+    void *inode;
 } File;
 
 typedef enum FileFlag
@@ -41,6 +41,8 @@ typedef enum std_fd
 } std_fd;
 
 fd_t get_free_global_fd();
+File *get_global_file(fd_t fd);
+
 int32 sys_open(const char *pathname, FileFlag flags);
 
 #endif

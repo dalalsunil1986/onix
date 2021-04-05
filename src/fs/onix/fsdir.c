@@ -122,8 +122,9 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
     {
         record->parent = &root_dir;
         record->type = FILETYPE_DIRECTORY;
-        record->parent_path[0] = 0;
+        record->search_path[0] = 0;
     }
+    Partition *part = get_path_part(pathname);
 
     u32 pathlen = strlen(abuf);
     assert(abuf[0] == '/' && pathlen > 1 && pathlen < MAX_PATH_LEN);
@@ -143,11 +144,11 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
     subpath = dirname(subpath, name);
     while (name[0])
     {
-        assert(strlen(record->parent_path) < MAX_PATH_LEN);
-        strcat(record->parent_path, "/");
-        strcat(record->parent_path, "name");
+        assert(strlen(record->search_path) < MAX_PATH_LEN);
+        strcat(record->search_path, "/");
+        strcat(record->search_path, name);
 
-        if (!onix_search_dir_entry(root_part, parent, name, &entry))
+        if (!onix_search_dir_entry(part, parent, name, &entry))
         {
             return FILE_NULL;
         }
@@ -161,8 +162,8 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
         if (entry.type == FILETYPE_DIRECTORY)
         {
             nr = parent->inode->nr;
-            onix_dir_close(root_part, parent);
-            parent = onix_dir_open(root_part, entry.inode_nr);
+            onix_dir_close(part, parent);
+            parent = onix_dir_open(part, entry.inode_nr);
             record->parent = parent;
         }
         memset(name, 0, sizeof(name));

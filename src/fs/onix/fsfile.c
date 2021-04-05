@@ -19,7 +19,7 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-bool onix_file_create(Partition *part, Dir *parent, File *file, char *name, FileFlag flag)
+bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, FileFlag flags)
 {
     void *buf = malloc(BLOCK_SIZE);
     if (buf == NULL)
@@ -44,10 +44,11 @@ bool onix_file_create(Partition *part, Dir *parent, File *file, char *name, File
         goto rollback;
     }
     onix_inode_init(nr, inode);
+
     file->inode = inode;
     file->offset = 0;
     file->inode->write_deny = false;
-    file->flag = flag;
+    file->flags = flags;
 
     DirEntry entry;
     memset(&entry, 0, sizeof(DirEntry));
@@ -82,12 +83,12 @@ rollback:
     return success;
 }
 
-bool onix_file_open(Partition *part, File *file, u32 nr, FileFlag flag)
+bool onix_file_open(Partition *part, OnixFile *file, u32 nr, FileFlag flags)
 {
     file->inode = onix_inode_open(part, nr);
     file->offset = 0;
-    file->flag = flag;
-    if (!(flag & O_W || flag & O_RW)) // 如果不写
+    file->flags = flags;
+    if (!(flags & O_W || flags & O_RW)) // 如果不写
         return true;
     bool success = false;
     bool *write_deny = &file->inode->write_deny;
@@ -105,7 +106,7 @@ bool onix_file_open(Partition *part, File *file, u32 nr, FileFlag flag)
     return success;
 }
 
-bool onix_file_close(Partition *part, File *file)
+bool onix_file_close(Partition *part, OnixFile *file)
 {
     if (file == NULL)
         return false;
@@ -115,7 +116,7 @@ bool onix_file_close(Partition *part, File *file)
     return true;
 }
 
-int32 onix_file_write(Partition *part, File *file, const void *content, int32 count)
+int32 onix_file_write(Partition *part, OnixFile *file, const void *content, int32 count)
 {
     assert(count > 0);
     if (file->offset + count > MAX_FILE_SIZE)
@@ -302,7 +303,7 @@ rollback:
     }
 }
 
-int32 onix_file_read(Partition *part, File *file, const void *content, int32 count)
+int32 onix_file_read(Partition *part, OnixFile *file, const void *content, int32 count)
 {
     assert(count > 0);
 
@@ -372,7 +373,7 @@ int32 onix_file_read(Partition *part, File *file, const void *content, int32 cou
     return bytes;
 }
 
-int32 onix_file_lseek(File *file, int32 offset, Whence whence)
+int32 onix_file_lseek(OnixFile *file, int32 offset, Whence whence)
 {
     u32 filesize = file->inode->size;
     u32 pos = 0;

@@ -10,6 +10,7 @@
 #include <fs/onix/fsblock.h>
 #include <fs/onix/fsdir.h>
 #include <fs/onix/fsfile.h>
+#include <fs/onix/fssyscall.h>
 #include <onix/malloc.h>
 
 #define DEBUGINFO
@@ -109,9 +110,12 @@ void test_file()
     onix_file_create(part, root, file, "A file.txt", 1);
 
     char buf[] = "hello world this is a file content\0";
-    DEBUGP("create file nr %d\n", file->inode->nr);
 
-    onix_file_open(part, file, file->inode->nr, O_R | O_W);
+    Inode *finode = file->inode;
+
+    DEBUGP("create file nr %d\n", finode->nr);
+
+    onix_file_open(part, file, finode->nr, O_R | O_W);
 
     onix_file_write(part, file, buf, sizeof(buf));
 
@@ -124,6 +128,12 @@ void test_file()
     onix_file_close(part, file);
 }
 
+void test_sys_open()
+{
+    fd_t fd = onix_sys_open("/testfile", O_C);
+    DEBUGP("sys open file %d\n", fd);
+}
+
 int main()
 {
     init_harddisk();
@@ -131,6 +141,7 @@ int main()
     part = root_part;
     print_format_info(part, part->super_block);
     // test_inode();
-    test_dir();
+    // test_dir();
     // test_file();
+    test_sys_open();
 }

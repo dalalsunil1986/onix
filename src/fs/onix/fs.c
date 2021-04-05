@@ -54,47 +54,47 @@ static bool partition_mount(Node *node, char *partname)
     DEBUGP("partition mount %s name %s\n", part->name, partname);
 
     root_part = part;
-    Harddisk *disk = root_part->disk;
+    Harddisk *disk = part->disk;
 
     SuperBlock *sb = malloc(sizeof(SuperBlockHolder));
 
     // 读超级块
-    root_part->super_block = malloc(sizeof(SuperBlockHolder));
-    if (root_part->super_block == NULL)
+    part->super_block = malloc(sizeof(SuperBlockHolder));
+    if (part->super_block == NULL)
     {
         panic("allocate memory failed!");
     }
     memset(sb, 0, sizeof(SuperBlock));
-    partition_read(root_part, BLOCK_SECTOR_COUNT, sb, BLOCK_SECTOR_COUNT);
-    memcpy(root_part->super_block, sb, sizeof(SuperBlockHolder));
+    partition_read(part, BLOCK_SECTOR_COUNT, sb, BLOCK_SECTOR_COUNT);
+    memcpy(part->super_block, sb, sizeof(SuperBlockHolder));
 
     // 读块位图
-    root_part->block_bitmap.bits = malloc(sb->block_bitmap_blocks * BLOCK_SIZE);
-    if (root_part->block_bitmap.bits == NULL)
+    part->block_bitmap.bits = malloc(sb->block_bitmap_blocks * BLOCK_SIZE);
+    if (part->block_bitmap.bits == NULL)
     {
         panic("allocate memory failed!");
     }
 
-    root_part->block_bitmap.length = sb->block_bitmap_blocks * BLOCK_SIZE;
-    partition_read(root_part,
+    part->block_bitmap.length = sb->block_bitmap_blocks * BLOCK_SIZE;
+    partition_read(part,
                    sb->block_bitmap_lba,
-                   root_part->block_bitmap.bits,
+                   part->block_bitmap.bits,
                    sb->block_bitmap_blocks * BLOCK_SECTOR_COUNT);
 
     // 读 inode 位图
-    root_part->inode_bitmap.bits = malloc(sb->inode_bitmap_blocks * BLOCK_SIZE);
-    if (root_part->inode_bitmap.bits == NULL)
+    part->inode_bitmap.bits = malloc(sb->inode_bitmap_blocks * BLOCK_SIZE);
+    if (part->inode_bitmap.bits == NULL)
     {
         panic("allocate memory failed!");
     }
-    root_part->inode_bitmap.length = sb->inode_bitmap_blocks * BLOCK_SIZE;
+    part->inode_bitmap.length = sb->inode_bitmap_blocks * BLOCK_SIZE;
 
-    partition_read(root_part,
+    partition_read(part,
                    sb->inode_bitmap_lba,
-                   root_part->inode_bitmap.bits,
+                   part->inode_bitmap.bits,
                    sb->inode_bitmap_blocks * BLOCK_SECTOR_COUNT);
 
-    queue_init(&root_part->open_inodes);
+    queue_init(&part->open_inodes);
     free(sb);
     DEBUGP("mount %s done!\n", part->name);
     return true;
@@ -285,4 +285,9 @@ void init_fs()
     }
     queue_traversal(&partition_queue, partition_mount, default_part);
     init_dir();
+}
+
+void *get_path_part(const char *pathname)
+{
+    return root_part; // todo for mounted part in the future
 }

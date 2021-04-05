@@ -104,5 +104,6 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority);
 void task_block(Task *task);
 void task_unblock(Task *task);
 void task_yield();
+fd_t task_install_fd(fd_t fd);
 
 #endif

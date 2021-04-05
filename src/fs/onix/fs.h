@@ -79,6 +79,13 @@ typedef struct Inode
     u32 unused[13];              // 用来撑场面，凑够 128 字节 未来可做扩展
 } Inode;
 
+typedef struct OnixFile
+{
+    u32 offset;
+    u32 flags;
+    Inode *inode;
+} OnixFile;
+
 typedef struct Dir // 只存在于内存中的结构
 {
     Inode *inode;
@@ -98,11 +105,13 @@ typedef struct DirEntry // 硬盘上的结构，同样可以存在于内存中
 
 typedef struct SearchRecord
 {
-    char parent_path[MAX_PATH_LEN];
+    char search_path[MAX_PATH_LEN];
     Dir *parent;
     FileType type;
 } SearchRecord;
 
 void init_fs();
+
+void *get_path_part(const char *pathname);
 
 #endif

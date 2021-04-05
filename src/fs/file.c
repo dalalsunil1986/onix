@@ -32,3 +32,9 @@ fd_t get_free_global_fd()
     }
     return idx;
 }
+
+File *get_global_file(fd_t fd)
+{
+    assert(fd >= 0 && fd < MAX_OPEN_FILES);
+    &file_table[fd];
+}
