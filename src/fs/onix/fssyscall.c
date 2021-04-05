@@ -156,3 +156,11 @@ int32 onix_sys_read(fd_t fd, void *buf, u32 count)
     OnixFile *file = get_global_file(global_fd);
     return onix_file_read(file, buf, count);
 }
+
+int32 onix_sys_lseek(fd_t fd, int32 offset, Whence whence)
+{
+    assert(fd >= 0 && fd < TASK_MAX_OPEN_FILES);
+    u32 global_fd = task_global_fd(fd);
+    OnixFile *file = get_global_file(global_fd);
+    return onix_file_lseek(file, offset, whence);
+}

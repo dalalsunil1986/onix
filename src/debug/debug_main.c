@@ -155,9 +155,12 @@ void test_sys_call()
     // PBMB;
     char *buf = malloc(sizeof(str));
     memset(buf, 0, sizeof(str));
-    onix_sys_close(fd);
 
-    fd = onix_sys_open(filename, O_C | O_RW);
+    // onix_sys_close(fd);
+    // fd = onix_sys_open(filename, O_C | O_RW);
+
+    onix_sys_lseek(fd, 0, SEEK_SET);
+
     onix_sys_read(fd, buf, sizeof(str));
     DEBUGP("read file %s content:\n    %s\n", filename, buf);
     onix_sys_close(fd);
