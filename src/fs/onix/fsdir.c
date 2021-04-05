@@ -128,7 +128,7 @@ rollback:
 
 int32 onix_search_file(const char *pathname, SearchRecord *record)
 {
-    PBMB;
+    // PBMB;
     char *abuf = malloc(MAX_PATH_LEN);
     int32 res = FILE_NULL;
     u32 step = 0;

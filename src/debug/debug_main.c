@@ -145,6 +145,7 @@ void test_file()
 
 void test_sys_open()
 {
+    // PBMB;
     fd_t fd = onix_sys_open("/testfile", O_C);
     DEBUGP("sys open file %d\n", fd);
 }
@@ -163,8 +164,8 @@ void test_function()
     // test_inode();
     PBMB;
     // test_dir();
-    test_file();
-    // test_sys_open();
+    // test_file();
+    test_sys_open();
 
     DEBUGP("Debug finish.....\n");
 }

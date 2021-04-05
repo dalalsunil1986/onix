@@ -6,6 +6,15 @@
 #include <onix/string.h>
 #include <onix/malloc.h>
 #include <onix/kernel/task.h>
+#include <onix/kernel/debug.h>
+
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 extern Partition *root_part;
 extern Dir root_dir;
@@ -49,50 +58,59 @@ fd_t onix_sys_open(const char *pathname, FileFlag flags)
 {
     fd_t fd = FILE_NULL;
 
-    SearchRecord record;
-    memset(&record, 0, sizeof(SearchRecord));
+    SearchRecord *record = malloc(sizeof(SearchRecord));
+    memset(record, 0, sizeof(SearchRecord));
 
     Partition *part = get_path_part(pathname);
 
+    // PBMB;
+
     u32 depth = path_depth(pathname);
-    int nr = onix_search_file(pathname, &record);
+
+    // PBMB;
+
+    int nr = onix_search_file(pathname, record);
+
+    // PBMB;
+
     bool found = nr != FILE_NULL ? true : false;
 
-    if (record.type == FILETYPE_DIRECTORY)
+    if (record->type == FILETYPE_DIRECTORY)
     {
         printk("can`t open a direcotry with open(), use opendir() to instead\n");
-        onix_dir_close(part, record.parent);
+        onix_dir_close(part, record->parent);
         return FILE_NULL;
     }
 
-    u32 search_depth = path_depth(record.search_path);
+    // PBMB;
+    u32 search_depth = path_depth(record->search_path);
 
     if (depth != search_depth)
     {
-        printk("can`t access %s, subpath %s not exists\n", pathname, record.search_path);
-        onix_dir_close(part, record.parent);
+        printk("can`t access %s, subpath %s not exists\n", pathname, record->search_path);
+        onix_dir_close(part, record->parent);
         return FILE_NULL;
     }
 
     if (!found && !(flags & O_C))
     {
         printk("file %s not exists\n", pathname);
-        onix_dir_close(part, record.parent);
+        onix_dir_close(part, record->parent);
         return FILE_NULL;
     }
     if (found && (flags & O_C))
     {
         printk("file %s already exists\n", pathname);
-        onix_dir_close(part, record.parent);
+        onix_dir_close(part, record->parent);
         return FILE_NULL;
     }
     if (!found && (flags & O_C))
     {
         char name[MAX_FILENAME_LENGTH];
         memset(name, 0, sizeof(name));
-        dirname(record.search_path, name);
-        fd = create_file(part, record.parent, name, flags);
-        onix_dir_close(part, record.parent);
+        dirname(record->search_path, name);
+        fd = create_file(part, record->parent, name, flags);
+        onix_dir_close(part, record->parent);
         return fd;
     }
     else

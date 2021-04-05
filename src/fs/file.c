@@ -38,3 +38,15 @@ File *get_global_file(fd_t fd)
     assert(fd >= 0 && fd < MAX_OPEN_FILES);
     &file_table[fd];
 }
+
+void init_file()
+{
+    DEBUGK("Init global files...\n");
+    for (size_t i = 0; i < MAX_OPEN_FILES; i++)
+    {
+        File *file = file_table + i;
+        file->flags = 0;
+        file->inode = NULL;
+        file->offset = 0;
+    }
+}

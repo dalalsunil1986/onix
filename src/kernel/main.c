@@ -36,6 +36,7 @@ void __init_kernel()
     init_process();
     init_harddisk();
     init_fs();
+    init_file();
 
 #ifndef ONIX_KERNEL_DEBUG
     test_function();
