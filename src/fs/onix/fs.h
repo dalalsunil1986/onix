@@ -109,6 +109,7 @@ typedef struct SearchRecord
     char search_path[MAX_PATH_LEN];
     Dir *parent;
     FileType type;
+    DirEntry entry;
 } SearchRecord;
 
 void init_fs();

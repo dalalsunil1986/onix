@@ -8,5 +8,6 @@ fd_t onix_sys_close(fd_t fd);
 int32 onix_sys_write(fd_t fd, const void *buf, u32 count);
 int32 onix_sys_read(fd_t fd, void *buf, u32 count);
 int32 onix_sys_lseek(fd_t fd, int32 offset, Whence whence);
+int32 onix_sys_unlink(const char *pathname);
 
 #endif

@@ -165,6 +165,7 @@ void test_sys_call()
     DEBUGP("read file %s content:\n    %s\n", filename, buf);
     onix_sys_close(fd);
     free(buf);
+    onix_sys_unlink(filename);
 }
 
 #ifdef ONIX_KERNEL_DEBUG

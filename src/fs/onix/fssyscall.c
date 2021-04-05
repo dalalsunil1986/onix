@@ -164,3 +164,75 @@ int32 onix_sys_lseek(fd_t fd, int32 offset, Whence whence)
     OnixFile *file = get_global_file(global_fd);
     return onix_file_lseek(file, offset, whence);
 }
+
+extern File file_table[MAX_OPEN_FILES];
+
+int32 onix_sys_unlink(const char *pathname)
+{
+    assert(strlen(pathname) < MAX_PATH_LEN);
+
+    SearchRecord *record = malloc(sizeof(SearchRecord));
+    int step = 1;
+    int32 ret = -1;
+    if (record == NULL)
+    {
+        step = 1;
+        goto rollback;
+    }
+
+    memset(record, 0, sizeof(SearchRecord));
+    Partition *part = get_path_part(pathname);
+
+    int nr = onix_search_file(pathname, record);
+    if (nr == FILE_NULL)
+    {
+        printk("file %s not found!\n", pathname);
+        step = 2;
+        goto rollback;
+    }
+    if (record->type == FILETYPE_DIRECTORY)
+    {
+        printk("file %s is directory use rmdir instead!\n", pathname);
+        onix_dir_close(part, record->parent);
+        step = 2;
+        goto rollback;
+    }
+    OnixFile *file = NULL;
+    u32 idx = 0;
+    while (idx < MAX_OPEN_FILES)
+    {
+        file = file_table + idx;
+        if (file->inode != NULL && file->inode->nr == nr)
+        {
+            break;
+        }
+        idx++;
+    }
+    if (idx < MAX_OPEN_FILES)
+    {
+        step = 2;
+        printk("file %s is in use\n", pathname);
+        onix_dir_close(part, record->parent);
+        goto rollback;
+    }
+    assert(idx == MAX_OPEN_FILES);
+
+    Dir *parent = record->parent;
+    onix_delete_dir_entry(part, parent, &record->entry);
+    onix_inode_delete(part, nr);
+    onix_dir_close(part, record->parent);
+    ret = 0;
+    step = 2;
+
+rollback:
+    switch (step)
+    {
+    case 2:
+        free(record);
+    case 1:
+        break;
+    default:
+        break;
+    }
+    return ret;
+}

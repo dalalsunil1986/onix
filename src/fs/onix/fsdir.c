@@ -130,7 +130,7 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
 {
     // PBMB;
     char *abuf = malloc(MAX_PATH_LEN);
-    int32 res = FILE_NULL;
+    int32 ret = FILE_NULL;
     u32 step = 0;
     if (abuf == NULL)
     {
@@ -152,7 +152,7 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
 
     char *subpath = abuf;
     Dir *parent = &root_dir;
-    DirEntry entry;
+    DirEntry *entry = &record->entry;
 
     char *name = malloc(MAX_FILENAME_LENGTH);
     if (name == NULL)
@@ -175,25 +175,25 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
         strcat(record->search_path, "/");
         strcat(record->search_path, name);
 
-        if (!onix_search_dir_entry(part, parent, name, &entry))
+        if (!onix_search_dir_entry(part, parent, name, entry))
         {
             step = 3;
             goto rollback;
         }
 
-        if (entry.type == FILETYPE_REGULAR)
+        if (entry->type == FILETYPE_REGULAR)
         {
             record->type = FILETYPE_REGULAR;
-            res = entry.inode_nr;
+            ret = entry->inode_nr;
             step = 3;
             goto rollback;
         }
 
-        if (entry.type == FILETYPE_DIRECTORY)
+        if (entry->type == FILETYPE_DIRECTORY)
         {
             nr = parent->inode->nr;
             onix_dir_close(part, parent);
-            parent = onix_dir_open(part, entry.inode_nr);
+            parent = onix_dir_open(part, entry->inode_nr);
             record->parent = parent;
         }
         memset(name, 0, sizeof(name));
@@ -215,7 +215,7 @@ rollback:
     default:
         break;
     }
-    return res;
+    return ret;
 }
 
 void onix_create_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry)
