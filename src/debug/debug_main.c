@@ -78,15 +78,18 @@ void test_inode()
 void test_dir()
 {
     DEBUGP("size of entry %d\n", sizeof(DirEntry));
-    char buf[BLOCK_SIZE];
+    // PBMB;
+
     Dir *root_dir = onix_open_root_dir(part);
     u32 nr = onix_inode_bitmap_alloc_sync(part);
     DirEntry entry;
     char filename[] = "hello";
+    // PBMB;
     bool exists = onix_search_dir_entry(part, root_dir, filename, &entry);
     if (!exists)
     {
-        DEBUGP("file %s is not exists, then create it.\n");
+        // PBMB;
+        DEBUGP("file %s is not exists, then create it.\n", filename);
         onix_create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
         onix_sync_dir_entry(part, root_dir, &entry);
     }
@@ -94,14 +97,17 @@ void test_dir()
     {
         DEBUGP("file %s is exists, congratulations!!!\n");
     }
-
-    SearchRecord record;
-
-    fd_t fd = onix_search_file(filename, &record);
-    DEBUGP("search file %s fd %d\n", filename, fd);
+    PBMB;
+    SearchRecord *record = malloc(sizeof(SearchRecord));
+    memset(record, 0, sizeof(SearchRecord));
+    PBMB;
+    nr = onix_search_file(filename, record);
+    DEBUGP("search file %s nr %d\n", filename, nr);
+    PBMB;
 
     DEBUGP("delete dir entry ....\n");
     onix_delete_dir_entry(part, root_dir, &entry);
+    free(record);
 }
 
 void test_file()
@@ -148,7 +154,10 @@ void test_function()
     part = root_part;
     print_format_info(part, part->super_block);
     // test_inode();
+    PBMB;
     // test_dir();
     // test_file();
     // test_sys_open();
+
+    DEBUGP("Debug finish.....\n");
 }
