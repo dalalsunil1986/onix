@@ -7,9 +7,11 @@ void debugk(const char *fmt, ...);
 #include <onix/kernel/printk.h>
 #define BOCHS_MAGIC_BREAKPOINT asm("xchgw %bx, %bx")
 #define DEBUGK(fmt, args...) debugk(__BASE_FILE__, __LINE__, fmt, ##args)
+#define CHECK_STACK (running_task()->magic == TASK_MAGIC);
 #else
 #define BOCHS_MAGIC_BREAKPOINT
 #define DEBUGK(fmt, args...)
+#define CHECK_STACK
 #endif
 
 #define BMB BOCHS_MAGIC_BREAKPOINT;

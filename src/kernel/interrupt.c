@@ -121,6 +121,7 @@ static void test_interrupt()
 
 void init_interrupt()
 {
+    CHECK_STACK;
     printk("Initializing interrupt...\n");
     init_pit();
     init_pic();

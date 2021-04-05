@@ -161,6 +161,7 @@ static void test_arena()
 
 void init_arena()
 {
+    CHECK_STACK;
     DEBUGP("Initializing arena...\n");
     Task *task = running_task();
     init_arena_desc(task->adesc);

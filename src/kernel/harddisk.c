@@ -441,6 +441,7 @@ static void init_channels()
 
 void init_harddisk()
 {
+    CHECK_STACK;
     printk("Initializing harddisk...\n");
 
     DEBUGP("harddisk enable irq\n");

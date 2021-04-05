@@ -41,6 +41,7 @@ File *get_global_file(fd_t fd)
 
 void init_file()
 {
+    CHECK_STACK;
     DEBUGK("Init global files...\n");
     for (size_t i = 0; i < MAX_OPEN_FILES; i++)
     {

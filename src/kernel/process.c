@@ -148,5 +148,6 @@ void test_process()
 
 void init_process()
 {
+    CHECK_STACK;
     init_tss();
 }

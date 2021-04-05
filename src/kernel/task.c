@@ -340,6 +340,7 @@ void schedule()
 
 void init_task()
 {
+    CHECK_STACK;
     DEBUGP("Size Taskframe %d\n", sizeof(TaskFrame));
     DEBUGP("Size Threadframe %d\n", sizeof(ThreadFrame));
     DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(TaskFrame));

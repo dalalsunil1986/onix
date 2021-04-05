@@ -280,6 +280,7 @@ extern void init_dir();
 
 void init_fs()
 {
+    CHECK_STACK;
     extern u8 channel_count;
     u8 idx = 0;
     DEBUGK("searching filesystem in %d channel.....\n", channel_count);

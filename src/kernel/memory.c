@@ -345,6 +345,7 @@ void test_memory()
 
 void init_memory()
 {
+    CHECK_STACK;
     printk("Initializing Memory...\n");
     printk("Total Memory Size 0x%X B\n", total_memory_bytes);
     DEBUGP("Total Memory Ards count %d\n", ards_count);
