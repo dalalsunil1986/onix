@@ -98,12 +98,12 @@ fd_t onix_sys_open(const char *pathname, FileFlag flags)
         onix_dir_close(part, record->parent);
         return FILE_NULL;
     }
-    if (found && (flags & O_C))
-    {
-        printk("file %s already exists\n", pathname);
-        onix_dir_close(part, record->parent);
-        return FILE_NULL;
-    }
+    // if (found && (flags & O_C))
+    // {
+    //     printk("file %s already exists\n", pathname);
+    //     onix_dir_close(part, record->parent);
+    //     return FILE_NULL;
+    // }
     if (!found && (flags & O_C))
     {
         char name[MAX_FILENAME_LENGTH];
@@ -118,4 +118,17 @@ fd_t onix_sys_open(const char *pathname, FileFlag flags)
         fd = open_file(part, nr, flags);
         return fd;
     }
+}
+
+fd_t onix_sys_close(fd_t fd)
+{
+    fd_t ret = FILE_NULL;
+    if (fd < 3)
+        return ret;
+    u32 global_fd = task_global_fd(fd);
+    OnixFile *file = get_global_file(global_fd);
+    bool success = onix_file_close(file);
+    Task *task = running_task();
+    task->file_table[fd] = FILE_NULL;
+    return success;
 }

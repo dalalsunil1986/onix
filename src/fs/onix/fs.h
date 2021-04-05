@@ -84,6 +84,7 @@ typedef struct OnixFile
     u32 offset;
     u32 flags;
     Inode *inode;
+    void *part;
 } OnixFile;
 
 typedef struct Dir // 只存在于内存中的结构

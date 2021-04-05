@@ -46,14 +46,14 @@ void test_path()
 
 void test_inode()
 {
-    PBMB;
+    // PBMB;
     u32 idx = 5;
     u32 lba = 0;
     idx = onix_inode_bitmap_alloc(part);
     DEBUGP("Alloc inode bit %d\n", idx);
     onix_bitmap_sync(part, idx, INODE_BITMAP);
 
-    PBMB;
+    // PBMB;
 
     lba = onix_block_bitmap_alloc(part);
     DEBUGP("Alloc block bit %d\n", lba);
@@ -97,13 +97,13 @@ void test_dir()
     {
         DEBUGP("file %s is exists, congratulations!!!\n");
     }
-    PBMB;
+    // PBMB;
     SearchRecord *record = malloc(sizeof(SearchRecord));
     memset(record, 0, sizeof(SearchRecord));
-    PBMB;
+    // PBMB;
     nr = onix_search_file(filename, record);
     DEBUGP("search file %s nr %d\n", filename, nr);
-    PBMB;
+    // PBMB;
 
     DEBUGP("delete dir entry ....\n");
     onix_delete_dir_entry(part, root_dir, &entry);
@@ -112,7 +112,7 @@ void test_dir()
 
 void test_file()
 {
-    PBMB;
+    // PBMB;
     OnixFile holder;
     OnixFile *file = &holder;
     Dir *root = onix_open_root_dir(part);
@@ -120,39 +120,43 @@ void test_file()
 
     DEBUGP("create file success is %d\n", success);
 
-    PBMB;
+    // PBMB;
     char buf[] = "hello world this is a file content\0";
 
     DEBUGP("create file nr %u\n", file->inode->nr);
 
     onix_file_open(part, file, file->inode->nr, O_R | O_W);
 
-    PBMB;
+    // PBMB;
 
-    onix_file_write(part, file, buf, sizeof(buf));
+    onix_file_write(file, buf, sizeof(buf));
 
-    PBMB;
+    // PBMB;
     memset(buf, 0, sizeof(buf));
 
     file->offset = 0;
 
-    onix_file_read(part, file, buf, sizeof(buf));
+    onix_file_read(file, buf, sizeof(buf));
     DEBUGP("%s\n", buf);
-    PBMB;
+    // PBMB;
 
-    onix_file_close(part, file);
+    onix_file_close(file);
 }
 
-void test_sys_open()
+void test_sys_call()
 {
     // PBMB;
     fd_t fd = onix_sys_open("/testfile", O_C);
     DEBUGP("sys open file %d\n", fd);
+    // PBMB;
+    onix_sys_close(fd);
 }
 
 #ifdef ONIX_KERNEL_DEBUG
 int main()
 {
+    Task *task = running_task();
+    init_file_table(task);
     init_harddisk();
     init_fs();
 #else
@@ -161,11 +165,11 @@ void test_function()
 #endif
     part = root_part;
     print_format_info(part, part->super_block);
-    // test_inode();
-    PBMB;
-    // test_dir();
-    // test_file();
-    test_sys_open();
+    test_inode();
+    // PBMB;
+    test_dir();
+    test_file();
+    test_sys_call();
 
     DEBUGP("Debug finish.....\n");
 }

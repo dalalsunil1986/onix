@@ -50,6 +50,7 @@ bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, 
     file->offset = 0;
     file->inode->write_deny = false;
     file->flags = flags;
+    file->part = part;
 
     DirEntry entry;
     memset(&entry, 0, sizeof(DirEntry));
@@ -90,6 +91,8 @@ bool onix_file_open(Partition *part, OnixFile *file, u32 nr, FileFlag flags)
     file->inode = onix_inode_open(part, nr);
     file->offset = 0;
     file->flags = flags;
+    file->part = part;
+
     if (!(flags & O_W || flags & O_RW)) // 如果不写
         return true;
     bool success = false;
@@ -108,18 +111,20 @@ bool onix_file_open(Partition *part, OnixFile *file, u32 nr, FileFlag flags)
     return success;
 }
 
-bool onix_file_close(Partition *part, OnixFile *file)
+bool onix_file_close(OnixFile *file)
 {
     if (file == NULL)
         return false;
     file->inode->write_deny = false;
-    onix_inode_close(part, file->inode);
+    onix_inode_close(file->part, file->inode);
     file->inode = NULL;
     return true;
 }
 
-int32 onix_file_write(Partition *part, OnixFile *file, const void *content, int32 count)
+int32 onix_file_write(OnixFile *file, const void *content, int32 count)
 {
+    Partition *part = file->part;
+
     assert(count > 0);
     if (file->offset + count > MAX_FILE_SIZE)
     {
@@ -325,8 +330,10 @@ rollback:
     }
 }
 
-int32 onix_file_read(Partition *part, OnixFile *file, const void *content, int32 count)
+int32 onix_file_read(OnixFile *file, const void *content, int32 count)
 {
+    Partition *part = file->part;
+
     assert(count > 0);
 
     u32 block_start = file->offset / BLOCK_SIZE; // 起始块

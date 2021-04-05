@@ -16,6 +16,7 @@ typedef struct File
     u32 offset;
     u32 flags;
     void *inode;
+    void *part;
 } File;
 
 typedef enum FileFlag

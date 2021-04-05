@@ -139,6 +139,15 @@ fd_t task_install_fd(fd_t fd)
     return idx;
 }
 
+fd_t task_global_fd(fd_t fd)
+{
+    assert(fd >= 0 && fd < TASK_MAX_OPEN_FILES);
+    Task *task = running_task();
+    fd_t global_fd = task->file_table[fd];
+    assert(global_fd >= 0 && global_fd < MAX_OPEN_FILES);
+    return global_fd;
+}
+
 void task_init(Task *task, char *name, int priority, int user)
 {
     Task *cur = running_task();

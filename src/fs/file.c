@@ -49,5 +49,6 @@ void init_file()
         file->flags = 0;
         file->inode = NULL;
         file->offset = 0;
+        file->part = NULL;
     }
 }

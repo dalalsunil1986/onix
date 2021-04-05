@@ -105,5 +105,6 @@ void task_block(Task *task);
 void task_unblock(Task *task);
 void task_yield();
 fd_t task_install_fd(fd_t fd);
+fd_t task_global_fd(fd_t fd);
 
 #endif

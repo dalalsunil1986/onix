@@ -292,9 +292,11 @@ static void disk_identity(Harddisk *disk)
 static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
 {
     DEBUGP("part scan start \n");
-    BootSector holder;
-    BootSector *bs = &holder;
-
+    BootSector *bs = malloc(sizeof(BootSector));
+    if (bs == NULL)
+    {
+        return;
+    }
     Task *task = running_task();
     assert(task->magic == TASK_MAGIC);
 
@@ -329,6 +331,7 @@ static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
             part->sec_cnt = entry->sec_cnt;
             part->disk = disk;
             part->type = PART_PRIMARY;
+            queue_init(&part->open_inodes);
             DEBUGP("part scan push primary queue \n");
             queue_push(&partition_queue, &part->node);
             sprintf(part->name, "%s%d", disk->name, disk->primary_count + 1);
@@ -345,6 +348,7 @@ static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
             part->sec_cnt = entry->sec_cnt;
             part->disk = disk;
             part->type = PART_LOGICAL;
+            queue_init(&part->open_inodes);
             DEBUGP("part scan push primary queue\n");
             queue_push(&partition_queue, &part->node);
 
@@ -352,6 +356,7 @@ static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
             disk->logical_count++;
         }
     };
+    free(bs);
 }
 
 static bool print_partition_info(Node *node, int arg)

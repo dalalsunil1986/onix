@@ -253,7 +253,7 @@ static void search_disk_fs(Harddisk *disk)
         part++;
         idx++;
     }
-            part = disk->logical_parts;
+    part = disk->logical_parts;
     idx = 0;
     while (idx < disk->logical_count)
     {
