@@ -110,7 +110,8 @@
 			"fsblock.h": "c",
 			"file.h": "c",
 			"fsfile.h": "c",
-			"fssyscall.h": "c"
+			"fssyscall.h": "c",
+			"pid.h": "c"
 		}
 	}
 }

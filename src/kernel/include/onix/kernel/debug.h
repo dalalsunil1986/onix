@@ -5,9 +5,10 @@ void debugk(const char *fmt, ...);
 
 #ifdef ONIX_DEBUG
 #include <onix/kernel/printk.h>
+#include <onix/kernel/assert.h>
 #define BOCHS_MAGIC_BREAKPOINT asm("xchgw %bx, %bx")
 #define DEBUGK(fmt, args...) debugk(__BASE_FILE__, __LINE__, fmt, ##args)
-#define CHECK_STACK (running_task()->magic == TASK_MAGIC);
+#define CHECK_STACK assert(running_task()->magic == TASK_MAGIC);
 #else
 #define BOCHS_MAGIC_BREAKPOINT
 #define DEBUGK(fmt, args...)
