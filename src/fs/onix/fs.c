@@ -96,7 +96,7 @@ static bool partition_mount(Node *node, char *partname)
 
     queue_init(&part->open_inodes);
     free(sb);
-    DEBUGP("mount %s done!\n", part->name);
+    DEBUGK("mount %s done!\n", part->name);
     return true;
 }
 
@@ -227,6 +227,7 @@ static void search_part_fs(Harddisk *disk, Partition *part)
 
     DEBUGP("search %s part %s\n", disk->name, part->name);
     memset(sb, 0, SECTOR_SIZE);
+    // PBMB;
     partition_read(part, BLOCK_SECTOR_COUNT, sb, 1);
     if (sb->magic == FS_MAGIC)
     {
@@ -245,12 +246,18 @@ static void search_disk_fs(Harddisk *disk)
 {
     Partition *part = disk->primary_parts;
     u8 idx = 0;
-    while (idx < MAX_PART)
+    while (idx < disk->primary_count)
     {
-        if (idx == MAX_PRIMARY_PART)
-        {
+
+        search_part_fs(disk, part);
+        part++;
+        idx++;
+    }
             part = disk->logical_parts;
-        }
+    idx = 0;
+    while (idx < disk->logical_count)
+    {
+
         search_part_fs(disk, part);
         part++;
         idx++;
@@ -274,9 +281,8 @@ extern void init_dir();
 void init_fs()
 {
     extern u8 channel_count;
-
     u8 idx = 0;
-    DEBUGP("searching filesystem in %d channel.....\n", channel_count);
+    DEBUGK("searching filesystem in %d channel.....\n", channel_count);
     while (idx < channel_count)
     {
         IDEChannel *channel = channels + idx;
@@ -285,6 +291,7 @@ void init_fs()
     }
     queue_traversal(&partition_queue, partition_mount, default_part);
     init_dir();
+    DEBUGK("Init file system finished.\n");
 }
 
 void *get_path_part(const char *pathname)

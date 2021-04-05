@@ -35,13 +35,3 @@ void __init_kernel()
     init_harddisk();
     init_fs();
 }
-
-int test_function()
-{
-    // BMB;
-    // Lock lock;
-    // lock_init(&lock);
-    // acquire(&lock);
-    // release(&lock);
-    // BMB;
-}
