@@ -5,4 +5,7 @@
 
 fd_t onix_sys_open(const char *pathname, FileFlag flags);
 fd_t onix_sys_close(fd_t fd);
+int32 onix_sys_write(fd_t fd, const void *buf, u32 count);
+int32 onix_sys_read(fd_t fd, void *buf, u32 count);
+
 #endif

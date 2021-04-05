@@ -146,10 +146,22 @@ void test_file()
 void test_sys_call()
 {
     // PBMB;
-    fd_t fd = onix_sys_open("/testfile", O_C);
+    char filename[] = "/testfile";
+    fd_t fd = onix_sys_open(filename, O_C | O_RW);
     DEBUGP("sys open file %d\n", fd);
     // PBMB;
+    char str[] = "hello world this is a file content\0";
+    onix_sys_write(fd, str, sizeof(str));
+    // PBMB;
+    char *buf = malloc(sizeof(str));
+    memset(buf, 0, sizeof(str));
     onix_sys_close(fd);
+
+    fd = onix_sys_open(filename, O_C | O_RW);
+    onix_sys_read(fd, buf, sizeof(str));
+    DEBUGP("read file %s content:\n    %s\n", filename, buf);
+    onix_sys_close(fd);
+    free(buf);
 }
 
 #ifdef ONIX_KERNEL_DEBUG
@@ -165,10 +177,10 @@ void test_function()
 #endif
     part = root_part;
     print_format_info(part, part->super_block);
-    test_inode();
+    // test_inode();
     // PBMB;
-    test_dir();
-    test_file();
+    // test_dir();
+    // test_file();
     test_sys_call();
 
     DEBUGP("Debug finish.....\n");

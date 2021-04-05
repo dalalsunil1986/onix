@@ -6,6 +6,7 @@
 #include <onix/string.h>
 #include <onix/malloc.h>
 #include <onix/kernel/task.h>
+#include <onix/kernel/assert.h>
 #include <onix/kernel/debug.h>
 
 #define DEBUGINFO
@@ -131,4 +132,27 @@ fd_t onix_sys_close(fd_t fd)
     Task *task = running_task();
     task->file_table[fd] = FILE_NULL;
     return success;
+}
+
+int32 onix_sys_write(fd_t fd, const void *buf, u32 count)
+{
+    assert(fd >= 0 && fd < TASK_MAX_OPEN_FILES);
+    u32 global_fd = task_global_fd(fd);
+    OnixFile *file = get_global_file(global_fd);
+    DEBUGP("%d\n", file->flags);
+
+    if (file->flags & O_W || file->flags & O_RW)
+    {
+        return onix_file_write(file, buf, count);
+    }
+    printk("file cannot write...\n");
+    return 0;
+}
+
+int32 onix_sys_read(fd_t fd, void *buf, u32 count)
+{
+    assert(fd >= 0 && fd < TASK_MAX_OPEN_FILES);
+    u32 global_fd = task_global_fd(fd);
+    OnixFile *file = get_global_file(global_fd);
+    return onix_file_read(file, buf, count);
 }
