@@ -36,7 +36,11 @@ void onix_inode_sync(Partition *part, Inode *inode)
     InodePosition pos;
     onix_inode_locate(part, nr, &pos);
 
-    char *buf = malloc(BLOCK_SIZE); // todo rollback;
+    char *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        return;
+    }
     memset(buf, 0, BLOCK_SIZE);
 
     assert(pos.sec_lba <= part->sec_cnt);

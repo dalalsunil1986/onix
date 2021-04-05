@@ -22,25 +22,26 @@
 bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, FileFlag flags)
 {
     void *buf = malloc(BLOCK_SIZE);
+    bool success = false;
+    u32 step = 0;
     if (buf == NULL)
     {
-        printk("Onix memory allocate failed!!!\n");
-        return false;
+        step = 1;
+        goto rollback;
     }
 
     u32 nr = onix_inode_bitmap_alloc(part);
+    DEBUGP("inode alloc %u\n", nr);
     if (nr == -1)
     {
-        printk("Onix inode allocate failed!!!\n");
-        return false;
+        step = 2;
+        goto rollback;
     }
 
-    bool success = false;
-    u8 step = 0;
     Inode *inode = malloc(sizeof(Inode));
     if (inode == NULL)
     {
-        step = 1;
+        step = 3;
         goto rollback;
     }
     onix_inode_init(nr, inode);
@@ -58,7 +59,7 @@ bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, 
     if (!onix_sync_dir_entry(part, parent, &entry))
     {
         printk("Onix sync directory fail!!!\n");
-        step = 2;
+        step = 3;
         goto rollback;
     }
     onix_inode_sync(part, parent->inode);
@@ -67,16 +68,17 @@ bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, 
     queue_push(&part->open_inodes, &inode->node);
     inode->open_cnts = 1;
     success = true;
+    step = 2;
 
 rollback:
     switch (step)
     {
-    case 2:
-        free(inode);
-    case 1:
+    case 3:
         onix_inode_bitmap_rollback(part, nr);
-    case 0:
+    case 2:
         free(buf);
+    case 1:
+        break;
     default:
         break;
     }
@@ -125,7 +127,17 @@ int32 onix_file_write(Partition *part, OnixFile *file, const void *content, int3
         return 0;
     }
 
-    char buf[BLOCK_SIZE] = {0};
+    u32 bytes = 0;
+    u32 step = 0;
+
+    char *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        step = 1;
+        goto rollback;
+    }
+
+    memset(buf, 0, BLOCK_SIZE);
 
     u32 block_start = file->offset / BLOCK_SIZE;                                       // 起始块
     u32 block_remain_bytes = file->offset % BLOCK_SIZE;                                // 起始块已占用空间
@@ -134,7 +146,15 @@ int32 onix_file_write(Partition *part, OnixFile *file, const void *content, int3
     u32 idx = 0;
     Inode *inode = file->inode;
 
-    u32 blocks[INODE_ALL_BLOCKS] = {0};
+    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
+    if (blocks == NULL)
+    {
+        step = 2;
+        goto rollback;
+    }
+
+    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
+
     while (idx < DIRECT_BLOCK_CNT && inode->blocks[idx] > 0)
     {
         blocks[idx] = inode->blocks[idx];
@@ -159,7 +179,6 @@ int32 onix_file_write(Partition *part, OnixFile *file, const void *content, int3
     u32 used_blocks = block_start;
     u32 left_blocks = valid_blocks - used_blocks;
 
-    u32 bytes = 0;
     u32 write_bytes = 0;
 
     u32 last_idx = block_start;
@@ -204,7 +223,6 @@ int32 onix_file_write(Partition *part, OnixFile *file, const void *content, int3
 
     u32 new_blocks[INODE_ALL_BLOCKS] = {0};
     u32 block_idx = -1;
-    u8 step = 0;
     idx = 0;
     while (idx < need_blocks)
     {
@@ -212,7 +230,7 @@ int32 onix_file_write(Partition *part, OnixFile *file, const void *content, int3
         if (block_idx == -1)
         {
             printk("Onix inode block allocate failed.\n");
-            step = 1;
+            step = 4;
             goto rollback;
         }
         new_blocks[idx] = block_idx;
@@ -286,18 +304,22 @@ sync_inode:
         onix_bitmap_sync(part, new_blocks[idx], BLOCK_BITMAP);
         idx++;
     }
-    return bytes;
+    step = 3;
+
 rollback:
     switch (step)
     {
-    case 1:
+    case 4:
         idx = 0;
         while (new_blocks[idx])
         {
             onix_block_bitmap_rollback(part, new_blocks[idx]);
             idx++;
         }
-        return bytes;
+    case 3:
+        free(blocks);
+    case 2:
+        free(buf);
     default:
         break;
     }
@@ -316,7 +338,15 @@ int32 onix_file_read(Partition *part, OnixFile *file, const void *content, int32
 
     Inode *inode = file->inode;
 
-    u32 blocks[INODE_ALL_BLOCKS] = {0};
+    u32 step = 0;
+    int32 bytes = EOF;
+
+    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
+    if (blocks == NULL)
+    {
+        step = 1;
+        goto rollback;
+    }
     memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
 
     u32 lba = 0;
@@ -328,11 +358,21 @@ int32 onix_file_read(Partition *part, OnixFile *file, const void *content, int32
     }
 
     if (!blocks[block_start])
-        return EOF;
+    {
+        step = 2;
+        goto rollback;
+    }
 
     u32 idx = block_start;
-    char buf[BLOCK_SIZE] = {0};
-    u32 bytes = 0;
+
+    char *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        step = 2;
+        goto rollback;
+    }
+    memset(buf, 0, BLOCK_SIZE);
+
     if (block_remain_bytes)
     {
         lba = get_block_lba(part, blocks[idx]);
@@ -341,7 +381,9 @@ int32 onix_file_read(Partition *part, OnixFile *file, const void *content, int32
         {
             memcpy(content, buf + block_remain_bytes, count);
             file->offset += count;
-            return count;
+            step = 3;
+            bytes = count;
+            goto rollback;
         }
         memcpy(content, buf + block_remain_bytes, block_left_bytes);
         count -= block_left_bytes;
@@ -366,10 +408,26 @@ int32 onix_file_read(Partition *part, OnixFile *file, const void *content, int32
             memcpy(content, buf, count);
             bytes += count;
             file->offset += count;
-            return bytes;
+            step = 3;
+            goto rollback;
         }
         idx++;
     }
+    step = 3;
+
+rollback:
+    switch (step)
+    {
+    case 3:
+        free(buf);
+    case 2:
+        free(blocks);
+    case 1:
+        break;
+    default:
+        break;
+    }
+
     return bytes;
 }
 

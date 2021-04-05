@@ -112,26 +112,33 @@ void test_dir()
 
 void test_file()
 {
-    File holder;
-    File *file = &holder;
+    PBMB;
+    OnixFile holder;
+    OnixFile *file = &holder;
     Dir *root = onix_open_root_dir(part);
-    onix_file_create(part, root, file, "A file.txt", 1);
+    bool success = onix_file_create(part, root, file, "A file.txt", 1);
 
+    DEBUGP("create file success is %d\n", success);
+
+    PBMB;
     char buf[] = "hello world this is a file content\0";
 
-    Inode *finode = file->inode;
+    DEBUGP("create file nr %u\n", file->inode->nr);
 
-    DEBUGP("create file nr %d\n", finode->nr);
+    onix_file_open(part, file, file->inode->nr, O_R | O_W);
 
-    onix_file_open(part, file, finode->nr, O_R | O_W);
+    PBMB;
 
     onix_file_write(part, file, buf, sizeof(buf));
 
+    PBMB;
     memset(buf, 0, sizeof(buf));
 
     file->offset = 0;
 
     onix_file_read(part, file, buf, sizeof(buf));
+    DEBUGP("%s\n", buf);
+    PBMB;
 
     onix_file_close(part, file);
 }
@@ -156,7 +163,7 @@ void test_function()
     // test_inode();
     PBMB;
     // test_dir();
-    // test_file();
+    test_file();
     // test_sys_open();
 
     DEBUGP("Debug finish.....\n");
