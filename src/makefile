@@ -181,7 +181,7 @@ bochs: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	@rm -rf $(BUILD)/bx_enh_dbg.ini
 	cd $(BUILD) && $(BOCHS) -q  -f bochsrc
 
-image: $(BUILD)/harddisk.img
+image: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	-
 
 unlock:
