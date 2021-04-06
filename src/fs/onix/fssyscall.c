@@ -1,6 +1,8 @@
 #include <fs/onix/fssyscall.h>
 #include <fs/onix/fsdir.h>
 #include <fs/onix/fsfile.h>
+#include <fs/onix/fsbitmap.h>
+#include <fs/onix/fsblock.h>
 #include <fs/onix/inode.h>
 #include <fs/path.h>
 #include <onix/string.h>
@@ -228,4 +230,149 @@ rollback:
         break;
     }
     return ret;
+}
+
+int32 onix_sys_mkdir(const char *pathname)
+{
+    int32 success = -1;
+    int step = 0;
+
+    void *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        step = 1;
+        goto rollback;
+    }
+    memset(buf, 0, BLOCK_SIZE);
+
+    SearchRecord *record = malloc(sizeof(SearchRecord));
+    if (record == NULL)
+    {
+        step = 2;
+        goto rollback;
+    }
+    memset(record, 0, sizeof(SearchRecord));
+
+    int nr = onix_search_file(pathname, record);
+    if (nr != FILE_NULL)
+    {
+        step = 3;
+        goto rollback;
+    }
+
+    Partition *part = get_path_part(pathname);
+
+    int depth = path_depth(pathname);
+    int search_path = path_depth(record->search_path);
+    if (depth != search_path)
+    {
+        step = 4;
+        goto rollback;
+    }
+
+    Dir *parent = record->parent;
+    char *name = malloc(MAX_FILENAME_LENGTH);
+    if (name == NULL)
+    {
+        step = 4;
+        goto rollback;
+    }
+
+    memset(name, 0, MAX_FILENAME_LENGTH);
+
+    basename(record->search_path, name);
+
+    nr = onix_inode_bitmap_alloc(part);
+    if (nr == -1)
+    {
+        step = 5;
+        goto rollback;
+    }
+
+    Inode *inode = malloc(sizeof(Inode));
+    if (inode == NULL)
+    {
+        step = 6;
+        goto rollback;
+    }
+
+    memset(inode, 0, sizeof(Inode));
+
+    onix_inode_init(nr, inode);
+
+    u32 idx = onix_block_bitmap_alloc(part);
+    if (idx == -1)
+    {
+        step = 7;
+        goto rollback;
+    }
+
+    DirEntry holder;
+    DirEntry *entry = &holder;
+    memset(entry, 0, sizeof(holder));
+
+    onix_create_dir_entry(name, nr, FILETYPE_DIRECTORY, entry);
+
+    memset(buf, 0, BLOCK_SIZE);
+    if (!onix_sync_dir_entry(part, parent, entry))
+    {
+        step = 8;
+        goto rollback;
+    }
+
+    inode->blocks[0] = idx;
+    onix_bitmap_sync(part, idx, BLOCK_BITMAP);
+
+    entry = buf;
+
+    memcpy(entry->filename, ".", 1);
+    entry->inode_nr = nr;
+    entry->type = FILETYPE_DIRECTORY;
+
+    entry++;
+
+    memcpy(entry->filename, "..", 2);
+    entry->inode_nr = parent->inode->nr;
+    entry->type = FILETYPE_DIRECTORY;
+
+    partition_write(part, get_block_lba(part, idx), buf, BLOCK_SECTOR_COUNT);
+
+    inode->size = part->super_block->dir_entry_size * 2;
+
+    onix_inode_sync(part, inode);
+
+    onix_inode_sync(part, parent->inode);
+
+    onix_bitmap_sync(part, nr, INODE_BITMAP);
+
+    success = 0;
+    free(inode);
+    step = 5;
+
+rollback:
+    switch (step)
+    {
+    case 8:
+        onix_block_bitmap_rollback(part, idx);
+    case 7:
+        free(inode);
+    case 6:
+        onix_inode_bitmap_rollback(part, nr);
+    case 5:
+        free(name);
+    case 4:
+        if (record->parent)
+        {
+            onix_dir_close(part, record->parent);
+        }
+    case 3:
+        free(record);
+    case 2:
+        free(buf);
+    case 1:
+        break;
+    default:
+        break;
+    }
+    return success;
 }

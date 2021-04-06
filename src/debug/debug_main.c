@@ -198,6 +198,10 @@ void test_sys_call()
     onix_sys_close(fd);
     free(buf);
     onix_sys_unlink(filename);
+
+    char d[] = "/testdir";
+
+    onix_sys_mkdir(d);
 }
 
 #ifdef ONIX_KERNEL_DEBUG
