@@ -15,5 +15,6 @@ char *dirname(char *path, char *name);
 u32 path_depth(char *path);
 char *basename(char *path, char *name);
 char *abspath(char *path, char *absbuf);
+bool exists(char *path);
 
 #endif

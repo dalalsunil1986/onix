@@ -233,6 +233,7 @@ void test_fssys_call()
 }
 
 extern char *__sys_getcwd(char *buf, u32 size);
+extern int32 __sys_chdir(const char *path);
 
 test_cwd()
 {
@@ -240,7 +241,9 @@ test_cwd()
     memset(buf, 0, MAX_PATH_LEN);
 
     __sys_getcwd(buf, MAX_PATH_LEN);
-
+    DEBUGP("get task cwd %s\n", buf);
+    __sys_chdir("/testdir");
+    __sys_getcwd(buf, MAX_PATH_LEN);
     DEBUGP("get task cwd %s\n", buf);
 }
 

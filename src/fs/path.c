@@ -82,3 +82,9 @@ char *abspath(char *path, char *buf)
     }
     strcpy(buf + start, path);
 }
+
+bool exists(char *path)
+{
+    // todo exists
+    return true;
+}

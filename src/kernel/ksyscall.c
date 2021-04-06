@@ -7,6 +7,7 @@
 #include <onix/kernel/assert.h>
 #include <onix/syscall.h>
 #include <onix/string.h>
+#include <fs/path.h>
 
 #define DEBUGINFO
 
@@ -68,6 +69,21 @@ char *__sys_getcwd(char *buf, u32 size)
     u32 count = size < MAX_PATH_LEN ? size : MAX_PATH_LEN;
     memcpy(buf, task->cwd, count);
     return buf;
+}
+
+int32 __sys_chdir(const char *path)
+{
+    if (!exists(path))
+    {
+        printk("%s not exists...\n", path);
+        return -1;
+    }
+
+    u32 size = strlen(path);
+    assert(size <= MAX_PATH_LEN);
+    Task *task = running_task();
+    abspath(path, task->cwd);
+    return 0;
 }
 
 void init_syscall()
