@@ -44,6 +44,14 @@ void test_path()
     DEBUGP("path basename %s\n", basename(path, name));
 }
 
+void test_read_write()
+{
+    char *buf = malloc(BLOCK_SIZE);
+    partition_read(part, 1, buf, 2);
+    partition_write(part, 1, buf, 2);
+    free(buf);
+}
+
 void test_fsbitmap()
 {
     u32 idx = onix_inode_bitmap_alloc(part);
@@ -62,22 +70,24 @@ void test_inode()
 {
     // PBMB;
     u32 idx = 5;
-    u32 lba = 0;
-
-    for (size_t nr = 0; nr < 20; nr++)
+    u32 nr = 5;
+    DEBUGP("inode open %d\n", nr);
+    Inode *inode = onix_inode_open(part, nr);
+    for (size_t i = 0; i < DIRECT_BLOCK_CNT; i++)
     {
-        Inode *inode = onix_inode_open(part, nr);
-        for (size_t i = 0; i < DIRECT_BLOCK_CNT; i++)
-        {
-            idx = onix_inode_bitmap_alloc_sync(part);
-            inode->blocks[i] = idx;
-            inode->size += BLOCK_SIZE;
-        }
-        onix_inode_sync(part, inode);
-        onix_inode_close(part, inode);
+        idx = onix_block_bitmap_alloc_sync(part);
+        inode->blocks[i] = idx;
+        inode->size += BLOCK_SIZE;
     }
-    lba = get_block_lba(part, idx);
-    DEBUGP("data block lba 0x%08X idx %d\n", lba, idx);
+
+    DEBUGP("inode sync %d\n", nr);
+    onix_inode_sync(part, inode);
+    DEBUGP("inode delete %d\n", nr);
+    onix_inode_delete(part, nr);
+    DEBUGP("inode close %d\n", nr);
+    onix_inode_close(part, inode);
+    DEBUGP("inode erase %d\n", nr);
+    onix_inode_erase(part, nr);
 }
 
 void test_dir()
@@ -173,14 +183,6 @@ void test_sys_call()
     onix_sys_unlink(filename);
 }
 
-void test_read_write()
-{
-    char *buf = malloc(BLOCK_SIZE);
-    partition_read(part, 1, buf, 2);
-    partition_write(part, 1, buf, 2);
-    free(buf);
-}
-
 #ifdef ONIX_KERNEL_DEBUG
 int main()
 {
@@ -194,16 +196,11 @@ void test_function()
 #endif
     part = root_part;
     print_format_info(part, part->super_block);
-    // test_inode();
+    test_fsbitmap();
+    test_inode();
     // PBMB;
     // test_dir();
     // test_file();
     // test_sys_call();
-    u32 counter = 100;
-    while (counter--)
-    {
-        test_fsbitmap();
-    }
-
     DEBUGP("Debug finish.....\n");
 }

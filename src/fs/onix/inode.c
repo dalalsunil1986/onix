@@ -82,7 +82,10 @@ Inode *onix_inode_open(Partition *part, u32 nr)
     inode = malloc(sizeof(Inode));
 
     char *buf = malloc(BLOCK_SIZE);
-    // todo rollback....
+    if (buf == NULL)
+    {
+        return NULL;
+    }
 
     partition_read(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
 
@@ -99,6 +102,7 @@ Inode *onix_inode_open(Partition *part, u32 nr)
 void onix_inode_close(Partition *part, Inode *inode)
 {
     bool old = disable_int();
+    assert(queue_find(&part->open_inodes, &inode->node));
     if (--(inode->open_cnts) == 0)
     {
         queue_remove(&part->open_inodes, &inode->node);
@@ -119,10 +123,17 @@ void onix_inode_erase(Partition *part, u32 nr)
 
 void onix_inode_delete(Partition *part, u32 nr)
 {
+    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
+    if (blocks == NULL)
+    {
+        return;
+    }
+
     Inode *inode = onix_inode_open(part, nr);
     assert(inode->nr == nr);
 
-    u32 blocks[INODE_ALL_BLOCKS];
+    // u32 blocks[INODE_ALL_BLOCKS];
+    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
     memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
 
     u32 lba = 0;
@@ -142,6 +153,7 @@ void onix_inode_delete(Partition *part, u32 nr)
     }
     onix_inode_bitmap_rollback_sync(part, nr);
     onix_inode_close(part, inode);
+    free(blocks);
 }
 
 void onix_inode_init(u32 nr, Inode *inode)
