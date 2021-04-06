@@ -205,8 +205,19 @@ void test_sys_call()
     Dir *dir = onix_sys_opendir(d);
     onix_sys_closedir(dir);
     Dir *root = onix_sys_opendir("/");
-    DirEntry *entry = onix_sys_readdir(root);
-    DEBUGP("%s\n", entry->filename);
+
+    u32 count = 2;
+    while (count--)
+    {
+        while (true)
+        {
+            DirEntry *entry = onix_sys_readdir(root);
+            if (entry == NULL)
+                break;
+            DEBUGP("%s\n", entry->filename);
+        }
+        onix_sys_rewinddir(root);
+    }
 }
 
 #ifdef ONIX_KERNEL_DEBUG

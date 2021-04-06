@@ -466,3 +466,8 @@ DirEntry *onix_sys_readdir(Dir *dir)
     assert(dir != NULL);
     return onix_dir_read(dir->part, dir);
 }
+
+void *onix_sys_rewinddir(Dir *dir)
+{
+    dir->offset = 0;
+}

@@ -221,6 +221,7 @@ void partition_read(Partition *part, u32 lba, void *buf, u32 sec_cnt)
     assert(lba + sec_cnt <= part->sec_cnt);
     Harddisk *disk = part->disk;
     harddisk_read(disk, part->start_lba + lba, buf, sec_cnt);
+    DEBUGK("part read 0x%X lba 0x%X\n", part, (part->start_lba + lba));
 }
 
 void partition_write(Partition *part, u32 lba, void *buf, u32 sec_cnt)

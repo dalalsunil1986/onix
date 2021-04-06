@@ -86,6 +86,7 @@ DirEntry *onix_dir_read(Partition *part, Dir *dir)
         if (dir->offset >= inode->size)
         {
             step = 2;
+            entry = NULL;
             goto rollback;
         }
         if (blocks[idx] == 0)
@@ -101,7 +102,7 @@ DirEntry *onix_dir_read(Partition *part, Dir *dir)
         u32 entry_idx = 0;
         while (entry_idx < entry_cnt)
         {
-            entry = dir->buffer + entry_idx;
+            entry = (DirEntry *)dir->buffer + entry_idx;
             if (entry->type == FILETYPE_UNKNOWN)
             {
                 entry_idx++;

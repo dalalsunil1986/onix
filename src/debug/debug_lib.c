@@ -3,7 +3,16 @@
 #include <onix/kernel/harddisk.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <onix/kernel/debug.h>
 // 伪造底层汇编函数，用于调试上层逻辑
+
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 static u32 cr3;
 
@@ -128,7 +137,8 @@ void debug_harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
     FILE *file = fopen("slave.img", "rb+");
     fseek(file, lba * SECTOR_SIZE, 0);
-    fread(buf, SECTOR_SIZE, sec_cnt, file);
+    int count = fread(buf, SECTOR_SIZE, sec_cnt, file);
+    // DEBUGP("read count %d\n", count);
     fclose(file);
     file = NULL;
 }
@@ -137,7 +147,8 @@ void debug_harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
     FILE *file = fopen("slave.img", "rb+");
     fseek(file, lba * SECTOR_SIZE, 0);
-    fwrite(buf, SECTOR_SIZE, sec_cnt, file);
+    int count = fwrite(buf, SECTOR_SIZE, sec_cnt, file);
+    // DEBUGP("write count %d\n", count);
     fclose(file);
     file = NULL;
 }
