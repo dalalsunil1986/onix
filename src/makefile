@@ -84,7 +84,6 @@ FS_ONIX_C:=$(FS_ONIX_SRC)/inode.c \
 		$(FS_ONIX_SRC)/fs.c
 
 FS_C:= 	$(FS_SRC)/path.c \
-		$(FS_SRC)/dir.c \
 		$(FS_SRC)/file.c
 
 REAL_DEBUG_C:= $(DEBUG_SRC)/debug_main.c

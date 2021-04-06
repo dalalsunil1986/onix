@@ -330,6 +330,7 @@ static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
             part->sec_cnt = entry->sec_cnt;
             part->disk = disk;
             part->type = PART_PRIMARY;
+            part->fs = FS_UNKNOWN;
             queue_init(&part->open_inodes);
             DEBUGP("part scan push primary queue \n");
             queue_push(&partition_queue, &part->node);
@@ -347,6 +348,7 @@ static void partition_scan(Harddisk *disk, u32 start_lba, u32 ext_lba)
             part->sec_cnt = entry->sec_cnt;
             part->disk = disk;
             part->type = PART_LOGICAL;
+            part->fs = FS_UNKNOWN;
             queue_init(&part->open_inodes);
             DEBUGP("part scan push primary queue\n");
             queue_push(&partition_queue, &part->node);

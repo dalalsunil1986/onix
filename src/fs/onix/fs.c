@@ -212,6 +212,7 @@ static void partition_format(Partition *part)
 
     DEBUGP("%s format done\n", part->name);
     free(buf);
+    part->fs = FS_ONIX;
 }
 
 static void search_part_fs(Harddisk *disk, Partition *part)
@@ -231,6 +232,7 @@ static void search_part_fs(Harddisk *disk, Partition *part)
     partition_read(part, BLOCK_SECTOR_COUNT, sb, 1);
     if (sb->magic == FS_MAGIC)
     {
+        part->fs = FS_ONIX;
         DEBUGP("%s has file system\n", part->name);
         // partition_format(part);
     }

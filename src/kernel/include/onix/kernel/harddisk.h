@@ -84,6 +84,7 @@ typedef enum FSType
     FS_EXTEND = 5,
     FS_FAT16 = 6,
     FS_NTFS = 7,
+    FS_ONIX = 0x44,
     // https://www.win.tue.nl/~aeb/partitions/partition_types-1.html
     // FOR MORE INFORMATION
 } FSType;
@@ -106,6 +107,7 @@ typedef struct Partition
     Bitmap inode_bitmap;
     Queue open_inodes;
     u8 type;
+    FSType fs;
 } Partition;
 
 typedef struct Harddisk
