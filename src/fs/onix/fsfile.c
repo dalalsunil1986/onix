@@ -30,6 +30,8 @@ bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, 
         goto rollback;
     }
 
+    memset(buf, 0, BLOCK_SIZE);
+
     u32 nr = onix_inode_bitmap_alloc(part);
     DEBUGP("inode alloc %u\n", nr);
     if (nr == -1)
@@ -39,11 +41,14 @@ bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, 
     }
 
     Inode *inode = malloc(sizeof(Inode));
+    memset(inode, 0, sizeof(Inode));
+
     if (inode == NULL)
     {
         step = 3;
         goto rollback;
     }
+
     onix_inode_init(nr, inode);
 
     file->inode = inode;

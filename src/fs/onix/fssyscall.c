@@ -64,15 +64,9 @@ fd_t onix_sys_open(const char *pathname, FileFlag flags)
 
     Partition *part = get_path_part(pathname);
 
-    // PBMB;
-
     u32 depth = path_depth(pathname);
 
-    // PBMB;
-
     int nr = onix_search_file(pathname, record);
-
-    // PBMB;
 
     bool found = nr != FILE_NULL ? true : false;
 

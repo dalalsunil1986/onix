@@ -136,17 +136,25 @@ void test_file()
     // PBMB;
     OnixFile holder;
     OnixFile *file = &holder;
+    file->flags = 0;
+    file->inode = NULL;
+    file->part = NULL;
+    file->offset = 0;
+
     Dir *root = onix_open_root_dir(part);
-    bool success = onix_file_create(part, root, file, "A file.txt", 1);
+    bool success = onix_file_create(part, root, file, "A file.txt", O_C);
+    u32 nr = file->inode->nr;
 
     DEBUGP("create file success is %d\n", success);
+    DEBUGP("create file nr %u\n", file->inode->nr);
+
+    DEBUGP("close file\n");
+    onix_file_close(file);
 
     // PBMB;
     char buf[] = "hello world this is a file content\0";
 
-    DEBUGP("create file nr %u\n", file->inode->nr);
-
-    onix_file_open(part, file, file->inode->nr, O_R | O_W);
+    onix_file_open(part, file, nr, O_R | O_W);
 
     // PBMB;
 
@@ -205,7 +213,8 @@ void test_function()
     test_fsbitmap();
     test_inode();
     test_dir();
-    // test_file();
+    test_file();
+
     // test_sys_call();
     DEBUGP("Debug finish.....\n");
 }
