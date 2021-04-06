@@ -41,6 +41,13 @@ typedef enum std_fd
     onix_stderr = 2
 } std_fd;
 
+typedef struct Stat
+{
+    u32 nr;
+    u32 size;
+    FileType type;
+} Stat;
+
 fd_t get_free_global_fd();
 File *get_global_file(fd_t fd);
 

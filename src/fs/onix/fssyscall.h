@@ -18,4 +18,6 @@ int32 onix_sys_rmdir(const char *pathname);
 DirEntry *onix_sys_readdir(Dir *dir);
 void *onix_sys_rewinddir(Dir *dir);
 
+int32 onix_sys_stat(const char *pathname, Stat *stat);
+
 #endif

@@ -209,6 +209,9 @@ void test_fssys_call()
 
     onix_sys_closedir(dir);
     Dir *root = onix_sys_opendir("/");
+    Stat stat;
+
+    char *path = malloc(MAX_PATH_LEN);
 
     u32 count = 2;
     while (count--)
@@ -218,7 +221,11 @@ void test_fssys_call()
             DirEntry *entry = onix_sys_readdir(root);
             if (entry == NULL)
                 break;
-            DEBUGP("%s\n", entry->filename);
+            memset(path, 0, MAX_PATH_LEN);
+            path[0] = '/';
+            memcpy(path + 1, entry->filename, strlen(entry->filename));
+            onix_sys_stat(path, &stat);
+            DEBUGP("file: %s nr: %d size: %d type: %d\n", path, stat.nr, stat.size, stat.type);
         }
         onix_sys_rewinddir(root);
     }
@@ -230,6 +237,7 @@ void test_fssys_call()
             break;
         DEBUGP("%s\n", entry->filename);
     }
+    free(path);
 }
 
 extern char *__sys_getcwd(char *buf, u32 size);

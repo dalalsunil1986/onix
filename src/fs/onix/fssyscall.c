@@ -552,3 +552,68 @@ void *onix_sys_rewinddir(Dir *dir)
 {
     dir->offset = 0;
 }
+
+int32 onix_sys_stat(const char *pathname, Stat *stat)
+{
+    char *name = malloc(MAX_PATH_LEN);
+    int32 ret = -1;
+    int step = 0;
+    if (name == NULL)
+    {
+        step = 1;
+        goto rollback;
+    }
+    memset(name, 0, MAX_PATH_LEN);
+    abspath(pathname, name);
+    Partition *part = get_path_part(name);
+
+    if (!strcmp(name, "/"))
+    {
+        stat->nr = 0;
+        stat->size = root_dir.inode->size;
+        stat->type = FILETYPE_DIRECTORY;
+        step = 2;
+        ret = 0;
+        goto rollback;
+    }
+
+    SearchRecord *record = malloc(sizeof(SearchRecord));
+    if (record == NULL)
+    {
+        step = 2;
+        goto rollback;
+    }
+
+    memset(record, 0, sizeof(SearchRecord));
+    int nr = onix_search_file(name, record);
+    if (nr == FILE_NULL)
+    {
+        step = 3;
+        goto rollback;
+    }
+
+    Inode *inode = onix_inode_open(part, nr);
+    stat->size = inode->size;
+    stat->type = record->type;
+    stat->nr = nr;
+    ret = 0;
+    step = 3;
+
+rollback:
+    switch (step)
+    {
+    case 3:
+        if (record->parent != NULL)
+        {
+            onix_dir_close(part, record->parent);
+        }
+        free(record);
+    case 2:
+        free(name);
+    case 1:
+        break;
+    default:
+        break;
+    }
+    return ret;
+}
