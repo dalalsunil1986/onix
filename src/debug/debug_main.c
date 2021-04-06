@@ -203,6 +203,7 @@ void test_sys_call()
 
     onix_sys_mkdir(d);
     Dir *dir = onix_sys_opendir(d);
+    onix_sys_closedir(dir);
 }
 
 #ifdef ONIX_KERNEL_DEBUG

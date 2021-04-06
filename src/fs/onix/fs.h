@@ -92,6 +92,7 @@ typedef struct Dir // 只存在于内存中的结构
     Inode *inode;
     u32 dir_offset;         // 记录在目录内的偏移
     u32 buffer[BLOCK_SIZE]; // 目录的数据缓存
+    void *part;
 } Dir;
 
 typedef struct DirEntry // 硬盘上的结构，同样可以存在于内存中

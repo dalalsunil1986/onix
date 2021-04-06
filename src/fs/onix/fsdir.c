@@ -40,6 +40,7 @@ Dir *onix_dir_open(Partition *part, u32 nr)
     }
     dir->inode = onix_inode_open(part, nr);
     dir->dir_offset = 0;
+    dir->part = part;
     return dir;
 }
 

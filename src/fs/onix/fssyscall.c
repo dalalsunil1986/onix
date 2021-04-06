@@ -424,6 +424,7 @@ Dir *onix_sys_opendir(const char *pathname)
     if (record->type == FILETYPE_DIRECTORY)
     {
         dir = onix_dir_open(part, nr);
+        dir->part = part;
         step = 3;
         goto rollback;
     }
@@ -451,4 +452,11 @@ rollback:
 
 int32 onix_sys_closedir(Dir *dir)
 {
+    int32 ret = -1;
+    if (dir != NULL)
+    {
+        onix_dir_close(dir->part, dir);
+        ret = 0;
+    }
+    return ret;
 }
