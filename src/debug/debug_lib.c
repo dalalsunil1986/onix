@@ -66,12 +66,16 @@ u32 syscall3(u32 nr, u32 arg1, u32 arg2, u32 arg3)
     return 0;
 }
 
-Task task;
+Task *task = NULL;
 
 Task *running_task()
 {
-    task.magic = TASK_MAGIC;
-    return &task;
+    if (task == NULL)
+    {
+        task = page_alloc(1);
+    }
+    task->magic = TASK_MAGIC;
+    return task;
 }
 
 void switch_to(void *current, void *next)

@@ -1,5 +1,6 @@
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/debug.h>
+#include <onix/kernel/pid.h>
 #include <onix/string.h>
 #include <fs/onix/fs.h>
 #include <fs/path.h>
@@ -11,6 +12,7 @@
 #include <fs/onix/fsdir.h>
 #include <fs/onix/fsfile.h>
 #include <fs/onix/fssyscall.h>
+#include <onix/kernel/ksyscall.h>
 #include <onix/malloc.h>
 
 #define DEBUGINFO
@@ -175,7 +177,7 @@ void test_file()
     onix_sys_unlink(filename);
 }
 
-void test_sys_call()
+void test_fssys_call()
 {
     // PBMB;
     char filename[] = "/testfile";
@@ -230,11 +232,25 @@ void test_sys_call()
     }
 }
 
+extern char *__sys_getcwd(char *buf, u32 size);
+
+test_cwd()
+{
+    char buf[MAX_PATH_LEN];
+    memset(buf, 0, MAX_PATH_LEN);
+
+    __sys_getcwd(buf, MAX_PATH_LEN);
+
+    DEBUGP("get task cwd %s\n", buf);
+}
+
 #ifdef ONIX_KERNEL_DEBUG
 int main()
 {
+    free_pages = 1000;
     Task *task = running_task();
-    init_file_table(task);
+    init_pid();
+    make_setup_task();
     init_harddisk();
     init_fs();
 #else
@@ -248,6 +264,10 @@ void test_function()
     // test_inode();
     // test_dir();
     // test_file();
-    test_sys_call();
+    test_fssys_call();
+    test_cwd();
     DEBUGP("Debug finish.....\n");
+#ifdef ONIX_KERNEL_DEBUG
+    task_destory(task);
+#endif
 }

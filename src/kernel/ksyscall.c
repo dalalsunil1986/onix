@@ -4,7 +4,9 @@
 #include <onix/kernel/task.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/clock.h>
+#include <onix/kernel/assert.h>
 #include <onix/syscall.h>
+#include <onix/string.h>
 
 #define DEBUGINFO
 
@@ -56,6 +58,16 @@ u32 __sys_malloc(size_t size)
 void __sys_free(void *ptr)
 {
     arena_free(ptr);
+}
+
+char *__sys_getcwd(char *buf, u32 size)
+{
+    assert(buf != NULL);
+
+    Task *task = running_task();
+    u32 count = size < MAX_PATH_LEN ? size : MAX_PATH_LEN;
+    memcpy(buf, task->cwd, count);
+    return buf;
 }
 
 void init_syscall()

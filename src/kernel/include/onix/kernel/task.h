@@ -87,6 +87,7 @@ typedef struct Task
     PageTable pde;
     ArenaDesc adesc[DESC_COUNT];
     fd_t file_table[TASK_MAX_OPEN_FILES];
+    char *cwd;
     u32 exit_code;
     u32 magic;
 } Task;
@@ -104,6 +105,7 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority);
 void task_block(Task *task);
 void task_unblock(Task *task);
 void task_yield();
+void task_destory(Task *task);
 fd_t task_install_fd(fd_t fd);
 fd_t task_global_fd(fd_t fd);
 

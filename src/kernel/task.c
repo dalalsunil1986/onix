@@ -163,6 +163,7 @@ void task_init(Task *task, char *name, int priority, int user)
     task->pde = NULL;
     task->magic = TASK_MAGIC;
     task->user = user;
+    task->cwd = NULL;
 
     init_arena_desc(task->adesc);
     init_file_table(task);
@@ -184,6 +185,11 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
     DEBUGP("Start task 0x%X\n", (u32)task);
     task_init(task, name, priority, cur->user);
     task_create(task, target, args);
+
+    task->cwd = malloc(MAX_PATH_LEN);
+
+    memset(task->cwd, 0, MAX_PATH_LEN);
+    memcpy(task->cwd, "/", 1);
 
     assert(!queue_find(&tasks_queue, &task->all_node));
     push_task(task);
@@ -273,6 +279,10 @@ void task_destory(Task *task)
         // destory pde;
     }
     DEBUGP("free task page 0x%08X\n", task);
+    if (task->cwd != NULL)
+    {
+        free(task->cwd);
+    }
     page_free(task, 1);
     DEBUGP("free pages 0x%d tasks %d died %d\n", free_pages, tasks_queue.size, tasks_died.size);
 }
@@ -308,6 +318,15 @@ void make_setup_task()
     Task *task = running_task();
     task_init(task, "init task", 50, USER_KERNEL);
     task_create(task, NULL, NULL);
+
+#ifndef ONIX_KERNEL_DEBUG
+    task->cwd = (char *)(0x12000);
+#else
+    task->cwd = malloc(MAX_PATH_LEN);
+#endif
+
+    memset(task->cwd, 0, MAX_PATH_LEN);
+    memcpy(task->cwd, "/", 1);
 
     task->status = TASK_RUNNING;
     assert(task->magic == TASK_MAGIC);

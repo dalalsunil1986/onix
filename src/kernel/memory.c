@@ -288,6 +288,9 @@ static void init_memory_map()
 
 Page page_alloc(u32 size)
 {
+#ifdef ONIX_KERNEL_DEBUG
+    return malloc(4 * 1024 * size);
+#endif
     assert(size > 0 && size < available_pages);
     acquire(&memory_lock);
     u32 addr = scan_task_page(size);
@@ -298,6 +301,9 @@ Page page_alloc(u32 size)
 
 void page_free(Page vaddr, u32 size)
 {
+#ifdef ONIX_KERNEL_DEBUG
+    return free(vaddr);
+#endif
     acquire(&memory_lock);
     free_task_page(vaddr, size);
     release(&memory_lock);
