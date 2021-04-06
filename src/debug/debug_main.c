@@ -203,6 +203,8 @@ void test_sys_call()
 
     onix_sys_mkdir(d);
     Dir *dir = onix_sys_opendir(d);
+    // DEBUGP("dir %s size %d \n", d, dir->inode->size);
+
     onix_sys_closedir(dir);
     Dir *root = onix_sys_opendir("/");
 
@@ -217,6 +219,14 @@ void test_sys_call()
             DEBUGP("%s\n", entry->filename);
         }
         onix_sys_rewinddir(root);
+    }
+    onix_sys_rmdir(d);
+    while (true)
+    {
+        DirEntry *entry = onix_sys_readdir(root);
+        if (entry == NULL)
+            break;
+        DEBUGP("%s\n", entry->filename);
     }
 }
 

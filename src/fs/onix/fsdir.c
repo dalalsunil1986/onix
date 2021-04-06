@@ -136,6 +136,34 @@ rollback:
     return entry;
 }
 
+bool onix_dir_remove(Partition *part, Dir *parent, Dir *dir, DirEntry *entry)
+{
+    Inode *inode = dir->inode;
+    u32 idx = 1;
+
+    while (idx < INODE_BLOCK_CNT)
+    {
+        assert(inode->blocks[idx] == 0);
+        idx++;
+    }
+
+    char *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        return -1;
+    }
+    onix_delete_dir_entry(part, parent, entry);
+    onix_inode_delete(part, inode->nr);
+    free(buf);
+    return 0;
+}
+
+bool onix_dir_empty(Partition *part, Dir *dir)
+{
+    Inode *inode = dir->inode;
+    return (inode->size == part->super_block->dir_entry_size * 2);
+}
+
 bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry)
 {
     u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
@@ -161,7 +189,7 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
     u32 idx = 0;
     u32 lba = 0;
 
-    memcpy(blocks, dir->inode->blocks, INODE_BLOCK_CNT * sizeof(u32));
+    memcpy(blocks, dir->inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
     u32 indirect_idx = dir->inode->blocks[INDIRECT_BLOCK_IDX];
     if (indirect_idx)
     {
@@ -282,10 +310,10 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
         if (entry->type == FILETYPE_DIRECTORY)
         {
             record->type = FILETYPE_DIRECTORY;
+            record->parent = parent;
             nr = parent->inode->nr;
             onix_dir_close(part, parent);
             parent = onix_dir_open(part, entry->inode_nr);
-            record->parent = parent;
             ret = entry->inode_nr;
         }
         memset(name, 0, sizeof(name));
@@ -343,7 +371,7 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
     memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
     // u32 blocks[INODE_ALL_BLOCKS] = {0};
 
-    memcpy(blocks, dir_inode->blocks, INODE_BLOCK_CNT * sizeof(u32));
+    memcpy(blocks, dir_inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
 
     u32 lba = 0;
     u32 indirect_idx = dir_inode->blocks[INDIRECT_BLOCK_IDX];
@@ -499,7 +527,7 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
 
     memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
 
-    memcpy(blocks, inode->blocks, INODE_BLOCK_CNT * sizeof(u32));
+    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
 
     u32 lba = 0;
     u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
@@ -526,7 +554,9 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
 
     u32 idx = 0;
 
-    while (idx < INODE_ALL_BLOCKS)
+    u32 block_cnt = INODE_ALL_BLOCKS;
+
+    while (idx < block_cnt)
     {
         if (blocks[idx] == 0)
         {

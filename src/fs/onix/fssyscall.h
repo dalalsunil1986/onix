@@ -13,6 +13,7 @@ int32 onix_sys_unlink(const char *pathname);
 int32 onix_sys_mkdir(const char *pathname);
 Dir *onix_sys_opendir(const char *pathname);
 int32 onix_sys_closedir(Dir *dir);
+int32 onix_sys_rmdir(const char *pathname);
 
 DirEntry *onix_sys_readdir(Dir *dir);
 void *onix_sys_rewinddir(Dir *dir);

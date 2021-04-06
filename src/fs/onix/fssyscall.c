@@ -461,6 +461,87 @@ int32 onix_sys_closedir(Dir *dir)
     return ret;
 }
 
+int32 onix_sys_rmdir(const char *pathname)
+{
+    int step = 0;
+    int ret = -1;
+
+    char *name = malloc(MAX_PATH_LEN);
+    if (name == NULL)
+    {
+        step = 1;
+        goto rollback;
+    }
+
+    memset(name, 0, MAX_PATH_LEN);
+    abspath(pathname, name);
+    if (!strcmp(name, "/"))
+    {
+        printk("cannot delete root dir\n");
+        step = 2;
+        goto rollback;
+    }
+
+    Partition *part = get_path_part(pathname);
+    SearchRecord *record = malloc(sizeof(SearchRecord));
+    if (record == NULL)
+    {
+        step = 2;
+        goto rollback;
+    }
+    memset(record, 0, sizeof(SearchRecord));
+
+    int nr = onix_search_file(name, record);
+    if (nr == FILE_NULL)
+    {
+        printk("dir %s not exists!\n", pathname);
+        step = 3;
+        goto rollback;
+    }
+
+    if (record->type == FILETYPE_REGULAR)
+    {
+        printk("%s not directory!\n", pathname);
+        step = 3;
+        goto rollback;
+    }
+
+    assert(record->type == FILETYPE_DIRECTORY);
+
+    Dir *dir = onix_dir_open(part, nr);
+    // DEBUGP("dir size %lsd\n", dir->inode->size);
+    if (!onix_dir_empty(part, dir))
+    {
+        printk("%s not empty!\n", pathname);
+        step = 4;
+        goto rollback;
+    }
+    if (!onix_dir_remove(part, record->parent, dir, &record->entry))
+    {
+        ret = 0;
+    }
+    step = 4;
+rollback:
+    switch (step)
+    {
+    case 4:
+        onix_dir_close(part, dir);
+    case 3:
+        if (record->parent != NULL)
+        {
+            onix_dir_close(part, record->parent);
+        }
+        free(record);
+    case 2:
+        free(name);
+    case 1:
+        break;
+    default:
+        break;
+    }
+    return ret;
+}
+
 DirEntry *onix_sys_readdir(Dir *dir)
 {
     assert(dir != NULL);

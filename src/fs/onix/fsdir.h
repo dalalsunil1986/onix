@@ -15,6 +15,8 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry);
 Dir *onix_dir_open(Partition *part, u32 nr);
 void onix_dir_close(Partition *part, Dir *dir);
 DirEntry *onix_dir_read(Partition *part, Dir *dir);
+bool onix_dir_empty(Partition *part, Dir *dir);
+bool onix_dir_remove(Partition *part, Dir *parent, Dir *dir, DirEntry *entry);
 
 void init_dir();
 
