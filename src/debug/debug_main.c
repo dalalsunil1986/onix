@@ -214,7 +214,6 @@ void test_function()
     test_inode();
     test_dir();
     test_file();
-
-    // test_sys_call();
+    test_sys_call();
     DEBUGP("Debug finish.....\n");
 }
