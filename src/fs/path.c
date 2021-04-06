@@ -1,6 +1,7 @@
 #include <fs/path.h>
 #include <fs/file.h>
 #include <onix/string.h>
+#include <onix/syscall.h>
 
 bool is_split(char ch)
 {
@@ -85,6 +86,7 @@ char *abspath(char *path, char *buf)
 
 bool exists(char *path)
 {
-    // todo exists
-    return true;
+    Stat stat;
+    int32 ret = sys_stat(path, &stat);
+    return (ret != -1);
 }

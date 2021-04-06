@@ -5,9 +5,11 @@
 #include <onix/kernel/debug.h>
 #include <onix/kernel/clock.h>
 #include <onix/kernel/assert.h>
+#include <onix/kernel/harddisk.h>
 #include <onix/syscall.h>
 #include <onix/string.h>
 #include <fs/path.h>
+#include <fs/onix/fssyscall.h>
 
 #define DEBUGINFO
 
@@ -84,6 +86,19 @@ int32 __sys_chdir(const char *path)
     Task *task = running_task();
     abspath(path, task->cwd);
     return 0;
+}
+
+int32 __sys_stat(const char *pathname, Stat *stat)
+{
+    Partition *part = get_path_part(pathname);
+    switch (part->fs)
+    {
+    case FS_ONIX:
+        return onix_sys_stat(pathname, stat);
+    default:
+        break;
+    }
+    return -1;
 }
 
 void init_syscall()

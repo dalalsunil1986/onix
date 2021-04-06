@@ -15,3 +15,11 @@ syscall1:
     mov ebx, [esp + 8]
     int 0x80
     ret
+
+global syscall2: 
+syscall2:
+    mov eax, [esp + 4]
+    mov ebx, [esp + 8]
+    mov ecx, [esp + 12]
+    int 0x80
+    ret

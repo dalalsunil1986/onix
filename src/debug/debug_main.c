@@ -253,6 +253,12 @@ test_cwd()
     __sys_chdir("/testdir");
     __sys_getcwd(buf, MAX_PATH_LEN);
     DEBUGP("get task cwd %s\n", buf);
+
+    bool ex = exists("/");
+    DEBUGP("root dir exits %d\n", ex);
+
+    ex = exists("/testdir");
+    DEBUGP("/testdir exits %d\n", ex);
 }
 
 #ifdef ONIX_KERNEL_DEBUG

@@ -1,4 +1,8 @@
 #include <onix/syscall.h>
+#include <fs/file.h>
+#ifdef ONIX_KERNEL_DEBUG
+#include <onix/kernel/ksyscall.h>
+#endif
 
 u32 sys_test()
 {
@@ -34,4 +38,13 @@ void sys_free(void *ptr)
 {
     syscall1(SYS_NR_FREE, ptr);
     return;
+}
+
+int32 sys_stat(const char *pathname, Stat *stat)
+{
+#ifndef ONIX_KERNEL_DEBUG
+    return syscall2(SYS_NR_STAT, pathname, stat);
+#else
+    return __sys_stat(pathname, stat);
+#endif
 }
