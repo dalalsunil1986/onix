@@ -133,7 +133,6 @@ int32 onix_sys_write(fd_t fd, const void *buf, u32 count)
     assert(fd >= 0 && fd < TASK_MAX_OPEN_FILES);
     u32 global_fd = task_global_fd(fd);
     OnixFile *file = get_global_file(global_fd);
-    DEBUGP("%d\n", file->flags);
 
     if (file->flags & O_W || file->flags & O_RW)
     {

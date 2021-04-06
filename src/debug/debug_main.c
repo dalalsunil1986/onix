@@ -141,8 +141,9 @@ void test_file()
     file->part = NULL;
     file->offset = 0;
 
+    char filename[] = "A file.txt";
     Dir *root = onix_open_root_dir(part);
-    bool success = onix_file_create(part, root, file, "A file.txt", O_C);
+    bool success = onix_file_create(part, root, file, filename, O_C);
     u32 nr = file->inode->nr;
 
     DEBUGP("create file success is %d\n", success);
@@ -170,6 +171,8 @@ void test_file()
     // PBMB;
 
     onix_file_close(file);
+
+    onix_sys_unlink(filename);
 }
 
 void test_sys_call()
@@ -210,10 +213,11 @@ void test_function()
 #endif
     part = root_part;
     print_format_info(part, part->super_block);
-    test_fsbitmap();
-    test_inode();
-    test_dir();
-    test_file();
+    test_read_write();
+    // test_fsbitmap();
+    // test_inode();
+    // test_dir();
+    // test_file();
     test_sys_call();
     DEBUGP("Debug finish.....\n");
 }
