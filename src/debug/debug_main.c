@@ -95,15 +95,21 @@ void test_dir()
     DEBUGP("size of entry %d\n", sizeof(DirEntry));
     // PBMB;
 
+    DEBUGP("test dir open root dir\n");
+
     Dir *root_dir = onix_open_root_dir(part);
-    u32 nr = onix_inode_bitmap_alloc_sync(part);
+    u32 nr;
+
     DirEntry entry;
     char filename[] = "hello";
-    // PBMB;
+
+    DEBUGP("test dir search file %s\n", filename);
     bool exists = onix_search_dir_entry(part, root_dir, filename, &entry);
     if (!exists)
     {
         // PBMB;
+        DEBUGP("test dir alloc inode bitmap\n");
+        nr = onix_inode_bitmap_alloc_sync(part);
         DEBUGP("file %s is not exists, then create it.\n", filename);
         onix_create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
         onix_sync_dir_entry(part, root_dir, &entry);
@@ -198,8 +204,7 @@ void test_function()
     print_format_info(part, part->super_block);
     test_fsbitmap();
     test_inode();
-    // PBMB;
-    // test_dir();
+    test_dir();
     // test_file();
     // test_sys_call();
     DEBUGP("Debug finish.....\n");

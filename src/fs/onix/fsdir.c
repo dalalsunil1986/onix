@@ -61,12 +61,17 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
         step = 1;
         goto rollback;
     }
+
+    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
+
     u8 *buf = malloc(BLOCK_SIZE);
     if (buf == NULL)
     {
         step = 2;
         goto rollback;
     }
+
+    memset(buf, 0, BLOCK_SIZE);
 
     u32 idx = 0;
     u32 lba = 0;
@@ -110,7 +115,7 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
         dir_ptr = buf;
         memset(buf, 0, BLOCK_SIZE);
     }
-
+    step = 3;
 rollback:
     switch (step)
     {
@@ -241,7 +246,7 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
     u32 idx = 0;
     u32 step = 0;
     bool success = false;
-    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32)); //  todo rollback
+    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
     if (blocks == NULL)
     {
         step = 1;
