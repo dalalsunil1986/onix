@@ -251,7 +251,7 @@ extern int32 __sys_chdir(const char *path);
 
 test_cwd()
 {
-    char buf[MAX_PATH_LEN];
+    char *buf = malloc(MAX_PATH_LEN);
     memset(buf, 0, MAX_PATH_LEN);
 
     __sys_getcwd(buf, MAX_PATH_LEN);
@@ -265,6 +265,7 @@ test_cwd()
 
     ex = exists("/testdir");
     DEBUGP("/testdir exits %d\n", ex);
+    free(buf);
 }
 
 #ifdef ONIX_KERNEL_DEBUG

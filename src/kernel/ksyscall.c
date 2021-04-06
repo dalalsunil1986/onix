@@ -24,7 +24,7 @@ SyscallHandler syscall_table[SYSCALL_SIZE];
 
 void __sys_default()
 {
-    printk("default syscall....\n");
+    printk("!!!default syscall....\n");
 }
 
 void __sys_test()
@@ -122,4 +122,6 @@ void init_syscall()
     syscall_table[SYS_NR_SLEEP] = __sys_sleep;
     syscall_table[SYS_NR_MALLOC] = __sys_malloc;
     syscall_table[SYS_NR_FREE] = __sys_free;
+    syscall_table[SYS_NR_CWD] = __sys_getcwd;
+    syscall_table[SYS_NR_STAT] = __sys_stat;
 }
