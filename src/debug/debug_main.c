@@ -44,20 +44,25 @@ void test_path()
     DEBUGP("path basename %s\n", basename(path, name));
 }
 
+void test_fsbitmap()
+{
+    u32 idx = onix_inode_bitmap_alloc(part);
+    DEBUGP("Alloc inode bit %d\n", idx);
+    onix_bitmap_sync(part, idx, INODE_BITMAP);
+
+    onix_inode_bitmap_rollback_sync(part, idx);
+
+    idx = onix_block_bitmap_alloc(part);
+    DEBUGP("Alloc block bit %d\n", idx);
+    onix_bitmap_sync(part, idx, BLOCK_BITMAP);
+    onix_block_bitmap_rollback_sync(part, idx);
+}
+
 void test_inode()
 {
     // PBMB;
     u32 idx = 5;
     u32 lba = 0;
-    idx = onix_inode_bitmap_alloc(part);
-    DEBUGP("Alloc inode bit %d\n", idx);
-    onix_bitmap_sync(part, idx, INODE_BITMAP);
-
-    // PBMB;
-
-    lba = onix_block_bitmap_alloc(part);
-    DEBUGP("Alloc block bit %d\n", lba);
-    onix_bitmap_sync(part, idx, BLOCK_BITMAP);
 
     for (size_t nr = 0; nr < 20; nr++)
     {
@@ -194,12 +199,11 @@ void test_function()
     // test_dir();
     // test_file();
     // test_sys_call();
-    u32 counter = 10000;
-    while (counter --)
+    u32 counter = 100;
+    while (counter--)
     {
-        test_read_write();
+        test_fsbitmap();
     }
-    
 
     DEBUGP("Debug finish.....\n");
 }
