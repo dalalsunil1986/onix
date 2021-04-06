@@ -11,5 +11,7 @@ int32 onix_sys_lseek(fd_t fd, int32 offset, Whence whence);
 int32 onix_sys_unlink(const char *pathname);
 
 int32 onix_sys_mkdir(const char *pathname);
+Dir *onix_sys_opendir(const char *pathname);
+int32 onix_sys_closedir(Dir *dir);
 
 #endif

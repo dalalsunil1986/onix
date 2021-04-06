@@ -196,10 +196,12 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
 
         if (entry->type == FILETYPE_DIRECTORY)
         {
+            record->type = FILETYPE_DIRECTORY;
             nr = parent->inode->nr;
             onix_dir_close(part, parent);
             parent = onix_dir_open(part, entry->inode_nr);
             record->parent = parent;
+            ret = entry->inode_nr;
         }
         memset(name, 0, sizeof(name));
         if (subpath)

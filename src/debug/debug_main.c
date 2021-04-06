@@ -202,6 +202,7 @@ void test_sys_call()
     char d[] = "/testdir";
 
     onix_sys_mkdir(d);
+    Dir *dir = onix_sys_opendir(d);
 }
 
 #ifdef ONIX_KERNEL_DEBUG

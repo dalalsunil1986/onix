@@ -376,3 +376,79 @@ rollback:
     }
     return success;
 }
+
+Dir *onix_sys_opendir(const char *pathname)
+{
+    int step = 0;
+    Dir *dir = NULL;
+
+    char *name = malloc(MAX_PATH_LEN);
+    if (name == NULL)
+    {
+        step = 1;
+        goto rollback;
+    }
+
+    memset(name, 0, MAX_PATH_LEN);
+    abspath(pathname, name);
+    if (!strcmp(name, "/"))
+    {
+        dir = &root_dir;
+        step = 2;
+        goto rollback;
+    }
+
+    Partition *part = get_path_part(pathname);
+    SearchRecord *record = malloc(sizeof(SearchRecord));
+    if (record == NULL)
+    {
+        step = 2;
+        goto rollback;
+    }
+    memset(record, 0, sizeof(SearchRecord));
+
+    int nr = onix_search_file(name, record);
+    if (nr == FILE_NULL)
+    {
+        step = 3;
+        goto rollback;
+    }
+
+    if (record->type == FILETYPE_REGULAR)
+    {
+        printk("%s is file!!!\n", pathname);
+        step = 3;
+        goto rollback;
+    }
+
+    if (record->type == FILETYPE_DIRECTORY)
+    {
+        dir = onix_dir_open(part, nr);
+        step = 3;
+        goto rollback;
+    }
+
+    assert(false); // should never here....
+
+rollback:
+    switch (step)
+    {
+    case 3:
+        if (record->parent != NULL)
+        {
+            onix_dir_close(part, record->parent);
+        }
+        free(record);
+    case 2:
+        free(name);
+    case 1:
+        break;
+    default:
+        break;
+    }
+    return dir;
+}
+
+int32 onix_sys_closedir(Dir *dir)
+{
+}
