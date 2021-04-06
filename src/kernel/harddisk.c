@@ -117,7 +117,6 @@ void harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
 
 #ifdef ONIX_KERNEL_DEBUG
-    extern void harddisk_read(Harddisk * disk, u32 lba, void *buf, u32 sec_cnt);
     return debug_harddisk_read(disk, lba, buf, sec_cnt);
 #endif
 
@@ -173,7 +172,6 @@ void harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
 
 #ifdef ONIX_KERNEL_DEBUG
-    extern void debug_harddisk_write(Harddisk * disk, u32 lba, void *buf, u32 sec_cnt);
     return debug_harddisk_write(disk, lba, buf, sec_cnt);
 #endif
     assert(lba < MAX_LBA);

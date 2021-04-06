@@ -111,7 +111,8 @@
 			"file.h": "c",
 			"fsfile.h": "c",
 			"fssyscall.h": "c",
-			"pid.h": "c"
+			"pid.h": "c",
+			"stat.h": "c"
 		}
 	}
 }
