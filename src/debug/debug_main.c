@@ -32,7 +32,7 @@ void test_path()
 {
     DEBUGP("hello, debug\n");
 
-    char path[] = "/hello//world//onix/path\\\\\\there/is\\a wonderful land\\path.c\\\\//";
+    char path[] = "../hello//world//onix/path\\.\\..\\but/here\\..\\there/is\\a wonderful land\\path.c\\\\//";
     char name[16] = {0};
     char *dir = path;
     while (dir)
@@ -42,8 +42,14 @@ void test_path()
         dir = dirname(dir, name);
     }
 
+    char buf[64];
+    memset(buf, 0, sizeof(buf));
+
+    abspath(path, buf);
+
     DEBUGP("path depth %d\n", path_depth(path));
     DEBUGP("path basename %s\n", basename(path, name));
+    DEBUGP("path abspath %s\n", buf);
 }
 
 void test_read_write()
@@ -276,6 +282,7 @@ void test_function()
 #endif
     part = root_part;
     print_format_info(part, part->super_block);
+    test_path();
     test_read_write();
     // test_fsbitmap();
     // test_inode();

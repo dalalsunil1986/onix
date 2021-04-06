@@ -74,14 +74,47 @@ u32 path_depth(char *path)
 
 char *abspath(char *path, char *buf)
 {
-    // todo make abspath
-    u32 start = 0;
-    if (path[0] != '/')
+    char *bptr = buf;
+    if (is_split(path[0]))
     {
-        buf[0] = '/';
-        start = 1;
+        *bptr = '/';
+        bptr++;
     }
-    strcpy(buf + start, path);
+    else
+    {
+        sys_getcwd(buf, MAX_PATH_LEN);
+        bptr = buf + strlen(buf);
+    }
+
+    char name[MAX_FILENAME_LENGTH];
+    char *ptr = path;
+
+    while (true)
+    {
+        memset(name, 0, sizeof(name));
+        ptr = dirname(ptr, name);
+        if (!name[0])
+            break;
+        if (!strcmp(name, "."))
+        {
+            continue;
+        }
+        if (!strcmp(name, ".."))
+        {
+            bptr = strrchr(buf, '/');
+            *bptr = 0;
+            continue;
+        }
+        if (*(bptr - 1) != '/')
+        {
+            *bptr = '/';
+            bptr++;
+        }
+        u32 len = strlen(name);
+        memcpy(bptr, name, len);
+        bptr += len;
+    }
+    return buf;
 }
 
 bool exists(char *path)

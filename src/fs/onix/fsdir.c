@@ -266,7 +266,7 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
     Partition *part = get_path_part(pathname);
 
     u32 pathlen = strlen(abuf);
-    assert(abuf[0] == '/' && pathlen > 1 && pathlen < MAX_PATH_LEN);
+    assert(abuf[0] == '/' && pathlen >= 1 && pathlen < MAX_PATH_LEN);
 
     char *subpath = abuf;
     Dir *parent = &root_dir;

@@ -26,7 +26,7 @@ void memset(void *dest, char ch, size_t size)
     }
 }
 
-char * strcpy(char *dest, char *src)
+char *strcpy(char *dest, char *src)
 {
     int i = 0;
     while (src[i])
@@ -59,4 +59,31 @@ int strcmp(const char *str1, const char *str2)
         str2++;
     }
     return *str1 < *str2 ? -1 : *str1 > *str2;
+}
+
+char *strchr(const char *str, const char ch)
+{
+    while (*str != 0)
+    {
+        if (*str == ch)
+        {
+            return (char *)str;
+        }
+        str++;
+    }
+    return NULL;
+}
+
+char *strrchr(const char *str, const char ch)
+{
+    const char *last_char = NULL;
+    while (*str != 0)
+    {
+        if (*str == ch)
+        {
+            last_char = str;
+        }
+        str++;
+    }
+    return (char *)last_char;
 }

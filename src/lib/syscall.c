@@ -40,6 +40,15 @@ void sys_free(void *ptr)
     return;
 }
 
+char *sys_getcwd(char *buf, u32 size)
+{
+#ifndef ONIX_KERNEL_DEBUG
+    return syscall2(SYS_NR_CWD, buf, size);
+#else
+    return __sys_getcwd(buf, size);
+#endif
+}
+
 int32 sys_stat(const char *pathname, Stat *stat)
 {
 #ifndef ONIX_KERNEL_DEBUG

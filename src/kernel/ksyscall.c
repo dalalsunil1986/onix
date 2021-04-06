@@ -68,7 +68,8 @@ char *__sys_getcwd(char *buf, u32 size)
     assert(buf != NULL);
 
     Task *task = running_task();
-    u32 count = size < MAX_PATH_LEN ? size : MAX_PATH_LEN;
+    u32 length = strlen(task->cwd);
+    u32 count = size < length ? size : length;
     memcpy(buf, task->cwd, count);
     return buf;
 }

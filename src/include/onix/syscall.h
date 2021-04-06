@@ -12,6 +12,7 @@ enum SYSCALL_NR
     SYS_NR_SLEEP,
     SYS_NR_MALLOC,
     SYS_NR_FREE,
+    SYS_NR_CWD,
     SYS_NR_STAT,
     SYS_NR_TEST
 };
@@ -30,6 +31,7 @@ u32 sys_malloc(size_t size);
 void sys_free(void *ptr);
 void sys_sleep(u32 milliseconds);
 
+char *sys_getcwd(char *buf, u32 size);
 int32 sys_stat(const char *pathname, Stat *stat);
 
 #endif
