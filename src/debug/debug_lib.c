@@ -124,14 +124,9 @@ void interrupt_exit()
 u32 interrupt_entry_table[256];
 u32 syscall_handler[256];
 
-static FILE *file = NULL;
-
 void debug_harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
-    if (file == NULL)
-    {
-        file = fopen("slave.img", "rb+");
-    }
+    FILE *file = fopen("slave.img", "rb+");
     fseek(file, lba * SECTOR_SIZE, 0);
     fread(buf, SECTOR_SIZE, sec_cnt, file);
     fclose(file);
@@ -140,10 +135,7 @@ void debug_harddisk_read(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 
 void debug_harddisk_write(Harddisk *disk, u32 lba, void *buf, u32 sec_cnt)
 {
-    if (file == NULL)
-    {
-        file = fopen("slave.img", "rb+");
-    }
+    FILE *file = fopen("slave.img", "rb+");
     fseek(file, lba * SECTOR_SIZE, 0);
     fwrite(buf, SECTOR_SIZE, sec_cnt, file);
     fclose(file);

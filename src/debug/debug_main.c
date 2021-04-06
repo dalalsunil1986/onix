@@ -168,6 +168,14 @@ void test_sys_call()
     onix_sys_unlink(filename);
 }
 
+void test_read_write()
+{
+    char *buf = malloc(BLOCK_SIZE);
+    partition_read(part, 1, buf, 2);
+    partition_write(part, 1, buf, 2);
+    free(buf);
+}
+
 #ifdef ONIX_KERNEL_DEBUG
 int main()
 {
@@ -185,7 +193,13 @@ void test_function()
     // PBMB;
     // test_dir();
     // test_file();
-    test_sys_call();
+    // test_sys_call();
+    u32 counter = 10000;
+    while (counter --)
+    {
+        test_read_write();
+    }
+    
 
     DEBUGP("Debug finish.....\n");
 }
