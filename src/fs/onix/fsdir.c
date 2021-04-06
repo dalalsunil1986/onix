@@ -26,7 +26,8 @@ Dir *onix_open_root_dir(Partition *part)
         return &root_dir;
     }
     root_dir.inode = onix_inode_open(part, part->super_block->root_inode_nr);
-    root_dir.dir_offset = 0;
+    root_dir.offset = 0;
+    root_dir.part = part;
     return &root_dir;
 }
 
@@ -39,7 +40,7 @@ Dir *onix_dir_open(Partition *part, u32 nr)
         return NULL;
     }
     dir->inode = onix_inode_open(part, nr);
-    dir->dir_offset = 0;
+    dir->offset = 0;
     dir->part = part;
     return dir;
 }
@@ -50,6 +51,88 @@ void onix_dir_close(Partition *part, Dir *dir)
         return;
     onix_inode_close(part, dir->inode);
     free(dir);
+}
+
+DirEntry *onix_dir_read(Partition *part, Dir *dir)
+{
+    DirEntry *entry = dir->buffer;
+    Inode *inode = dir->inode;
+
+    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
+    u32 step = 0;
+    bool success = false;
+    u32 lba = 0;
+    if (blocks == NULL)
+    {
+        step = 1;
+        goto rollback;
+    }
+    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
+    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
+    u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
+    if (indirect_idx)
+    {
+        lba = get_block_lba(part, indirect_idx);
+        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
+    }
+
+    u32 entry_size = part->super_block->dir_entry_size;
+    u32 entry_cnt = BLOCK_SIZE / entry_size;
+    u32 entry_offset = 0;
+    u32 idx = 0;
+
+    while (idx < INODE_ALL_BLOCKS)
+    {
+        if (dir->offset >= inode->size)
+        {
+            step = 2;
+            goto rollback;
+        }
+        if (blocks[idx] == 0)
+        {
+            idx++;
+            continue;
+        }
+
+        memset(dir->buffer, 0, sizeof(dir->buffer));
+        lba = get_block_lba(part, blocks[idx]);
+        partition_read(part, lba, dir->buffer, BLOCK_SECTOR_COUNT);
+
+        u32 entry_idx = 0;
+        while (entry_idx < entry_cnt)
+        {
+            entry = dir->buffer + entry_idx;
+            if (entry->type == FILETYPE_UNKNOWN)
+            {
+                entry_idx++;
+                continue;
+            }
+            if (entry_offset < dir->offset)
+            {
+                entry_offset += entry_size;
+                entry_idx++;
+                continue;
+            }
+            assert(entry_offset == dir->offset);
+            dir->offset += entry_size;
+            step = 2;
+            goto rollback;
+        }
+        idx++;
+    }
+    step = 2;
+    entry = NULL;
+rollback:
+    switch (step)
+    {
+    case 2:
+        free(blocks);
+    case 1:
+        break;
+    default:
+        break;
+    }
+    return entry;
 }
 
 bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry)

@@ -460,3 +460,9 @@ int32 onix_sys_closedir(Dir *dir)
     }
     return ret;
 }
+
+DirEntry *onix_sys_readdir(Dir *dir)
+{
+    assert(dir != NULL);
+    return onix_dir_read(dir->part, dir);
+}

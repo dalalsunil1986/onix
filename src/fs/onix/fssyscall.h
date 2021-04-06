@@ -14,4 +14,6 @@ int32 onix_sys_mkdir(const char *pathname);
 Dir *onix_sys_opendir(const char *pathname);
 int32 onix_sys_closedir(Dir *dir);
 
+DirEntry *onix_sys_readdir(Dir *dir);
+
 #endif
