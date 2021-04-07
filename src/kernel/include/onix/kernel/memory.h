@@ -27,6 +27,7 @@
 #define USER_KERNEL 0
 #define USER_USER 1
 
+#define PAGE_SIZE 4096
 #define ARDS_SIZE 32
 
 static const u32 ARDS_TYPE_MEMORY = 1;

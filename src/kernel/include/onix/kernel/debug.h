@@ -8,10 +8,12 @@ void debugk(const char *fmt, ...);
 #include <onix/assert.h>
 #define BOCHS_MAGIC_BREAKPOINT asm("xchgw %bx, %bx")
 #define DEBUGK(fmt, args...) debugk(__BASE_FILE__, __LINE__, fmt, ##args)
+#define DEBUGF(fmt, args...) debugf(__BASE_FILE__, __LINE__, fmt, ##args)
 #define CHECK_STACK assert(running_task()->magic == TASK_MAGIC);
 #else
 #define BOCHS_MAGIC_BREAKPOINT
 #define DEBUGK(fmt, args...)
+#define DEBUGF(fmt, args...)
 #define CHECK_STACK
 #endif
 

@@ -5,21 +5,28 @@
 #include <onix/kernel/printk.h>
 #include <onix/kernel/debug.h>
 
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGF
+#else
+#define DEBUGP(fmt, args...)
+#endif
+
 void test_processa()
 {
     // clear();
+    DEBUGP("test process %d fork....\n", sys_getpid());
+    u32 id = sys_fork();
     while (true)
     {
-        u32 id = sys_getpid();
-        printf("Hello test process %d\n", id);
-        sys_sleep(200);
-        sys_fork();
+        DEBUGP("Hello test process %d\n", sys_getpid());
         break;
     }
+    DEBUGP("test process %d exit....\n", sys_getpid());
 }
-
 void test_task()
 {
-    printf("Hello test task, exit...\n");
+    DEBUGP("Hello test task, exit...\n");
     sys_sleep(1000);
 }
