@@ -17,25 +17,12 @@
 
 extern IOQueue key_ioq;
 
-extern void test_process();
-extern void init_fs();
-
 void init_task()
 {
     __clear();
 
     u32 counter = 0;
     Task *task;
-
-    // bool old = disable_int();
-    // while (tasks_queue.size < 100)
-    // {
-    //     task_start(test_task, NULL, "test task", 16);
-    //     clock_sleep(1);
-    //     DEBUGP("free pages 0x%d task size %d\n", free_pages, tasks_queue.size);
-    //     continue;
-    // }
-    // set_interrupt_status(old);
 
     while (true)
     {
@@ -85,7 +72,7 @@ void idle_task()
 
 void keyboard_task()
 {
-    while (1)
+    while (true)
     {
         bool old = disable_int();
         if (!ioqueue_empty(&key_ioq))
@@ -95,5 +82,22 @@ void keyboard_task()
         }
         clock_sleep(1);
         set_interrupt_status(old);
+    }
+}
+
+extern Task *pop_fork_task();
+
+void fork_task()
+{
+    while (true)
+    {
+        Task *parent = pop_fork_task();
+        if (parent == NULL)
+        {
+            clock_sleep(100);
+            continue;
+        }
+        parent->message = 1000;
+        push_ready_task(parent);
     }
 }

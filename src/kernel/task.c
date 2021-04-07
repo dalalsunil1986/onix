@@ -283,6 +283,7 @@ void task_yield()
 u32 task_fork()
 {
     Task *task = running_task();
+    push_fork_task(task);
     return task->message;
 }
 
@@ -411,6 +412,7 @@ static void make_init_task()
 
 extern void idle_task();
 extern void keyboard_task();
+extern void fork_task();
 
 void init_tasks()
 {
@@ -418,9 +420,12 @@ void init_tasks()
     DEBUGP("Size Taskframe %d\n", sizeof(TaskFrame));
     DEBUGP("Size Threadframe %d\n", sizeof(ThreadFrame));
     DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(TaskFrame));
+
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
     queue_init(&tasks_died);
+    queue_init(&tasks_fork);
+
     init_pid();
 
     make_init_task();
@@ -429,5 +434,6 @@ void init_tasks()
     release_pid(idle->tid);
     idle->tid = 0;
 
-    task_start(keyboard_task, NULL, "key task", 16);
+    task_start(keyboard_task, NULL, "key task", 64);
+    task_start(fork_task, NULL, "fork task", 16);
 }
