@@ -32,6 +32,8 @@ Bitmap mmap;
 
 #define DIDX(vaddr) (vaddr >> 22)
 #define TIDX(vaddr) (vaddr >> 12 & 0b1111111111)
+#define SWAP_ADDR1 0xff400000
+#define SWAP_ADDR2 0xff000000
 
 extern u32 get_cr3();
 
@@ -152,6 +154,25 @@ void mmap_free(Bitmap *mmap, u32 idx)
 {
     DEBUGP("mmap set 0x%X idx 0x%X\n", mmap->bits, idx);
     bitmap_set(mmap, idx, 0);
+}
+
+void page_copy(u32 dest, u32 src)
+{
+    int old = disable_int();
+    set_page(SWAP_ADDR1, dest & 0xfffff000);
+
+    set_page(SWAP_ADDR2, src & 0xfffff000);
+
+    memcpy(SWAP_ADDR1, SWAP_ADDR2, PAGE_SIZE);
+
+    PageTable pte;
+    pte = get_pte(SWAP_ADDR1);
+    pte[TIDX(SWAP_ADDR1)] = 0;
+
+    pte = get_pte(SWAP_ADDR2);
+    pte[TIDX(SWAP_ADDR2)] = 0;
+
+    set_interrupt_status(old);
 }
 
 void create_user_mmap(struct Task *task)

@@ -76,6 +76,8 @@ extern u32 free_pages;
 extern Page page_alloc(u32 size);
 extern void page_free(Page page, u32 size);
 
+void page_copy(u32 dest, u32 src);
+
 u32 get_paddr(u32 vaddr);
 
 #endif
