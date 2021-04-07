@@ -5,7 +5,7 @@
 #include <onix/kernel/memory.h>
 #include <onix/kernel/interrupt.h>
 #include <onix/kernel/task.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/clock.h>
 #include <onix/string.h>
 #include <onix/syscall.h>

@@ -1,6 +1,6 @@
 #include <onix/kernel/pid.h>
 #include <onix/kernel/mutex.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/bitmap.h>
 
 #define BITS_LEN ((MAX_PID + 1) / 8)

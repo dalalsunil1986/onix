@@ -1,6 +1,6 @@
 #include <onix/kernel/global.h>
 #include <onix/kernel/printk.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/debug.h>
 #include <onix/string.h>
 

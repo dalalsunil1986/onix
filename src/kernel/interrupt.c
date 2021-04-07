@@ -1,7 +1,7 @@
 #include <onix/kernel/interrupt.h>
 #include <onix/kernel/io.h>
 #include <onix/kernel/printk.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/clock.h>
 #include <onix/kernel/keyboard.h>
 #include <onix/kernel/harddisk.h>

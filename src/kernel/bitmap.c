@@ -1,6 +1,6 @@
 #include <onix/bitmap.h>
 #include <onix/string.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 
 void bitmap_init(Bitmap *bitmap)
 {

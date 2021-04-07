@@ -3,7 +3,7 @@
 #include <onix/kernel/io.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/printk.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/keyboard.h>
 #include <onix/kernel/ioqueue.h>
 

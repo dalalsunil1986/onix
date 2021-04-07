@@ -1,7 +1,7 @@
 #include <fs/onix/fs.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/harddisk.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/stdlib.h>
 #include <onix/malloc.h>
 #include <onix/string.h>

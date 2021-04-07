@@ -1,7 +1,7 @@
 #include <onix/kernel/arena.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/printk.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/memory.h>
 #include <onix/kernel/mutex.h>
 #include <onix/string.h>

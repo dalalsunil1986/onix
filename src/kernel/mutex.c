@@ -1,6 +1,6 @@
 #include <onix/kernel/mutex.h>
 #include <onix/kernel/interrupt.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/debug.h>
 
 // #define DEBUGINFO

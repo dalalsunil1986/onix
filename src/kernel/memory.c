@@ -2,7 +2,7 @@
 #include <onix/kernel/printk.h>
 #include <onix/kernel/io.h>
 #include <onix/kernel/debug.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/mutex.h>
 #include <onix/string.h>
 #include <onix/stdlib.h>

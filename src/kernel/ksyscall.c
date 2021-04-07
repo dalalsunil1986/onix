@@ -4,7 +4,7 @@
 #include <onix/kernel/task.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/clock.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/harddisk.h>
 #include <onix/syscall.h>
 #include <onix/string.h>

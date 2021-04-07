@@ -1,5 +1,5 @@
 #include <fs/file.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/string.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/task.h>

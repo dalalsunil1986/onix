@@ -3,7 +3,7 @@
 #include <fs/onix/fsblock.h>
 #include <fs/onix/fsbitmap.h>
 #include <onix/kernel/harddisk.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/string.h>
 #include <onix/kernel/debug.h>
 #include <fs/path.h>

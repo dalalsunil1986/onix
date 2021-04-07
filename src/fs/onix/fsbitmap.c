@@ -1,6 +1,6 @@
 #include <fs/onix/fsbitmap.h>
 #include <onix/bitmap.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/harddisk.h>
 #include <onix/kernel/debug.h>
 

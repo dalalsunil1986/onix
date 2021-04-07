@@ -1,11 +1,11 @@
-#include <onix/kernel/assert.h>
-#include <onix/kernel/printk.h>
+#include <onix/assert.h>
+#include <onix/stdio.h>
 #include <onix/kernel/io.h>
 #include <onix/stdarg.h>
 
 void spin(char *name)
 {
-    printk("\nspinning in %s ...\n\0", name);
+    printf("\nspinning in %s ...\n\0", name);
     while (1)
     {
         stop();
@@ -14,7 +14,7 @@ void spin(char *name)
 
 void assertion_failure(char *exp, char *file, char *base_file, int line)
 {
-    printk(
+    printf(
         "%c \n--> assert(%s) failed!!!\n"
         "--> file: %s \n"
         "--> base_file: %s, \n"

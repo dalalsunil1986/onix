@@ -45,7 +45,6 @@ KERNEL_ASM:= $(KERNEL_SRC)/start.asm \
 	$(KERNEL_SRC)/schedule.asm
 
 KERNEL_C:= $(KERNEL_SRC)/arena.c \
-	$(KERNEL_SRC)/assert.c \
 	$(KERNEL_SRC)/bitmap.c \
 	$(KERNEL_SRC)/clock.c \
 	$(KERNEL_SRC)/debug.c \
@@ -62,15 +61,16 @@ KERNEL_C:= $(KERNEL_SRC)/arena.c \
 	$(KERNEL_SRC)/pid.c \
 	$(KERNEL_SRC)/printk.c \
 	$(KERNEL_SRC)/process.c \
-	$(KERNEL_SRC)/queue.c \
-	$(KERNEL_SRC)/stdlib.c \
-	$(KERNEL_SRC)/string.c \
 	$(KERNEL_SRC)/task.c \
 	$(KERNEL_SRC)/test.c \
 
 LIB_ASM:=$(LIB_SRC)/__syscall.asm
 
 LIB_C:= $(LIB_SRC)/malloc.c \
+	$(LIB_SRC)/assert.c \
+	$(LIB_SRC)/string.c \
+	$(LIB_SRC)/stdlib.c \
+	$(LIB_SRC)/queue.c \
 	$(LIB_SRC)/stdio.c \
 	$(LIB_SRC)/syscall.c \
 	$(LIB_SRC)/vsprintf.c

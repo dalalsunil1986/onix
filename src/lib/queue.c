@@ -1,6 +1,6 @@
 #include <onix/queue.h>
 #include <onix/kernel/memory.h>
-#include <onix/kernel/assert.h>
+#include <onix/assert.h>
 #include <onix/kernel/debug.h>
 
 // #define DEBUGP DEBUGK

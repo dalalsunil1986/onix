@@ -1,5 +1,6 @@
 #include <onix/syscall.h>
 #include <onix/stdio.h>
+#include <onix/assert.h>
 
 #include <onix/kernel/printk.h>
 #include <onix/kernel/debug.h>

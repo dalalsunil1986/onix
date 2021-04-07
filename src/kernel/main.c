@@ -1,5 +1,6 @@
 #include <onix/string.h>
 #include <onix/queue.h>
+#include <onix/assert.h>
 #include <onix/kernel/global.h>
 #include <onix/kernel/printk.h>
 #include <onix/kernel/debug.h>
@@ -23,9 +24,12 @@
 
 extern void test_function();
 
+bool kernel_running;
+
 void __init_kernel()
 {
-    // BMB;
+    kernel_running = false;
+
     init_gdt();
     init_pid();
     make_setup_task();
@@ -37,10 +41,11 @@ void __init_kernel()
     init_harddisk();
     init_fs();
     init_file();
+    kernel_running = true;
 
-    test_process();
     // #ifndef ONIX_KERNEL_DEBUG
     //     test_function();
     //     PBMB;
     // #endif
+    test_process();
 }
