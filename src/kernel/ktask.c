@@ -20,7 +20,7 @@ extern IOQueue key_ioq;
 extern void test_process();
 extern void init_fs();
 
-void init_kernel_task()
+void init_task()
 {
     __clear();
 

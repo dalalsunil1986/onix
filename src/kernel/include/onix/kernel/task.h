@@ -94,22 +94,28 @@ typedef struct Task
     u32 magic;
 } Task;
 
-void init_task();
+void init_tasks();
 void schedule();
 
 void make_setup_task();
 Task *running_task();
+
 void push_task(Task *task);
 void push_ready_task(Task *task);
+
 void task_init(Task *task, char *name, int priority, int user);
 void task_create(Task *task, Tasktarget target, void *args);
 Task *task_start(Tasktarget target, void *args, const char *name, int priority);
+
 void task_block(Task *task);
 void task_unblock(Task *task);
 void task_yield();
+
 u32 task_fork();
+
 void task_exit(Task *task);
 void task_destory(Task *task);
+
 fd_t task_install_fd(fd_t fd);
 fd_t task_global_fd(fd_t fd);
 

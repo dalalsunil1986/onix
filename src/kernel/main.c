@@ -36,7 +36,7 @@ void __init_kernel()
     init_memory();
     init_arena();
     init_interrupt();
-    init_task();
+    init_tasks();
     init_process();
     init_harddisk();
     init_fs();

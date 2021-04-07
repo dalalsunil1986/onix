@@ -24,15 +24,12 @@
 Queue tasks_queue;
 Queue tasks_ready;
 Queue tasks_died;
+Queue tasks_fork;
 
 u32 init_stack_top;
 
 extern void switch_to(Task *current, Task *next);
 extern void process_activate(Task *next);
-
-extern void idle_task();
-extern void init_kernel_task();
-extern void keyboard_task();
 
 static Task *idle;
 
@@ -68,6 +65,34 @@ void push_ready_task(Task *task)
     set_interrupt_status(old);
 }
 
+Task *pop_fork_task()
+{
+    bool old = disable_int();
+    if (queue_empty(&tasks_fork))
+    {
+        return NULL;
+    }
+    assert(!queue_empty(&tasks_fork));
+    Task *task = element_entry(Task, node, queue_popback(&tasks_fork));
+    assert(task->magic == TASK_MAGIC);
+    set_interrupt_status(old);
+    return task;
+}
+
+void push_fork_task(Task *task)
+{
+    bool old = disable_int();
+    task->status = TASK_WAITING;
+    if (queue_find(&tasks_ready, &task->node))
+    {
+        queue_remove(&tasks_ready, &task->node);
+    }
+    assert(!queue_find(&tasks_fork, &task->node));
+    queue_push(&tasks_fork, &task->node);
+    schedule();
+    set_interrupt_status(old);
+}
+
 Task *pop_died_task()
 {
     if (queue_empty(&tasks_died))
@@ -76,6 +101,20 @@ Task *pop_died_task()
     Task *task = element_entry(Task, node, queue_popback(&tasks_died));
     assert(task->magic == TASK_MAGIC);
     return task;
+}
+
+void push_died_task(Task *task)
+{
+    bool old = disable_int();
+    task->status = TASK_DIED;
+    if (queue_find(&tasks_ready, &task->node))
+    {
+        queue_remove(&tasks_ready, &task->node);
+    }
+    queue_remove(&tasks_queue, &task->all_node);
+    assert(!queue_find(&tasks_died, &task->node));
+    queue_push(&tasks_died, &task->node);
+    set_interrupt_status(old);
 }
 
 void task_wrapper(Tasktarget target, void *args)
@@ -243,7 +282,8 @@ void task_yield()
 
 u32 task_fork()
 {
-    DEBUGP("Fork task...\n");
+    Task *task = running_task();
+    return task->message;
 }
 
 bool task_check_tid(Node *node, pid_t pid)
@@ -266,21 +306,14 @@ Task *task_found(pid_t tid)
 void task_exit(Task *task)
 {
     DEBUGP("Task exit 0x%08X\n", task);
-    bool old = disable_int();
-    task->status = TASK_DIED;
-    if (queue_find(&tasks_ready, &task->node))
-    {
-        queue_remove(&tasks_ready, &task->node);
-    }
-    queue_remove(&tasks_queue, &task->all_node);
-    release_pid(task->tid);
-    assert(!queue_find(&tasks_died, &task->node));
-    queue_push(&tasks_died, &task->node);
+    // todo close file...
+    push_died_task(task);
     schedule();
 }
 
 void task_destory(Task *task)
 {
+    release_pid(task->tid);
     DEBUGP("free pages %d\n", free_pages);
     if (task->pid == task->tid)
     {
@@ -294,54 +327,7 @@ void task_destory(Task *task)
         task->cwd = NULL;
     }
     page_free(task, 1);
-    DEBUGP("free pages %d tasks %d died %d\n", free_pages, tasks_queue.size, tasks_died.size);
-}
-
-static void make_init_task()
-{
-    Task *task = (Task *)TASK_INIT_PAGE;
-    task_init(task, "init task", 50, USER_KERNEL);
-    task_create(task, init_kernel_task, NULL);
-
-    ThreadFrame *frame = (ThreadFrame *)task->stack;
-    frame->ebp = 0x1111; // 这里的值不重要，用于调试定位栈顶信息
-    frame->ebx = 0x2222;
-    frame->edi = 0x3333;
-    frame->esi = 0x4444;
-    frame->addr = 0x5555;
-
-    init_stack_top = (u32)task->stack + element_offset(ThreadFrame, addr);
-    // 跳过 switch_to 返回的栈空间
-    // 这样从形式上和其他线程的栈空间一致
-
-    task->status = TASK_RUNNING;
-    assert(task->magic == TASK_MAGIC);
-
-    assert(!queue_find(&tasks_queue, &task->all_node));
-    push_task(task);
-    DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n",
-           (u32)task, (u32)task->stack, init_kernel_task);
-}
-
-void make_setup_task()
-{
-    Task *task = running_task();
-    task_init(task, "init task", 50, USER_KERNEL);
-    task_create(task, NULL, NULL);
-
-#ifndef ONIX_KERNEL_DEBUG
-    task->cwd = (char *)(0x12000);
-#else
-    task->cwd = malloc(MAX_PATH_LEN);
-#endif
-
-    memset(task->cwd, 0, MAX_PATH_LEN);
-    memcpy(task->cwd, "/", 1);
-
-    task->status = TASK_RUNNING;
-    assert(task->magic == TASK_MAGIC);
-
-    DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n", (u32)task, (u32)task->stack, NULL);
+    DEBUGP("free pages %d tasks count %d died count %d\n", free_pages, tasks_queue.size, tasks_died.size);
 }
 
 void schedule()
@@ -376,7 +362,57 @@ void schedule()
     switch_to(cur, next);
 }
 
-void init_task()
+void make_setup_task()
+{
+    Task *task = running_task();
+    task_init(task, "init task", 50, USER_KERNEL);
+    task_create(task, NULL, NULL);
+
+#ifndef ONIX_KERNEL_DEBUG
+    task->cwd = (char *)(0x12000);
+#else
+    task->cwd = malloc(MAX_PATH_LEN);
+#endif
+
+    memset(task->cwd, 0, MAX_PATH_LEN);
+    memcpy(task->cwd, "/", 1);
+
+    task->status = TASK_RUNNING;
+    assert(task->magic == TASK_MAGIC);
+
+    DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n", (u32)task, (u32)task->stack, NULL);
+}
+
+extern void init_task();
+
+static void make_init_task()
+{
+    Task *task = (Task *)TASK_INIT_PAGE;
+    task_init(task, "init task", 50, USER_KERNEL);
+    task_create(task, init_task, NULL);
+
+    ThreadFrame *frame = (ThreadFrame *)task->stack;
+    frame->ebp = 0x1111; // 这里的值不重要，用于调试定位栈顶信息
+    frame->ebx = 0x2222;
+    frame->edi = 0x3333;
+    frame->esi = 0x4444;
+    frame->addr = 0x5555;
+
+    init_stack_top = (u32)task->stack + element_offset(ThreadFrame, addr);
+    // 跳过 switch_to 返回的栈空间
+    // 这样从形式上和其他线程的栈空间一致
+
+    task->status = TASK_RUNNING;
+    assert(task->magic == TASK_MAGIC);
+
+    assert(!queue_find(&tasks_queue, &task->all_node));
+    push_task(task);
+}
+
+extern void idle_task();
+extern void keyboard_task();
+
+void init_tasks()
 {
     CHECK_STACK;
     DEBUGP("Size Taskframe %d\n", sizeof(TaskFrame));
@@ -388,6 +424,10 @@ void init_task()
     init_pid();
 
     make_init_task();
+
     idle = task_start(idle_task, NULL, "idle task", 1);
+    release_pid(idle->tid);
+    idle->tid = 0;
+
     task_start(keyboard_task, NULL, "key task", 16);
 }
