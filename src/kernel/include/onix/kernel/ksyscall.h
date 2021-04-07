@@ -1,7 +1,7 @@
 #ifndef ONIX_KSYSCALL_H
 #define ONIX_KSYSCALL_H
 
-#define SYSCALL_SIZE 16
+#define SYSCALL_SIZE 32
 
 #include <onix/types.h>
 #include <fs/file.h>

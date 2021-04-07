@@ -12,6 +12,7 @@ void test_processa()
         u32 id = sys_getpid();
         printf("Hello test process %d\n", id);
         sys_sleep(200);
+        break;
     }
 }
 

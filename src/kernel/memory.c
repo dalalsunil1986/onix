@@ -154,7 +154,7 @@ void mmap_free(Bitmap *mmap, u32 idx)
     bitmap_set(mmap, idx, 0);
 }
 
-void create_user_mmap(Task *task)
+void create_user_mmap(struct Task *task)
 {
     DEBUGP("Create user map 0x%X\n", task);
     task->vaddr.start = USER_VADDR_START;
@@ -163,6 +163,63 @@ void create_user_mmap(Task *task)
     task->vaddr.mmap.bits = page_alloc(page_size);
     task->vaddr.mmap.length = length;
     bitmap_init(&task->vaddr.mmap);
+}
+
+void create_user_pde(struct Task *task)
+{
+    u32 page = page_alloc(1);
+    u32 kernel_entry = 0x300 * 4; // 0xC00;
+
+    PageTable *table = (PageTable)page;
+
+    memcpy((void *)page, (void *)(0xFFFFF000), PG_SIZE); // todo replace with use pde
+    // memcpy((void *)page + kernel_entry, (void *)(0xFFFFF000 + kernel_entry), 0x100 * 4);
+    DEBUGP("get user pde page addr 0x%08X\n", page);
+
+    u32 store = 0;
+    PageEntry *entry = (PageEntry *)&store;
+
+    entry->index = get_paddr(page) >> 12;
+    entry->present = 1;
+    entry->write = 1;
+    entry->user = 1;
+    table[1023] = store;
+    task->pde = page;
+
+    DEBUGP("set user pde self addr 0x%08X\n", store);
+}
+
+void free_user_pde(struct Task *task)
+{
+    int old_int = disable_int();
+    u32 old_cr3 = get_cr3();
+
+    set_cr3(get_paddr(task->pde));
+
+    PageTable pde = get_pde();
+    for (size_t i = 1; i < 0x300; i++) // 高位内存是内核的
+    {
+        // todo 暂时将低位 4 M 放过，留给内核
+        PageEntry *pde_entry = &pde[i];
+        if (!pde_entry->present)
+            continue;
+
+        PageTable pte = get_pte(i << 22);
+
+        for (size_t j = 0; j < 1024; j++)
+        {
+            PageEntry *pte_entry = &pte[j];
+            if (!pte_entry->present)
+                continue;
+            u32 vaddr = (i << 22 | j << 12);
+            DEBUGP("memory exists 0x%08X\n", vaddr);
+            free_task_page(vaddr, 1, task);
+        }
+    }
+    DEBUGP("restore set cr3 \n");
+    set_cr3(old_cr3);
+    free_task_page(task->pde, 1, running_task());
+    set_interrupt_status(old_int);
 }
 
 static void set_pages(u32 vstart, u32 pstart, u32 pages)
@@ -185,7 +242,7 @@ static u32 scan_page(Task *task, u32 size)
     return vstart;
 }
 
-static u32 scan_task_page(u32 size)
+u32 scan_task_page(u32 size)
 {
     Task *task = running_task();
     assert(task->magic == TASK_MAGIC);
@@ -196,9 +253,8 @@ static u32 scan_task_page(u32 size)
     return vstart;
 }
 
-static void free_task_page(Page vaddr, u32 size)
+void free_task_page(Page vaddr, u32 size, Task *task)
 {
-    Task *task = running_task();
     Bitmap *mmap = &task->vaddr.mmap;
     u32 start = task->vaddr.start;
 
@@ -305,7 +361,7 @@ void page_free(Page vaddr, u32 size)
     return free(vaddr);
 #endif
     acquire(&memory_lock);
-    free_task_page(vaddr, size);
+    free_task_page(vaddr, size, running_task());
     release(&memory_lock);
 }
 

@@ -57,3 +57,9 @@ int32 sys_stat(const char *pathname, Stat *stat)
     return __sys_stat(pathname, stat);
 #endif
 }
+
+void sys_exit(u32 code)
+{
+    syscall1(SYS_NR_EXIT, code);
+    return;
+}

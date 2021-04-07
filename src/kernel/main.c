@@ -38,8 +38,9 @@ void __init_kernel()
     init_fs();
     init_file();
 
-#ifndef ONIX_KERNEL_DEBUG
-    test_function();
-    PBMB;
-#endif
+    test_process();
+    // #ifndef ONIX_KERNEL_DEBUG
+    //     test_function();
+    //     PBMB;
+    // #endif
 }

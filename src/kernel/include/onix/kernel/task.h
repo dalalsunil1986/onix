@@ -15,7 +15,7 @@
 
 #define TASK_MAX_OPEN_FILES 32
 
-typedef void Tasktarget(void *);
+typedef u32 Tasktarget(void *);
 
 typedef enum TASK_STATUS
 {
@@ -48,6 +48,7 @@ typedef struct TaskFrame
     u32 ds;
 
     u32 error;
+
     void (*eip)(void);
     u32 cs;
     u32 eflags;
@@ -105,6 +106,7 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority);
 void task_block(Task *task);
 void task_unblock(Task *task);
 void task_yield();
+void task_exit(Task *task);
 void task_destory(Task *task);
 fd_t task_install_fd(fd_t fd);
 fd_t task_global_fd(fd_t fd);

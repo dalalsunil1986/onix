@@ -274,17 +274,20 @@ void task_exit(Task *task)
 
 void task_destory(Task *task)
 {
+    DEBUGP("free pages %d\n", free_pages);
     if (task->pid == task->tid)
     {
-        // destory pde;
+        free_user_pde(task);
+        page_free(task->vaddr.mmap.bits, 1);
     }
     DEBUGP("free task page 0x%08X\n", task);
     if (task->cwd != NULL)
     {
         free(task->cwd);
+        task->cwd = NULL;
     }
     page_free(task, 1);
-    DEBUGP("free pages 0x%d tasks %d died %d\n", free_pages, tasks_queue.size, tasks_died.size);
+    DEBUGP("free pages %d tasks %d died %d\n", free_pages, tasks_queue.size, tasks_died.size);
 }
 
 static void make_init_task()

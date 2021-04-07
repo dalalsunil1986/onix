@@ -37,11 +37,22 @@ typedef struct TSS
     u16 iobase;
 } TSS;
 
+typedef struct ProcessArgs
+{
+    void (*eip)(void);
+    void (*target)(void);
+    void *args;
+} ProcessArgs;
+
 static TSS tss;
 
 void init_process();
 void init_tss();
-void process_start(Tasktarget target);
+
+void process_activate(Task *task);
+void process_start(Tasktarget target, void *args);
+void process_execute(Tasktarget *target, const char *name);
+
 void test_process();
 
 #endif

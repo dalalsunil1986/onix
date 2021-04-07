@@ -6,6 +6,7 @@
 
 enum SYSCALL_NR
 {
+    SYS_NR_EXIT,
     SYS_NR_GETPID,
     SYS_NR_WRITE,
     SYS_NR_CLEAR,
@@ -23,6 +24,8 @@ extern u32 syscall2(u32 nr, u32 arg1, u32 arg2);
 extern u32 syscall3(u32 nr, u32 arg1, u32 arg2, u32 arg3);
 
 u32 sys_test();
+
+void sys_exit(u32 code);
 u32 sys_getpid();
 void sys_clear();
 u32 sys_write(char *str);
