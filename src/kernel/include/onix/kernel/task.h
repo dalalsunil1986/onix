@@ -28,7 +28,7 @@ typedef enum TASK_STATUS
     TASK_DIED,
 } TASK_STATUS;
 
-typedef struct TaskFrame
+typedef struct InterruptFrame
 {
     u32 vector;
     u32 edi;
@@ -54,7 +54,7 @@ typedef struct TaskFrame
     u32 eflags;
     void *esp;
     u32 ss;
-} TaskFrame;
+} InterruptFrame;
 
 typedef struct ThreadFrame
 {
@@ -70,6 +70,15 @@ typedef struct ThreadFrame
     void *args;
     /* data */
 } ThreadFrame;
+
+typedef struct ProcessFrame
+{
+    u32 ebp;
+    u32 ebx;
+    u32 edi;
+    u32 esi;
+    void (*eip)(Tasktarget *target, void *args);
+} ProcessFrame;
 
 typedef struct Task
 {
@@ -107,6 +116,7 @@ void task_init(Task *task, char *name, int priority, int user);
 void task_create(Task *task, Tasktarget target, void *args);
 Task *task_start(Tasktarget target, void *args, const char *name, int priority);
 
+void task_hanging(Task *task);
 void task_block(Task *task);
 void task_unblock(Task *task);
 void task_yield();

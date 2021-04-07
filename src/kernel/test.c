@@ -16,7 +16,7 @@
 void test_processa()
 {
     // clear();
-    DEBUGP("test process %d fork....\n", sys_getpid());
+    DEBUGP("Task 0x%X process %d fork....\n", running_task(), sys_getpid());
     u32 id = sys_fork();
     while (true)
     {

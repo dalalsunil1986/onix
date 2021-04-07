@@ -78,7 +78,7 @@ static u32 scan_bitmap_page(Bitmap *map, u32 size)
     for (size_t i = start; i < start + size; i++)
     {
         bitmap_set(map, i, 1);
-        DEBUGP("page alloc address 0x%04X \n", i);
+        DEBUGP("map 0x%X page alloc address 0x%04X \n", map->bits, i);
     }
     return start * PG_SIZE;
 }
@@ -87,7 +87,10 @@ static u32 scan_physical_page(u32 size)
 {
     u32 page = scan_bitmap_page(&pmap, size);
     free_pages -= size;
-    return page + (base_physical_pages * PG_SIZE);
+    u32 addr = page + (base_physical_pages * PG_SIZE);
+    DEBUGP("task 0x%08X scan page 0x%08X size %d\n", running_task(), addr, size);
+    // PBMB;
+    return addr;
 }
 
 static PageTable get_pde()
@@ -158,7 +161,7 @@ void mmap_free(Bitmap *mmap, u32 idx)
 
 void page_copy(u32 dest, u32 src)
 {
-    int old = disable_int();
+    assert(!get_interrupt_status());
     set_page(SWAP_ADDR1, dest & 0xfffff000);
 
     set_page(SWAP_ADDR2, src & 0xfffff000);
@@ -171,19 +174,19 @@ void page_copy(u32 dest, u32 src)
 
     pte = get_pte(SWAP_ADDR2);
     pte[TIDX(SWAP_ADDR2)] = 0;
-
-    set_interrupt_status(old);
 }
 
-void create_user_mmap(struct Task *task)
+u32 create_user_mmap(Task *task)
 {
     DEBUGP("Create user map 0x%X\n", task);
     task->vaddr.start = USER_VADDR_START;
     u32 length = (KERNEL_ADDR_MASK - USER_VADDR_START) / PG_SIZE / 8;
-    u32 page_size = round_up(length, PG_SIZE);
-    task->vaddr.mmap.bits = page_alloc(page_size);
+    u32 page_count = round_up(length, PG_SIZE);
+    task->vaddr.mmap.bits = page_alloc(page_count);
+    memset(task->vaddr.mmap.bits, 0, page_count * PG_SIZE);
     task->vaddr.mmap.length = length;
     bitmap_init(&task->vaddr.mmap);
+    return page_count;
 }
 
 void create_user_pde(struct Task *task)
@@ -243,6 +246,51 @@ void free_user_pde(struct Task *task)
     set_interrupt_status(old_int);
 }
 
+void copy_user_pde(Task *parent, Task *task)
+{
+    assert(!get_interrupt_status());
+
+    Task *cur = running_task();
+    create_user_pde(task);
+
+    Bitmap *map = &parent->vaddr.mmap;
+    u32 vstart = parent->vaddr.start;
+    u32 idx_byte = 0;
+    u32 idx_bit = 0;
+
+    DEBUGP("bit map addr 0x%08X length %d\n", map->bits, map->length);
+
+    set_cr3(get_paddr(parent->pde));
+
+    for (idx_byte = 0; idx_byte < map->length; idx_byte++)
+    {
+        char byte = map->bits[idx_byte];
+        if (!byte)
+        {
+            continue;
+        }
+        for (idx_bit = 0; idx_bit < 8; idx_bit++)
+        {
+            if (!((BITMAP_MASK << idx_bit) & byte))
+            {
+                continue;
+            }
+            u32 vaddr = (idx_byte * 8 + idx_bit) * PG_SIZE + vstart;
+            u32 addr1 = scan_physical_page(1);
+            u32 addr2 = get_paddr(vaddr);
+            DEBUGP("copy page %X %X %X \n", addr1, addr2, vaddr);
+
+            page_copy(addr1, addr2);
+
+            set_cr3(get_paddr(task->pde));
+            set_page(vaddr, addr1);
+
+            set_cr3(get_paddr(parent->pde));
+        }
+    }
+    set_cr3(get_paddr(cur->pde));
+}
+
 static void set_pages(u32 vstart, u32 pstart, u32 pages)
 {
     for (size_t i = 0; i < pages; i++)
@@ -280,7 +328,7 @@ void free_task_page(Page vaddr, u32 size, Task *task)
     u32 start = task->vaddr.start;
 
     // assert(task->user == 0);
-
+    DEBUGP("task %08X page free 0x%X size %d\n", task, vaddr, size);
     u32 vstart = (u32)vaddr;
     for (size_t i = 0; i < size; i++)
     {
@@ -309,7 +357,7 @@ static void init_memory_params()
     free_pages = available_pages;
 
     DEBUGP("Available start page 0x%X\n", base_physical_pages);
-    DEBUGP("Available memory pages 0x%X\n", available_pages);
+    DEBUGK("Available memory pages 0x%X\n", available_pages);
 }
 
 static void init_kernel_mmap()

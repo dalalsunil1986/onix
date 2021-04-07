@@ -42,6 +42,7 @@ interrupt_exit:
     mov eax, [esp + 4]; stack top
     mov esp, eax
     ; xchg bx, bx
+global __interrupt_exit
 __interrupt_exit:
     ; BMB;
     add esp, 4

@@ -128,7 +128,7 @@ void task_wrapper(Tasktarget target, void *args)
 void task_create(Task *task, Tasktarget target, void *args)
 {
     u32 stack = task->stack;
-    stack -= sizeof(TaskFrame);
+    stack -= sizeof(InterruptFrame);
     stack -= sizeof(ThreadFrame);
     task->stack = stack;
 
@@ -243,6 +243,17 @@ Task *task_start(Tasktarget target, void *args, const char *name, int priority)
     return task;
 }
 
+void task_hanging(Task *task)
+{
+    bool old = disable_int();
+    task->status = TASK_HANGING;
+    if (queue_find(&tasks_ready, &task->node))
+    {
+        queue_remove(&tasks_ready, &task->node);
+    }
+    set_interrupt_status(old);
+}
+
 void task_block(Task *task)
 {
     bool old = disable_int();
@@ -284,6 +295,7 @@ u32 task_fork()
 {
     Task *task = running_task();
     push_fork_task(task);
+    DEBUGK("task %x\n", task);
     return task->message;
 }
 
@@ -349,17 +361,15 @@ void schedule()
     assert(next->magic == TASK_MAGIC);
     next->status = TASK_RUNNING;
 
+    // DEBUGP("Task schedule 0x%X name %s\n", next, next->name);
     assert(((u32)next & 0xfff) == 0);
 
-    // PBMB;
     if (next == cur)
         return;
-    // DEBUGP("Task schedule 0x%X name %s\n", next, next->name);
-    // BMB;
-    process_activate(next);
-    // PBMB;
 
-    show_char(next->tid % 10 + 0x30, 73, 0);
+    process_activate(next);
+
+    show_char(next->tid % 10 + 0x30, 73, 0); // TODO REMOVE THIS CHAR
     switch_to(cur, next);
 }
 
@@ -417,9 +427,9 @@ extern void fork_task();
 void init_tasks()
 {
     CHECK_STACK;
-    DEBUGP("Size Taskframe %d\n", sizeof(TaskFrame));
+    DEBUGP("Size Taskframe %d\n", sizeof(InterruptFrame));
     DEBUGP("Size Threadframe %d\n", sizeof(ThreadFrame));
-    DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(TaskFrame));
+    DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(InterruptFrame));
 
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);

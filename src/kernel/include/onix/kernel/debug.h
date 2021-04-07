@@ -19,5 +19,6 @@ void debugk(const char *fmt, ...);
 
 #define BMB BOCHS_MAGIC_BREAKPOINT;
 #define PBMB DEBUGK("\n"); BOCHS_MAGIC_BREAKPOINT;
+#define UBMB DEBUGF("\n"); BOCHS_MAGIC_BREAKPOINT;
 
 #endif

@@ -86,6 +86,7 @@ void keyboard_task()
 }
 
 extern Task *pop_fork_task();
+extern Task *process_copy(Task *parent);
 
 void fork_task()
 {
@@ -94,10 +95,12 @@ void fork_task()
         Task *parent = pop_fork_task();
         if (parent == NULL)
         {
-            clock_sleep(100);
+            task_yield();
             continue;
         }
-        parent->message = 1000;
+        Task *task = process_copy(parent);
+        parent->message = task->pid;
         push_ready_task(parent);
+        push_ready_task(task);
     }
 }
