@@ -78,7 +78,7 @@ Task *pop_died_task()
     return task;
 }
 
-void kernel_task(Tasktarget target, void *args)
+void task_wrapper(Tasktarget target, void *args)
 {
     assert(!get_interrupt_status());
     enable_int();
@@ -94,7 +94,7 @@ void task_create(Task *task, Tasktarget target, void *args)
     task->stack = stack;
 
     ThreadFrame *frame = (ThreadFrame *)task->stack;
-    frame->eip = kernel_task;
+    frame->eip = task_wrapper;
     frame->target = target;
     frame->args = args;
     frame->ebp = 0x11111111; // 这里的值不重要，用于调试定位栈顶信息
@@ -156,6 +156,7 @@ void task_init(Task *task, char *name, int priority, int user)
     strcpy(task->name, name);
     task->tid = allocate_pid();
     task->pid = cur->pid;
+    task->ppid = 0;
     task->status = TASK_INIT;
     task->priority = priority;
     task->ticks = task->priority;
@@ -164,6 +165,7 @@ void task_init(Task *task, char *name, int priority, int user)
     task->magic = TASK_MAGIC;
     task->user = user;
     task->cwd = NULL;
+    task->message = 0;
 
     init_arena_desc(task->adesc);
     init_file_table(task);

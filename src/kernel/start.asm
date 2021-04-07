@@ -38,12 +38,12 @@ _start:
     jmp restart
 
 extern init_stack_top
-extern kernel_task
+extern task_wrapper
 
 restart:
     mov eax, [init_stack_top]
     mov esp, eax
-    jmp kernel_task
+    jmp task_wrapper
 
 ; 按理来说绝对不会走到这里
 __halt:

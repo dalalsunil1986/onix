@@ -89,6 +89,7 @@ typedef struct Task
     ArenaDesc adesc[DESC_COUNT];
     fd_t file_table[TASK_MAX_OPEN_FILES];
     char *cwd;
+    u32 message;
     u32 exit_code;
     u32 magic;
 } Task;
