@@ -24,12 +24,8 @@
 
 extern void test_function();
 
-bool kernel_running;
-
 void __init_kernel()
 {
-    kernel_running = false;
-
     init_gdt();
     init_pid();
     make_setup_task();
@@ -41,7 +37,6 @@ void __init_kernel()
     init_harddisk();
     init_fs();
     init_file();
-    kernel_running = true;
 
     // #ifndef ONIX_KERNEL_DEBUG
     //     test_function();
