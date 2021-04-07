@@ -63,3 +63,8 @@ void sys_exit(u32 code)
     syscall1(SYS_NR_EXIT, code);
     return;
 }
+
+u32 sys_fork()
+{
+    return syscall0(SYS_NR_FORK);
+}

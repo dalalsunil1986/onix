@@ -239,6 +239,11 @@ void task_yield()
     set_interrupt_status(old);
 }
 
+u32 task_fork()
+{
+    DEBUGP("Fork task...\n");
+}
+
 bool task_check_tid(Node *node, pid_t pid)
 {
     Task *task = element_entry(Task, all_node, node);

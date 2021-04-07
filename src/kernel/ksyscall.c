@@ -34,10 +34,15 @@ void __sys_test()
 
 void __sys_exit(u32 code)
 {
-    DEBUGP("syscall exit called\n");
+    // DEBUGP("syscall exit called\n");
     Task *task = running_task();
     task->exit_code = code;
     task_exit(task);
+}
+
+u32 __sys_fork()
+{
+    return task_fork();
 }
 
 u32 __sys_getpid()
@@ -125,6 +130,7 @@ void init_syscall()
 
     syscall_table[SYS_NR_TEST] = __sys_test;
     syscall_table[SYS_NR_EXIT] = __sys_exit;
+    syscall_table[SYS_NR_FORK] = __sys_fork;
     syscall_table[SYS_NR_GETPID] = __sys_getpid;
     syscall_table[SYS_NR_WRITE] = __sys_write;
     syscall_table[SYS_NR_CLEAR] = __sys_clear;

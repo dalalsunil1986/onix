@@ -7,6 +7,7 @@
 enum SYSCALL_NR
 {
     SYS_NR_EXIT,
+    SYS_NR_FORK,
     SYS_NR_GETPID,
     SYS_NR_WRITE,
     SYS_NR_CLEAR,
@@ -36,5 +37,7 @@ void sys_sleep(u32 milliseconds);
 
 char *sys_getcwd(char *buf, u32 size);
 int32 sys_stat(const char *pathname, Stat *stat);
+
+u32 sys_fork();
 
 #endif
