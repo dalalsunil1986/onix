@@ -51,7 +51,7 @@ void update_tss_esp0(Task *task)
     tss.esp0 = (u32 *)((u32)task + PG_SIZE);
 }
 
-void task_pde_activate(Task *task)
+void process_pde_activate(Task *task)
 {
     assert(task->pde != NULL);
     // DEBUGP("task activate 0x%08X pde 0x%08X\n", task, task->pde);
@@ -62,7 +62,7 @@ void process_activate(Task *task)
 {
     // DEBUGP("process activate 0x%08X user %d\n", task, task->user);
     assert(task != NULL);
-    task_pde_activate(task);
+    process_pde_activate(task);
     // BMB;
     if (task->user != 0)
     {
