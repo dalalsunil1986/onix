@@ -97,6 +97,7 @@ typedef struct Task
 } Task;
 
 void init_tasks();
+void start_tasks();
 void schedule();
 
 void init_setup_task();

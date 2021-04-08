@@ -7,6 +7,7 @@ int main(int argc, char const *argv[])
 int osh_task(int argc, char const *argv[])
 #endif
 {
+    clear();
     printf("hello world\n");
     return 0;
 }

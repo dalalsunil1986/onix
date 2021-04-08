@@ -221,13 +221,6 @@ void process_start(Tasktarget target, int argc, char const *argv[])
     interrupt_exit(frame);
 }
 
-extern void test_processa();
-
-void test_process(void *args)
-{
-    process_execute(test_processa, 0x12345, 0x666666, "test process");
-}
-
 void init_process()
 {
     CHECK_STACK;

@@ -3,6 +3,7 @@
 #include <onix/kernel/io.h>
 #include <onix/kernel/debug.h>
 #include <onix/kernel/printk.h>
+#include <onix/kernel/process.h>
 #include <onix/assert.h>
 
 #define DEBUGINFO
@@ -13,8 +14,14 @@
 #define DEBUGP(fmt, args...)
 #endif
 
+extern int osh_task(int argc, char const *argv[]);
+
 void init_task()
 {
+    __clear();
+
+    process_execute(osh_task, 0, NULL, "osh");
+
     u32 counter = 0;
     Task *task;
 
@@ -45,20 +52,10 @@ void init_task()
 
 void idle_task()
 {
-    static u32 idle_counter = 0;
     while (true)
     {
-        // BMB;
-        // DEBUGP("idle task 0x%X....\n", idle_counter);
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
-        idle_counter++;
-        char ch = ' ';
-        if ((idle_counter % 2) != 0)
-        {
-            ch = 'D';
-        }
-        show_char(ch, 75, 0);
         task_block(task);
         pause();
     }

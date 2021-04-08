@@ -35,13 +35,9 @@ _start:
     ; xchg bx, bx
     mov esp, KERNEL_STACK_TOP
     call __init_kernel
+
+extern restart
     jmp restart
-
-extern task_wrapper
-
-restart:
-    mov esp, eax
-    jmp task_wrapper
 
 ; 按理来说绝对不会走到这里
 __halt:

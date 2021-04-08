@@ -5,6 +5,7 @@ KERNEL_SRC:= $(SRC_DIR)/kernel
 LIB_SRC:= $(SRC_DIR)/lib
 FS_SRC:= $(SRC_DIR)/fs
 FS_ONIX_SRC:= $(SRC_DIR)/fs/onix
+OSH_SRC:= $(SRC_DIR)/osh
 DEBUG_SRC:= $(SRC_DIR)/debug
 
 REAL_DIR:=$(BUILD)/real
@@ -86,6 +87,9 @@ FS_ONIX_C:=$(FS_ONIX_SRC)/inode.c \
 FS_C:= 	$(FS_SRC)/path.c \
 		$(FS_SRC)/file.c
 
+OSH_C:= 	$(OSH_SRC)/osh.c \
+
+
 REAL_DEBUG_C:= $(DEBUG_SRC)/debug_main.c
 
 
@@ -109,6 +113,9 @@ $(REAL_DIR)/%.o: $(LIB_SRC)/%.c
 	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
 $(REAL_DIR)/%.o: $(FS_SRC)/%.c
+	$(CC) $(REAL_CFLAGS) -c $< -o $@
+
+$(REAL_DIR)/%.o: $(OSH_SRC)/%.c
 	$(CC) $(REAL_CFLAGS) -c $< -o $@
 
 $(REAL_DIR)/%.o: $(FS_ONIX_SRC)/%.c
@@ -140,6 +147,7 @@ REAL_OBJECTS= $(KERNEL_ASM:$(KERNEL_SRC)/%.asm=$(REAL_DIR)/%.o) \
 			$(LIB_C:$(LIB_SRC)/%.c=$(REAL_DIR)/%.o) \
 			$(FS_C:$(FS_SRC)/%.c=$(REAL_DIR)/%.o) \
 			$(FS_ONIX_C:$(FS_ONIX_SRC)/%.c=$(REAL_DIR)/%.o) \
+			$(OSH_C:$(OSH_SRC)/%.c=$(REAL_DIR)/%.o) \
 			$(REAL_DIR)/debug_main.o
 
 DEBUG_OBJECTS=$(KERNEL_C:$(KERNEL_SRC)/%.c=$(DEBUG_DIR)/%.o) \

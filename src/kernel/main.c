@@ -25,7 +25,7 @@
 extern void test_function();
 extern Task *idle;
 
-u32 __init_kernel()
+void __init_kernel()
 {
     init_gdt();
     init_pid();
@@ -43,6 +43,13 @@ u32 __init_kernel()
     //     test_function();
     //     PBMB;
     // #endif
-    test_process();
-    return idle->stack;
+}
+
+void restart()
+{
+    start_tasks();
+    Task *task = running_task();
+    task->status = TASK_DIED;
+    disable_int();
+    schedule();
 }

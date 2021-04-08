@@ -13,7 +13,7 @@
 #include <onix/kernel/clock.h>
 #include <onix/kernel/pid.h>
 
-#define DEBUGINFO
+// #define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -256,7 +256,7 @@ Task *task_start(Tasktarget target, int argc, char const *argv[], const char *na
     assert(!queue_find(&tasks_ready, &task->node));
     push_ready_task(task);
 
-    DEBUGP("Task create %s 0x%X stack top 0x%X\n", name, (u32)task, (u32)task->stack);
+    DEBUGK("Task create %s 0x%X stack 0x%X\n", name, (u32)task, (u32)task->stack);
     return task;
 }
 
@@ -430,6 +430,10 @@ void init_tasks()
     queue_init(&tasks_fork);
 
     idle = task_start(idle_task, 0, NULL, "idle task", 1);
+}
+
+void start_tasks()
+{
     task_start(init_task, 0, NULL, "init task", 64);
     task_start(fork_task, 0, NULL, "fork task", 16);
 }
