@@ -18,6 +18,9 @@ enum SYSCALL_NR
     SYS_NR_CREATE,
     SYS_NR_LINK,
     SYS_NR_ULINK,
+    SYS_NR_OPENDIR,
+    SYS_NR_READDIR,
+    SYS_NR_REWINDDIR,
     SYS_NR_EXEC,
     SYS_NR_CHDIR,
     SYS_NR_TIME,
@@ -52,21 +55,24 @@ extern u32 syscall3(u32 nr, u32 arg1, u32 arg2, u32 arg3);
 u32 sys_test();
 
 void sys_exit(u32 code);
+void sys_sleep(u32 milliseconds);
+u32 sys_fork();
 u32 sys_getpid();
-void sys_clear();
 
 u32 sys_read(fd_t fd, void *buf, u32 count);
-u32 sys_write(char *str);
+u32 sys_write(fd_t fd, void *buf, u32 count);
+void sys_clear();
 void sys_putchar(char ch);
 
 u32 sys_malloc(size_t size);
 void sys_free(void *ptr);
-void sys_sleep(u32 milliseconds);
 
 char *sys_getcwd(char *buf, u32 size);
 int32 sys_chdir(const char *path);
 int32 sys_stat(const char *pathname, Stat *stat);
 
-u32 sys_fork();
+int32 sys_opendir(const char *pathname);
+DirEntry *sys_readdir(Dir *dir);
+void sys_rewinddir(Dir *dir);
 
 #endif

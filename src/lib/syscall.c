@@ -9,14 +9,25 @@ u32 sys_test()
     return syscall0(SYS_NR_TEST);
 }
 
+void sys_exit(u32 code)
+{
+    syscall1(SYS_NR_EXIT, code);
+    return;
+}
+
+u32 sys_fork()
+{
+    return syscall0(SYS_NR_FORK);
+}
+
 u32 sys_getpid()
 {
     return syscall0(SYS_NR_GETPID);
 }
 
-void sys_clear()
+void sys_sleep(u32 milliseconds)
 {
-    syscall0(SYS_NR_CLEAR);
+    syscall1(SYS_NR_SLEEP, milliseconds);
 }
 
 u32 sys_read(fd_t fd, void *buf, u32 count)
@@ -24,19 +35,19 @@ u32 sys_read(fd_t fd, void *buf, u32 count)
     return syscall3(SYS_NR_READ, fd, buf, count);
 }
 
-u32 sys_write(char *str)
+u32 sys_write(fd_t fd, void *buf, u32 count)
 {
-    return syscall1(SYS_NR_WRITE, str);
+    return syscall3(SYS_NR_WRITE, fd, buf, count);
+}
+
+void sys_clear()
+{
+    syscall0(SYS_NR_CLEAR);
 }
 
 void sys_putchar(char ch)
 {
     return syscall1(SYS_NR_PUTCHAR, ch);
-}
-
-void sys_sleep(u32 milliseconds)
-{
-    syscall1(SYS_NR_SLEEP, milliseconds);
 }
 
 u32 sys_malloc(size_t size)
@@ -73,13 +84,19 @@ int32 sys_stat(const char *pathname, Stat *stat)
 #endif
 }
 
-void sys_exit(u32 code)
+int32 sys_open(const char *pathname, FileFlag flags);
+
+int32 sys_opendir(const char *pathname)
 {
-    syscall1(SYS_NR_EXIT, code);
-    return;
+    return syscall1(SYS_NR_OPENDIR, pathname);
 }
 
-u32 sys_fork()
+DirEntry *sys_readdir(Dir *dir)
 {
-    return syscall0(SYS_NR_FORK);
+    return syscall1(SYS_NR_READDIR, dir);
+}
+
+void sys_rewinddir(Dir *dir)
+{
+    return syscall1(SYS_NR_REWINDDIR, dir);
 }

@@ -10,7 +10,7 @@ int printf(const char *fmt, ...)
     va_start(args, fmt);
     i = vsprintf(buf, fmt, args);
     va_end(args);
-    sys_write(buf);
+    sys_write(onix_stdout, buf, i);
     return i;
 }
 

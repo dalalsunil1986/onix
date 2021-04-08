@@ -4,12 +4,22 @@
 #include <onix/assert.h>
 #include <fs/file.h>
 #include <fs/path.h>
+#include <onix/malloc.h>
+
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGF
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 #define MAX_CMD_LEN 256
 #define MAX_ARG_NR 16
 
 static char cwd[MAX_PATH_LEN];
 static char path[MAX_PATH_LEN];
+static char subpath[MAX_PATH_LEN];
 static char dname[MAX_FILENAME_LENGTH];
 static char cmd[MAX_CMD_LEN];
 static char *argv[MAX_ARG_NR];
@@ -42,25 +52,57 @@ void buildin_cd(int argc, char *argv[])
     {
         path = argv[1];
     }
-
     sys_chdir(path);
 }
 
-// void buildin_ls(int argc, char *argv[])
-// {
-//     char *pathname = NULL;
+void buildin_ls(int argc, char *argv[])
+{
 
-//     if (pathname == NULL)
-//     {
-//         sys_getcwd(path, MAX_PATH_LEN);
-//         pathname = path;
-//     }
-//     else
-//     {
-//         abspath(argv[1], path);
-//         pathname
-//     }
-// }
+    if (argc == 1)
+    {
+        sys_getcwd(path, MAX_PATH_LEN);
+    }
+    else
+    {
+        abspath(argv[1], path);
+    }
+
+    Stat stat;
+    int ret = sys_stat(path, &stat);
+    if (ret != 0)
+    {
+        DEBUGP("%s not exists...\n", path);
+        return;
+    }
+    if (stat.type == FILETYPE_DIRECTORY)
+    {
+        // DEBUGP("%s is dir...\n", path);
+        Dir *dir = sys_opendir(path);
+        DirEntry *entry = NULL;
+        sys_rewinddir(dir);
+        while (true)
+        {
+            entry = sys_readdir(dir);
+            if (entry == NULL)
+                break;
+            printf("%s ", entry->filename);
+        }
+        printf("\n");
+    }
+    else if (stat.type == FILETYPE_REGULAR)
+    {
+        // DEBUGP("%s is file...\n", path);
+        printf("%s\n", path);
+    }
+}
+
+void buildin_test(int argc, char *argv[])
+{
+    printf("test...\n");
+    void *buf = malloc(4);
+
+    free(buf);
+}
 
 static void execute(int argc, char *argv[])
 {
@@ -77,10 +119,14 @@ static void execute(int argc, char *argv[])
     {
         return buildin_cd(argc, argv);
     }
-    // if (!strcmp(line, "ls"))
-    // {
-    //     return buildin_ls(argc, argv);
-    // }
+    if (!strcmp(line, "ls"))
+    {
+        return buildin_ls(argc, argv);
+    }
+    if (!strcmp(line, "test"))
+    {
+        return buildin_test(argc, argv);
+    }
 }
 
 void readline(char *buf, u32 count)

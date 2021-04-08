@@ -58,11 +58,6 @@ void __sys_clear()
     __clear();
 }
 
-u32 __sys_write(char *str)
-{
-    printk("%s", str);
-}
-
 void __sys_sleep(u32 milliseconds)
 {
     clock_sleep(milliseconds);
@@ -142,6 +137,40 @@ int32 __sys_read(fd_t fd, void *buf, u32 count)
     return ret;
 }
 
+int32 __sys_write(fd_t fd, void *buf, u32 count)
+{
+    if (fd == onix_stdout)
+    {
+        return printk(buf);
+    }
+}
+
+fd_t __sys_open(const char *pathname, FileFlag flags);
+fd_t __sys_close(fd_t fd);
+
+int32 __sys_lseek(fd_t fd, int32 offset, Whence whence);
+int32 __sys_unlink(const char *pathname);
+
+int32 __sys_mkdir(const char *pathname);
+
+Dir *__sys_opendir(const char *pathname)
+{
+    return onix_sys_opendir(pathname);
+}
+
+int32 __sys_closedir(Dir *dir);
+int32 __sys_rmdir(const char *pathname);
+
+DirEntry *__sys_readdir(Dir *dir)
+{
+    return onix_sys_readdir(dir);
+}
+
+void __sys_rewinddir(Dir *dir)
+{
+    return onix_sys_rewinddir(dir);
+}
+
 void __sys_putchar(char ch)
 {
     put_char(ch);
@@ -164,14 +193,22 @@ void init_syscall()
     syscall_table[SYS_NR_EXIT] = __sys_exit;
     syscall_table[SYS_NR_FORK] = __sys_fork;
     syscall_table[SYS_NR_GETPID] = __sys_getpid;
-    syscall_table[SYS_NR_WRITE] = __sys_write;
-    syscall_table[SYS_NR_CLEAR] = __sys_clear;
     syscall_table[SYS_NR_SLEEP] = __sys_sleep;
+
     syscall_table[SYS_NR_MALLOC] = __sys_malloc;
     syscall_table[SYS_NR_FREE] = __sys_free;
-    syscall_table[SYS_NR_GETCWD] = __sys_getcwd;
+
     syscall_table[SYS_NR_STAT] = __sys_stat;
     syscall_table[SYS_NR_READ] = __sys_read;
+    syscall_table[SYS_NR_WRITE] = __sys_write;
+
     syscall_table[SYS_NR_PUTCHAR] = __sys_putchar;
+    syscall_table[SYS_NR_CLEAR] = __sys_clear;
+
     syscall_table[SYS_NR_CHDIR] = __sys_chdir;
+    syscall_table[SYS_NR_GETCWD] = __sys_getcwd;
+
+    syscall_table[SYS_NR_OPENDIR] = __sys_opendir;
+    syscall_table[SYS_NR_READDIR] = __sys_readdir;
+    syscall_table[SYS_NR_REWINDDIR] = __sys_rewinddir;
 }

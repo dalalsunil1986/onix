@@ -53,6 +53,4 @@ File *get_global_file(fd_t fd);
 
 void init_file();
 
-int32 sys_open(const char *pathname, FileFlag flags);
-
 #endif
