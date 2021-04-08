@@ -116,13 +116,6 @@ void init_exception()
     }
 }
 
-static void test_interrupt()
-{
-    DEBUGK("Test interrupt...\n");
-    // u32 *addr = (u32 *)0x22222222;
-    // *addr = 0x22222222;
-}
-
 void init_interrupt()
 {
     CHECK_STACK;
@@ -135,7 +128,7 @@ void init_interrupt()
     init_clock();
     init_keyboard();
     init_syscall();
-    test_interrupt();
+
     printk("Initializing interrupt finished...\n");
 }
 
@@ -162,7 +155,7 @@ void set_interrupt_status(bool status)
 
 void enable_irq(u32 irq)
 {
-    DEBUGP("enable irq %d\n", irq);
+    // DEBUGP("enable irq %d\n", irq);
     if (irq < 8)
         outb(PIC_M_DATA, inb(PIC_M_DATA) & ~(1 << irq));
     else

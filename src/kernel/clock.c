@@ -29,9 +29,9 @@ void init_pit()
 void clock_handler(int vector)
 {
     assert(vector == 0x20);
+    __global_ticks++;
 
     Task *cur = running_task();
-    // DEBUGP("Current task is 0x%X ticks 0x%X\n", cur, cur->ticks);
     assert(cur->magic == TASK_MAGIC);
 
     cur->ticks--;
@@ -40,14 +40,6 @@ void clock_handler(int vector)
         cur->ticks = cur->priority;
         schedule();
     }
-    __global_ticks++;
-    char ch = ' ';
-    if ((__global_ticks % 2) != 0)
-    {
-        ch = 'C';
-    }
-
-    show_char(ch, 79, 0);
 }
 
 void init_clock()
