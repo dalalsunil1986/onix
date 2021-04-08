@@ -90,12 +90,14 @@ void buildin_mkdir(int argc, char *argv[])
         return;
     }
     abspath(argv[1], path);
+    
     if (!strcmp(path, "/"))
     {
         return;
     }
     if (exists(path))
     {
+        DEBUGP("mkdir %s exists...\n", path);
         return;
     }
     return sys_mkdir(path);
