@@ -11,6 +11,7 @@
 static char cwd[MAX_PATH_LEN];
 static char dname[MAX_FILENAME_LENGTH];
 static char cmd[MAX_CMD_LEN];
+static char *argv[MAX_ARG_NR];
 
 void print_prompt()
 {
@@ -53,12 +54,51 @@ void readline(char *buf, u32 count)
     }
 }
 
+static int cmd_parse(char *cmd, char *argv[], char token)
+{
+    assert(cmd != NULL);
+    int idx = 0;
+    while (idx < MAX_ARG_NR)
+    {
+        argv[idx] = NULL;
+        idx++;
+    }
+    char *next = cmd;
+    int32 argc = 0;
+    while (*next && argc < MAX_ARG_NR)
+    {
+        while (*next == token)
+        {
+            next++;
+        }
+
+        if (*next == 0)
+        {
+            break;
+        }
+        argv[argc++] = next;
+        while (*next && *next != token)
+        {
+            next++;
+        }
+        if (*next)
+        {
+            *next = 0;
+            next++;
+        }
+    }
+    return argc;
+}
+
 #ifdef MAIN_DEBUG
-int main(int argc, char const *argv[])
+int main()
 #else
-int osh_task(int argc, char const *argv[])
+int osh_task()
 #endif
 {
+    char test[] = "asdf asdf asdf   asdf   asdf asdf";
+    int argc = cmd_parse(test, argv, ' ');
+
     memset(cmd, 0, sizeof(cmd));
     memset(cwd, 0, sizeof(cwd));
     memset(dname, 0, sizeof(dname));
@@ -72,6 +112,11 @@ int osh_task(int argc, char const *argv[])
         print_prompt();
         readline(cmd, sizeof(cmd));
         if (cmd[0] == 0)
+        {
+            continue;
+        }
+        argc = cmd_parse(cmd, argv, ' ');
+        if (argc < 0 || argc >= MAX_ARG_NR)
         {
             continue;
         }

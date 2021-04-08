@@ -16,7 +16,7 @@
 #define DEBUGP(fmt, args...)
 #endif
 
-extern int osh_task(int argc, char const *argv[]);
+extern int osh_task();
 
 void init_task()
 {
