@@ -37,11 +37,9 @@ _start:
     call __init_kernel
     jmp restart
 
-extern init_stack_top
 extern task_wrapper
 
 restart:
-    mov eax, [init_stack_top]
     mov esp, eax
     jmp task_wrapper
 

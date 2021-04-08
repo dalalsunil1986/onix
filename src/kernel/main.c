@@ -23,8 +23,9 @@
 #endif
 
 extern void test_function();
+extern Task *idle;
 
-void __init_kernel()
+u32 __init_kernel()
 {
     init_gdt();
     init_pid();
@@ -43,4 +44,5 @@ void __init_kernel()
     //     PBMB;
     // #endif
     test_process();
+    return idle->stack;
 }

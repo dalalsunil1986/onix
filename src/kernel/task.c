@@ -31,7 +31,7 @@ u32 init_stack_top;
 extern void switch_to(Task *current, Task *next);
 extern void process_activate(Task *next);
 
-static Task *idle;
+Task *idle;
 
 void push_task(Task *task)
 {
@@ -431,18 +431,14 @@ void init_tasks()
     DEBUGP("Size Threadframe %d\n", sizeof(ThreadFrame));
     DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(InterruptFrame));
 
+    init_pid();
+
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
     queue_init(&tasks_died);
     queue_init(&tasks_fork);
 
-    init_pid();
-
-    make_init_task();
-
     idle = task_start(idle_task, NULL, "idle task", 1);
-    release_pid(idle->tid);
-    idle->tid = 0;
 
     task_start(keyboard_task, NULL, "key task", 64);
     task_start(fork_task, NULL, "fork task", 16);

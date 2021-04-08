@@ -20,7 +20,7 @@ void init_pid()
 {
     pool.map.bits = bits;
     pool.map.length = BITS_LEN;
-    pool.start = 1;
+    pool.start = 0;
     bitmap_init(&pool.map);
     lock_init(&pool.lock);
 }
