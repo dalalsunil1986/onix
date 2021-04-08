@@ -2,6 +2,7 @@
 #include <fs/file.h>
 #include <onix/string.h>
 #include <onix/syscall.h>
+#include <onix/stdio.h>
 
 bool is_split(char ch)
 {
@@ -113,6 +114,11 @@ char *abspath(char *path, char *buf)
         u32 len = strlen(name);
         memcpy(bptr, name, len);
         bptr += len;
+    }
+    if (buf[0] == 0)
+    {
+        buf[0] = '/';
+        buf[1] = 0;
     }
     return buf;
 }

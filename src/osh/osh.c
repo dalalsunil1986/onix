@@ -41,20 +41,6 @@ void buildin_clear()
     clear();
 }
 
-void buildin_cd(int argc, char *argv[])
-{
-    char *path = NULL;
-    if (argc == 1)
-    {
-        path = "/";
-    }
-    else
-    {
-        path = argv[1];
-    }
-    sys_chdir(path);
-}
-
 void buildin_ls(int argc, char *argv[])
 {
     if (argc == 1)
@@ -108,7 +94,22 @@ void buildin_mkdir(int argc, char *argv[])
     {
         return;
     }
+    if (exists(path))
+    {
+        return;
+    }
     return sys_mkdir(path);
+}
+
+void buildin_cd(int argc, char *argv[])
+{
+    if (argc != 2)
+    {
+        printf("mkdir: only support 1 argument!\n");
+        return;
+    }
+    abspath(argv[1], path);
+    return sys_chdir(path);
 }
 
 void buildin_test(int argc, char *argv[])
@@ -129,10 +130,6 @@ static void execute(int argc, char *argv[])
     {
         return buildin_clear();
     }
-    if (!strcmp(line, "cd"))
-    {
-        return buildin_cd(argc, argv);
-    }
     if (!strcmp(line, "ls"))
     {
         return buildin_ls(argc, argv);
@@ -140,6 +137,10 @@ static void execute(int argc, char *argv[])
     if (!strcmp(line, "mkdir"))
     {
         return buildin_mkdir(argc, argv);
+    }
+    if (!strcmp(line, "cd"))
+    {
+        return buildin_cd(argc, argv);
     }
     if (!strcmp(line, "test"))
     {

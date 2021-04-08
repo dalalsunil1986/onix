@@ -24,6 +24,8 @@ extern IOQueue key_ioq;
 extern void syscall_handler();
 SyscallHandler syscall_table[SYSCALL_SIZE];
 
+char pathbuf[MAX_PATH_LEN];
+
 void __sys_default()
 {
     printk("!!!default syscall....\n");
@@ -92,11 +94,12 @@ int32 __sys_chdir(const char *path)
         printk("%s not exists...\n", path);
         return -1;
     }
-
     u32 size = strlen(path);
     assert(size <= MAX_PATH_LEN);
     Task *task = running_task();
-    abspath(path, task->cwd);
+    memset(pathbuf, 0, MAX_PATH_LEN);
+    abspath(path, pathbuf);
+    memcpy(task->cwd, pathbuf, MAX_PATH_LEN);
     return 0;
 }
 
