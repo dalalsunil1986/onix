@@ -15,13 +15,13 @@
 
 void test_processa()
 {
-    // clear();
+    clear();
     DEBUGP("Task 0x%X process %d fork....\n", running_task(), sys_getpid());
-    // u32 id = sys_fork();
+    u32 id = sys_fork();
     while (true)
     {
         DEBUGP("Hello test process %d\n", sys_getpid());
-        // break;
+        break;
     }
     DEBUGP("test process %d exit....\n", sys_getpid());
 }
