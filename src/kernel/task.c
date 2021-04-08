@@ -345,7 +345,7 @@ void task_destory(Task *task)
 {
     release_pid(task->tid);
     DEBUGP("free pages %d\n", free_pages);
-    if (task->pid == task->tid)
+    if (task->pid == task->tid && task->user != 0)
     {
         free_user_pde(task);
         page_free(task->vaddr.mmap.bits, 1);

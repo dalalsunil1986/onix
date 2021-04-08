@@ -13,7 +13,7 @@ REAL_CFLAGS = $(INCLUDE) -fno-builtin -m32 -fno-stack-protector \
 		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -w \
 		-D ONIX_DEBUG \
 
-DEBUG_CFLAGS = $(INCLUDE) -m32 -w -D ONIX_KERNEL_DEBUG -D ONIX_DEBUG -g 
+DEBUG_CFLAGS = $(INCLUDE) -m32 -w -D MAIN_DEBUG -D ONIX_DEBUG -g 
 
 SRC:=$(SRC_DIR)/osh.c 
 

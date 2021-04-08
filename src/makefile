@@ -139,6 +139,9 @@ $(DEBUG_DIR)/%.o: $(FS_ONIX_SRC)/%.c
 $(DEBUG_DIR)/%.o: $(DEBUG_SRC)/%.c
 	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
+$(DEBUG_DIR)/%.o: $(OSH_SRC)/%.c
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
+
 REAL_TARGET:=$(BUILD)/kernel.bin
 
 REAL_OBJECTS= $(KERNEL_ASM:$(KERNEL_SRC)/%.asm=$(REAL_DIR)/%.o) \
@@ -155,6 +158,7 @@ DEBUG_OBJECTS=$(KERNEL_C:$(KERNEL_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(FS_C:$(FS_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(FS_C:$(FS_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(FS_ONIX_C:$(FS_ONIX_SRC)/%.c=$(DEBUG_DIR)/%.o) \
+			$(OSH_C:$(OSH_SRC)/%.c=$(DEBUG_DIR)/%.o) \
 			$(DEBUG_C:$(DEBUG_SRC)/%.c=$(DEBUG_DIR)/%.o)
 
 DEBUG_TARGET:=$(BUILD)/debug.out
