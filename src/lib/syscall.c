@@ -19,6 +19,11 @@ void sys_clear()
     syscall0(SYS_NR_CLEAR);
 }
 
+u32 sys_read(fd_t fd, void *buf, u32 count)
+{
+    return syscall3(SYS_NR_READ, fd, buf, count);
+}
+
 u32 sys_write(char *str)
 {
     return syscall1(SYS_NR_WRITE, str);

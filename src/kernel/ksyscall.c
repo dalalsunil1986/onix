@@ -10,6 +10,7 @@
 #include <onix/string.h>
 #include <fs/path.h>
 #include <fs/onix/fssyscall.h>
+#include <onix/kernel/ioqueue.h>
 
 #define DEBUGINFO
 
@@ -19,6 +20,7 @@
 #define DEBUGP(fmt, args...)
 #endif
 
+extern IOQueue key_ioq;
 extern void syscall_handler();
 SyscallHandler syscall_table[SYSCALL_SIZE];
 
@@ -115,6 +117,31 @@ int32 __sys_stat(const char *pathname, Stat *stat)
     return -1;
 }
 
+int32 __sys_read(fd_t fd, void *buf, u32 count)
+{
+    assert(buf != NULL);
+    int32 ret = -1;
+    if (fd < 0 || fd == onix_stdout || fd == onix_stderr)
+    {
+        printk("sys_read: fd error\n");
+        return ret;
+    }
+    if (fd == onix_stdin)
+    {
+        char *ptr = buf;
+        u32 idx = 0;
+        while (idx < count)
+        {
+            ptr = buf + idx;
+            *ptr = ioqueue_get(&key_ioq);
+            idx++;
+        }
+        return idx;
+    }
+    ret = onix_sys_read(fd, buf, count);
+    return ret;
+}
+
 void init_syscall()
 {
     InterruptHandler handler = syscall_handler;
@@ -139,4 +166,5 @@ void init_syscall()
     syscall_table[SYS_NR_FREE] = __sys_free;
     syscall_table[SYS_NR_GETCWD] = __sys_getcwd;
     syscall_table[SYS_NR_STAT] = __sys_stat;
+    syscall_table[SYS_NR_READ] = __sys_read;
 }

@@ -53,6 +53,8 @@ u32 sys_test();
 void sys_exit(u32 code);
 u32 sys_getpid();
 void sys_clear();
+
+u32 sys_read(fd_t fd, void *buf, u32 count);
 u32 sys_write(char *str);
 
 u32 sys_malloc(size_t size);

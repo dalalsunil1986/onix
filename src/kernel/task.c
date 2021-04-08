@@ -431,6 +431,5 @@ void init_tasks()
 
     idle = task_start(idle_task, 0, NULL, "idle task", 1);
     task_start(init_task, 0, NULL, "init task", 64);
-    task_start(keyboard_task, 0, NULL, "key task", 64);
     task_start(fork_task, 0, NULL, "fork task", 16);
 }

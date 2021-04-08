@@ -4,8 +4,6 @@
 #include <onix/kernel/debug.h>
 #include <onix/kernel/printk.h>
 #include <onix/assert.h>
-#include <onix/kernel/keyboard.h>
-#include <onix/kernel/ioqueue.h>
 
 #define DEBUGINFO
 
@@ -14,8 +12,6 @@
 #else
 #define DEBUGP(fmt, args...)
 #endif
-
-extern IOQueue key_ioq;
 
 void init_task()
 {
@@ -65,21 +61,6 @@ void idle_task()
         show_char(ch, 75, 0);
         task_block(task);
         pause();
-    }
-}
-
-void keyboard_task()
-{
-    while (true)
-    {
-        bool old = disable_int();
-        if (!ioqueue_empty(&key_ioq))
-        {
-            char byte = ioqueue_get(&key_ioq);
-            put_char(byte);
-        }
-        clock_sleep(1);
-        set_interrupt_status(old);
     }
 }
 
