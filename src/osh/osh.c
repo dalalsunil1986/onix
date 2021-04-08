@@ -18,6 +18,12 @@ void print_prompt()
     printf("[steven@localhost %s]# ", dname);
 }
 
+void buildin_pwd()
+{
+
+    printf("%s\n", sys_getcwd(cwd, MAX_PATH_LEN));
+}
+
 void readline(char *buf, u32 count)
 {
     assert(buf != NULL);
@@ -90,6 +96,15 @@ static int cmd_parse(char *cmd, char *argv[], char token)
     return argc;
 }
 
+static void execute(int argc, char *argv[])
+{
+    char *line = argv[0];
+    if (!strcmp(line, "pwd"))
+    {
+        return buildin_pwd();
+    }
+}
+
 #ifdef MAIN_DEBUG
 int main()
 #else
@@ -120,6 +135,7 @@ int osh_task()
         {
             continue;
         }
+        execute(argc, argv);
     }
     panic("shoud not be here\n");
     return 0;
