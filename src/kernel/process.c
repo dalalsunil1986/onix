@@ -152,7 +152,7 @@ Task *process_copy(Task *parent)
 
 void process_wrapper(Tasktarget *target, void *args)
 {
-    sys_exit(target(args));
+    // sys_exit(target(args));
 }
 
 void process_start(Tasktarget target, void *args)

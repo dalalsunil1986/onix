@@ -15,7 +15,7 @@
 
 #define TASK_MAX_OPEN_FILES 32
 
-typedef u32 Tasktarget(void *);
+typedef u32 Tasktarget(int argc, char const *argv[]);
 
 typedef enum TASK_STATUS
 {
@@ -80,6 +80,14 @@ typedef struct ProcessFrame
     void (*eip)(Tasktarget *target, void *args);
 } ProcessFrame;
 
+typedef struct TaskArgs
+{
+    void (*eip)(void); // 用于模拟调用栈 wrapper
+    void (*target)(void);
+    u32 argc;
+    void *argv;
+} TaskArgs;
+
 typedef struct Task
 {
     u32 *stack;
@@ -113,8 +121,8 @@ void push_task(Task *task);
 void push_ready_task(Task *task);
 
 void task_init(Task *task, char *name, int priority, int user);
-void task_create(Task *task, Tasktarget target, void *args);
-Task *task_start(Tasktarget target, void *args, const char *name, int priority);
+void task_create(Task *task, Tasktarget target, int argc, char const *argv[]);
+Task *task_start(Tasktarget target, int argc, char const *argv[], const char *name, int priority);
 
 void task_hanging(Task *task);
 void task_block(Task *task);

@@ -117,15 +117,15 @@ void push_died_task(Task *task)
     set_interrupt_status(old);
 }
 
-void task_wrapper(Tasktarget target, void *args)
+void task_wrapper(Tasktarget target, int argc, char const *argv[])
 {
     assert(!get_interrupt_status());
     enable_int();
-    target(args);
+    target(argc, argv);
     task_exit(running_task());
 }
 
-void task_create(Task *task, Tasktarget target, void *args)
+void task_create(Task *task, Tasktarget target, int argc, char const *argv[])
 {
     u32 stack = task->stack;
     stack -= sizeof(InterruptFrame);
@@ -135,7 +135,7 @@ void task_create(Task *task, Tasktarget target, void *args)
     ThreadFrame *frame = (ThreadFrame *)task->stack;
     frame->eip = task_wrapper;
     frame->target = target;
-    frame->args = args;
+    frame->args = argv;
     frame->ebp = 0x11111111; // 这里的值不重要，用于调试定位栈顶信息
     frame->ebx = 0x22222222;
     frame->edi = 0x33333333;
@@ -218,14 +218,14 @@ void task_init(Task *task, char *name, int priority, int user)
     }
 }
 
-Task *task_start(Tasktarget target, void *args, const char *name, int priority)
+Task *task_start(Tasktarget target, int argc, char const *argv[], const char *name, int priority)
 {
     Task *cur = running_task();
     // BMB;
     Task *task = page_alloc(1);
     DEBUGP("Start task 0x%X\n", (u32)task);
     task_init(task, name, priority, cur->user);
-    task_create(task, target, args);
+    task_create(task, target, argc, argv);
 
     task->cwd = malloc(MAX_PATH_LEN);
 
@@ -377,7 +377,7 @@ void make_setup_task()
 {
     Task *task = running_task();
     task_init(task, "init task", 50, USER_KERNEL);
-    task_create(task, NULL, NULL);
+    task_create(task, NULL, NULL, NULL);
 
 #ifndef ONIX_KERNEL_DEBUG
     task->cwd = (char *)(0x12000);
@@ -394,33 +394,8 @@ void make_setup_task()
     DEBUGP("Task create 0x%X stack top 0x%X target 0x%08X\n", (u32)task, (u32)task->stack, NULL);
 }
 
-extern void init_task();
-
-static void make_init_task()
-{
-    Task *task = (Task *)TASK_INIT_PAGE;
-    task_init(task, "init task", 50, USER_KERNEL);
-    task_create(task, init_task, NULL);
-
-    ThreadFrame *frame = (ThreadFrame *)task->stack;
-    frame->ebp = 0x1111; // 这里的值不重要，用于调试定位栈顶信息
-    frame->ebx = 0x2222;
-    frame->edi = 0x3333;
-    frame->esi = 0x4444;
-    frame->addr = 0x5555;
-
-    init_stack_top = (u32)task->stack + element_offset(ThreadFrame, addr);
-    // 跳过 switch_to 返回的栈空间
-    // 这样从形式上和其他线程的栈空间一致
-
-    task->status = TASK_RUNNING;
-    assert(task->magic == TASK_MAGIC);
-
-    assert(!queue_find(&tasks_queue, &task->all_node));
-    push_task(task);
-}
-
 extern void idle_task();
+extern void init_task();
 extern void keyboard_task();
 extern void fork_task();
 
@@ -438,8 +413,8 @@ void init_tasks()
     queue_init(&tasks_died);
     queue_init(&tasks_fork);
 
-    idle = task_start(idle_task, NULL, "idle task", 1);
-
-    task_start(keyboard_task, NULL, "key task", 64);
-    task_start(fork_task, NULL, "fork task", 16);
+    idle = task_start(idle_task, 0, NULL, "idle task", 1);
+    task_start(init_task, 0, NULL, "init task", 64);
+    task_start(keyboard_task, 0, NULL, "key task", 64);
+    task_start(fork_task, 0, NULL, "fork task", 16);
 }
