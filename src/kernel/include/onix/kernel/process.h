@@ -50,6 +50,7 @@ static TSS tss;
 
 void init_process();
 void init_tss();
+void start_process();
 
 void process_activate(Task *task);
 void process_start(Tasktarget target, int argc, char const *argv[]);

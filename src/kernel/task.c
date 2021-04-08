@@ -412,9 +412,6 @@ void init_setup_task()
 }
 
 extern void idle_task();
-extern void init_task();
-extern void keyboard_task();
-extern void fork_task();
 
 void init_tasks()
 {
@@ -432,8 +429,11 @@ void init_tasks()
     idle = task_start(idle_task, 0, NULL, "idle task", 1);
 }
 
+extern void fork_task();
+extern void sweep_task();
+
 void start_tasks()
 {
-    task_start(init_task, 0, NULL, "init task", 64);
     task_start(fork_task, 0, NULL, "fork task", 16);
+    task_start(sweep_task, 0, NULL, "sweep task", 16);
 }

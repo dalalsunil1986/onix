@@ -71,6 +71,11 @@ int osh_task(int argc, char const *argv[])
     {
         print_prompt();
         readline(cmd, sizeof(cmd));
+        if (cmd[0] == 0)
+        {
+            continue;
+        }
     }
+    panic("shoud not be here\n");
     return 0;
 }

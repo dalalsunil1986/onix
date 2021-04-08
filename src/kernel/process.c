@@ -234,3 +234,10 @@ void init_process()
     CHECK_STACK;
     init_tss();
 }
+
+extern void init_task();
+
+void start_process()
+{
+    process_execute(init_task, 0, NULL, "init task");
+}

@@ -48,6 +48,8 @@ void __init_kernel()
 void restart()
 {
     start_tasks();
+    start_process();
+
     Task *task = running_task();
     task->status = TASK_DIED;
     disable_int();

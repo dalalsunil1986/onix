@@ -5,6 +5,8 @@
 #include <onix/kernel/printk.h>
 #include <onix/kernel/process.h>
 #include <onix/assert.h>
+#include <onix/stdio.h>
+#include <onix/syscall.h>
 
 #define DEBUGINFO
 
@@ -18,35 +20,28 @@ extern int osh_task(int argc, char const *argv[]);
 
 void init_task()
 {
-    __clear();
-
-    process_execute(osh_task, 0, NULL, "osh");
-
-    u32 counter = 0;
-    Task *task;
-
+    clear();
     while (true)
     {
-        // BMB;
-        // DEBUGP("init task....\n");
+        printf("Hello init....\n");
+        sys_sleep(1000);
+    }
+}
+
+void sweep_task()
+{
+    Task *task;
+    while (true)
+    {
         task = running_task();
         assert(task->magic == TASK_MAGIC);
-        // BMB;
-        counter++;
-        char ch = ' ';
-        if ((counter % 2) != 0)
-        {
-            ch = 'K';
-        }
-        show_char(ch, 77, 0);
 
         task = pop_died_task();
         if (task != NULL)
         {
             task_destory(task);
         }
-        clock_sleep(100);
-        pause();
+        task_yield();
     }
 }
 
