@@ -64,6 +64,7 @@ void sys_free(void *ptr);
 void sys_sleep(u32 milliseconds);
 
 char *sys_getcwd(char *buf, u32 size);
+int32 sys_chdir(const char *path);
 int32 sys_stat(const char *pathname, Stat *stat);
 
 u32 sys_fork();

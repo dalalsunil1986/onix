@@ -9,12 +9,15 @@
 #define MAX_ARG_NR 16
 
 static char cwd[MAX_PATH_LEN];
+static char path[MAX_PATH_LEN];
 static char dname[MAX_FILENAME_LENGTH];
 static char cmd[MAX_CMD_LEN];
 static char *argv[MAX_ARG_NR];
 
 void print_prompt()
 {
+    sys_getcwd(cwd, MAX_PATH_LEN);
+    basename(cwd, dname);
     printf("[steven@localhost %s]# ", dname);
 }
 
@@ -26,6 +29,58 @@ void buildin_pwd()
 void buildin_clear()
 {
     clear();
+}
+
+void buildin_cd(int argc, char *argv[])
+{
+    char *path = NULL;
+    if (argc == 1)
+    {
+        path = "/";
+    }
+    else
+    {
+        path = argv[1];
+    }
+
+    sys_chdir(path);
+}
+
+// void buildin_ls(int argc, char *argv[])
+// {
+//     char *pathname = NULL;
+
+//     if (pathname == NULL)
+//     {
+//         sys_getcwd(path, MAX_PATH_LEN);
+//         pathname = path;
+//     }
+//     else
+//     {
+//         abspath(argv[1], path);
+//         pathname
+//     }
+// }
+
+static void execute(int argc, char *argv[])
+{
+    char *line = argv[0];
+    if (!strcmp(line, "pwd"))
+    {
+        return buildin_pwd();
+    }
+    if (!strcmp(line, "clear"))
+    {
+        return buildin_clear();
+    }
+    if (!strcmp(line, "cd"))
+    {
+        return buildin_cd(argc, argv);
+    }
+    // if (!strcmp(line, "ls"))
+    // {
+    //     return buildin_ls(argc, argv);
+    // }
 }
 
 void readline(char *buf, u32 count)
@@ -100,34 +155,16 @@ static int cmd_parse(char *cmd, char *argv[], char token)
     return argc;
 }
 
-static void execute(int argc, char *argv[])
-{
-    char *line = argv[0];
-    if (!strcmp(line, "pwd"))
-    {
-        return buildin_pwd();
-    }
-    if (!strcmp(line, "clear"))
-    {
-        return buildin_clear();
-    }
-}
-
 #ifdef MAIN_DEBUG
 int main()
 #else
 int osh_task()
 #endif
 {
-    char test[] = "asdf asdf asdf   asdf   asdf asdf";
-    int argc = cmd_parse(test, argv, ' ');
-
     memset(cmd, 0, sizeof(cmd));
     memset(cwd, 0, sizeof(cwd));
     memset(dname, 0, sizeof(dname));
 
-    sys_getcwd(cwd, MAX_PATH_LEN);
-    basename(cwd, dname);
     clear();
 
     while (true)
@@ -138,7 +175,7 @@ int osh_task()
         {
             continue;
         }
-        argc = cmd_parse(cmd, argv, ' ');
+        int argc = cmd_parse(cmd, argv, ' ');
         if (argc < 0 || argc >= MAX_ARG_NR)
         {
             continue;

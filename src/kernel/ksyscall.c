@@ -173,4 +173,5 @@ void init_syscall()
     syscall_table[SYS_NR_STAT] = __sys_stat;
     syscall_table[SYS_NR_READ] = __sys_read;
     syscall_table[SYS_NR_PUTCHAR] = __sys_putchar;
+    syscall_table[SYS_NR_CHDIR] = __sys_chdir;
 }

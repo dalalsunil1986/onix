@@ -59,6 +59,11 @@ char *sys_getcwd(char *buf, u32 size)
 #endif
 }
 
+int32 sys_chdir(const char *path)
+{
+    return syscall1(SYS_NR_CHDIR, path);
+}
+
 int32 sys_stat(const char *pathname, Stat *stat)
 {
 #ifndef ONIX_KERNEL_DEBUG
