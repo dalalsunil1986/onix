@@ -113,6 +113,11 @@ void process_execute(Tasktarget *target, int argc, char const *argv[], const cha
 
     process_create(task, target, argc, argv);
 
+    task->cwd = malloc(MAX_PATH_LEN);
+
+    memset(task->cwd, 0, MAX_PATH_LEN);
+    memcpy(task->cwd, "/", 1);
+
     create_user_pde(task);
 
     push_task(task);
@@ -173,6 +178,9 @@ Task *process_copy(Task *parent)
     process_copy_task(parent, task);
     copy_user_pde(parent, task);
     process_build_stack(task);
+
+    task->cwd = malloc(MAX_PATH_LEN);
+    memcpy(task->cwd, parent->cwd, strlen(parent->cwd));
 
     // todo update open files...
 

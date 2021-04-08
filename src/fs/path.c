@@ -25,19 +25,14 @@ char *dirname(char *path, char *name)
 
 char *basename(char *path, char *name)
 {
-    u32 length = strlen(path);
-    bool split_flag = false;
-
-    while (is_split(path[--length]))
-        ;
-    u32 last = length + 1;
-
-    while (!is_split(path[--length]))
-        ;
-    u32 start = length + 1;
-    u32 size = last - start;
-    memcpy(name, path + start, size);
-    name[size] = 0;
+    int length = strlen(path);
+    char *ptr1 = strrchr(path, '/');
+    if (ptr1 == path || ptr1 == NULL)
+    {
+        memcpy(name, path, length);
+        return name;
+    }
+    memcpy(name, path + 1, length - 1);
     return name;
 }
 
