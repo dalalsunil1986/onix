@@ -63,7 +63,12 @@ static void default_handler(int vector)
     printk("default interrupt handler 0x%X \n", vector);
 }
 
-static void exception_handler(int vector, int code, int eip, int cs, int eflags)
+static void exception_handler(
+    int vector,
+    u32 edi, u32 esi, u32 ebp, u32 esp,
+    u32 ebx, u32 edx, u32 ecx, u32 eax,
+    u32 gs, u32 fs, u32 es, u32 ds,
+    int code, int eip, int cs, int eflags)
 {
     char *messages[] = {
         "#DE Divide Error\0",
@@ -88,14 +93,15 @@ static void exception_handler(int vector, int code, int eip, int cs, int eflags)
         "#XF SIMD Floating-Point Exception\0"};
 
     Task *task = running_task();
-    printk("Exception: %s \n    TASK: 0X%08X\n    NAME: %s\n    EFLAGS: 0x%X\n    CS: 0x%X\n    EIP: 0x%X \n    ErrorCode: 0x%X \n",
-           messages[vector],
-           task,
-           task->name,
-           eflags,
-           cs,
-           eip,
-           code);
+    printk("Exception   : %s \n", messages[vector]);
+    printk("    NAME    : %s\n", task->name);
+    printk("    VECTOR  : 0x%02X\n", vector);
+    printk("    CODE    : 0x%08X\n", code);
+    printk("    TASK    : 0X%08X\n", task);
+    printk("    EFLAGS  : 0x%08X\n", eflags);
+    printk("    EIP     : 0x%08X\n", eip);
+    printk("    CS      : 0x%02X\n", cs);
+
     task_hanging(running_task());
     halt();
 }
