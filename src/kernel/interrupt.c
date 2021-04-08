@@ -87,9 +87,11 @@ static void exception_handler(int vector, int code, int eip, int cs, int eflags)
         "#MC Machine Check\0",
         "#XF SIMD Floating-Point Exception\0"};
 
-    printk("Exception: %s \n    TASK: 0X%08X\n    EFLAGS: 0x%X CS: 0x%X EIP: 0x%X \n    ErrorCode: 0x%X \n",
+    Task *task = running_task();
+    printk("Exception: %s \n    TASK: 0X%08X\n    NAME: %s\n    EFLAGS: 0x%X\n    CS: 0x%X\n    EIP: 0x%X \n    ErrorCode: 0x%X \n",
            messages[vector],
-           running_task(),
+           task,
+           task->name,
            eflags,
            cs,
            eip,
