@@ -20,8 +20,12 @@ void print_prompt()
 
 void buildin_pwd()
 {
-
     printf("%s\n", sys_getcwd(cwd, MAX_PATH_LEN));
+}
+
+void buildin_clear()
+{
+    clear();
 }
 
 void readline(char *buf, u32 count)
@@ -102,6 +106,10 @@ static void execute(int argc, char *argv[])
     if (!strcmp(line, "pwd"))
     {
         return buildin_pwd();
+    }
+    if (!strcmp(line, "clear"))
+    {
+        return buildin_clear();
     }
 }
 
