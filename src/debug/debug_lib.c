@@ -134,6 +134,11 @@ void interrupt_exit()
 {
 }
 
+void __interrupt_exit()
+{
+}
+
+
 u32 interrupt_entry_table[256];
 u32 syscall_handler[256];
 
