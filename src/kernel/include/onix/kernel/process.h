@@ -39,9 +39,11 @@ typedef struct TSS
 
 typedef struct ProcessArgs
 {
-    void (*eip)(void);
+    void (*process_start)(void); // process_start
+    void (*eip)(void);           // 用于模拟调用栈 wrapper
     void (*target)(void);
-    void *args;
+    u32 argc;
+    void *argv;
 } ProcessArgs;
 
 static TSS tss;
@@ -50,8 +52,8 @@ void init_process();
 void init_tss();
 
 void process_activate(Task *task);
-void process_start(Tasktarget target, void *args);
-void process_execute(Tasktarget *target, const char *name);
+void process_start(Tasktarget target, int argc, char const *argv[]);
+void process_execute(Tasktarget *target, int argc, char const *argv[], const char *name);
 
 void test_process();
 

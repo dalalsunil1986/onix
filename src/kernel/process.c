@@ -30,7 +30,7 @@ extern void copy_user_pde(Task *parent, Task *task);
 
 void init_tss()
 {
-    printk("Initilaizing TSS...\n\0");
+    DEBUGK("init TSS...\n\0");
     memset(&tss, 0, sizeof(tss));
     tss.ss0 = *(u32 *)&SELECTOR_KERNEL_DATA;
     tss.iobase = sizeof(tss);
@@ -74,20 +74,50 @@ void process_activate(Task *task)
     }
 }
 
-void process_execute(Tasktarget *target, const char *name)
+void process_create(Task *task, Tasktarget target, int argc, char const *argv[])
+{
+    DEBUGK("taskwrapper 0x%X\n    process_start 0x%X\n    target 0x%X\n", task_wrapper, process_start, target);
+    u32 stack = task->stack;
+    stack -= sizeof(InterruptFrame);
+
+    stack -= sizeof(TaskArgs);
+
+    TaskArgs *args = stack;
+    // args->process_start = process_start;
+    args->eip = process_start;
+    args->target = target;
+    args->argc = argc;
+    args->argv = argv;
+
+    stack -= sizeof(TaskFrame);
+    task->stack = stack;
+
+    TaskFrame *frame = (TaskFrame *)task->stack;
+    frame->eip = process_start;
+    frame->ebp = 0x11111111; // 这里的值不重要，用于调试定位栈顶信息
+    frame->ebx = 0x22222222;
+    frame->edi = 0x33333333;
+    frame->esi = 0x44444444;
+}
+
+void process_execute(Tasktarget *target, int argc, char const *argv[], const char *name)
 {
     DEBUGP("process execute 0x%08X name %s\n", target, name);
     // BMB;
     Task *task = page_alloc(1);
     Task *cur = running_task();
     DEBUGP("process execute 0x%08X alloc 0x%08X\n", target, task);
+
     task_init(task, name, DEFAULT_PRIORITY, USER_USER);
     create_user_mmap(task);
 
-    task_create(task, process_start, target, 0);
+    process_create(task, target, argc, argv);
+
     create_user_pde(task);
+
     push_task(task);
     push_ready_task(task);
+
     task->ppid = cur->pid;
     task->pid = task->tid;
 }
@@ -150,28 +180,24 @@ Task *process_copy(Task *parent)
     return task;
 }
 
-void process_wrapper(Tasktarget *target, void *args)
-{
-    // sys_exit(target(args));
-}
-
-void process_start(Tasktarget target, void *args)
+void process_start(Tasktarget target, int argc, char const *argv[])
 {
     Task *cur = running_task();
+    DEBUGP("process start 0x%X\n", cur);
 
     cur->stack = (char *)cur + PG_SIZE - sizeof(InterruptFrame);
 
     InterruptFrame *frame = (InterruptFrame *)cur->stack;
 
-    frame->edi = 0;
-    frame->esi = 0;
-    frame->ebp = 0;
-    frame->esp_dummy = 0;
+    frame->edi = 1;
+    frame->esi = 2;
+    frame->ebp = 3;
+    frame->esp_dummy = 4;
 
-    frame->ebx = 0;
-    frame->edx = 0;
-    frame->ecx = 0;
-    frame->eax = 0;
+    frame->ebx = 5;
+    frame->edx = 6;
+    frame->ecx = 7;
+    frame->eax = 8;
 
     frame->gs = 0;
     frame->ds = SELECTOR_USER_DATA;
@@ -180,15 +206,17 @@ void process_start(Tasktarget target, void *args)
     frame->ss = SELECTOR_USER_DATA;
     frame->cs = SELECTOR_USER_CODE;
 
-    frame->esp = (void *)((u32)page_alloc(1) + PG_SIZE);
-    frame->eip = process_wrapper;
+    frame->eip = task_wrapper;
     frame->eflags = (EFLAGS_IOPL0 | EFLAGS_MBS | EFLAGS_IF);
 
-    frame->esp -= sizeof(ProcessArgs);
-    ProcessArgs *pargs = (ProcessArgs *)frame->esp;
-    pargs->eip = process_wrapper;
-    pargs->target = target;
-    pargs->args = args;
+    frame->esp = (void *)((u32)page_alloc(1) + PG_SIZE);
+
+    frame->esp -= sizeof(TaskArgs);
+    TaskArgs *args = (TaskArgs *)frame->esp;
+    args->eip = task_wrapper;
+    args->target = target;
+    args->argc = argc;
+    args->argv = argv;
 
     interrupt_exit(frame);
 }
@@ -197,7 +225,7 @@ extern void test_processa();
 
 void test_process(void *args)
 {
-    process_execute(test_processa, "test process");
+    process_execute(test_processa, 0x12345, 0x666666, "test process");
 }
 
 void init_process()

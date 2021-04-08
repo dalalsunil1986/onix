@@ -117,12 +117,17 @@ void push_died_task(Task *task)
     set_interrupt_status(old);
 }
 
-void task_wrapper(Tasktarget target, int argc, char const *argv[])
+void ktask_wrapper(Tasktarget target, int argc, char const *argv[])
 {
     assert(!get_interrupt_status());
     enable_int();
     target(argc, argv);
     task_exit(running_task());
+}
+
+void task_wrapper(Tasktarget target, int argc, char const *argv[])
+{
+    sys_exit(target(argc, argv));
 }
 
 void task_create(Task *task, Tasktarget target, int argc, char const *argv[])
@@ -131,7 +136,15 @@ void task_create(Task *task, Tasktarget target, int argc, char const *argv[])
     stack -= sizeof(TaskArgs);
 
     TaskArgs *args = stack;
-    args->eip = task_wrapper;
+    if (task->user)
+    {
+        args->eip = task_wrapper;
+    }
+    else
+    {
+        args->eip = ktask_wrapper;
+    }
+
     args->target = target;
     args->argc = argc;
     args->argv = argv;

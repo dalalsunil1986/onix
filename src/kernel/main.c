@@ -43,6 +43,6 @@ u32 __init_kernel()
     //     test_function();
     //     PBMB;
     // #endif
-    // test_process();
+    test_process();
     return idle->stack;
 }

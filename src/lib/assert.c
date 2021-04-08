@@ -14,8 +14,8 @@ int assert_print(char *fmt, ...)
     i = vsprintf(buf, fmt, args);
     va_end(args);
 
-    Task *task = running_task();
-    if (task->user)
+    u32 stack = running_task();
+    if (stack < KERNEL_ADDR_MASK)
         printf(buf);
     else
         printk(buf);

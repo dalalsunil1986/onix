@@ -114,6 +114,7 @@ void task_block(Task *task);
 void task_unblock(Task *task);
 void task_yield();
 
+void task_wrapper(Tasktarget target, int argc, char const *argv[]);
 u32 task_fork();
 
 void task_exit(Task *task);
