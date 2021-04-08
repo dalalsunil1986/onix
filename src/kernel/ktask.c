@@ -33,7 +33,7 @@ void init_task()
             {
                 ch = 'K';
             }
-            show_char(ch, 77, 0);
+            show_char(ch, 79, 0);
             sys_sleep(1000);
         }
     }

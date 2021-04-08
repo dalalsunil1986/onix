@@ -386,7 +386,6 @@ void schedule()
 
     process_activate(next);
 
-    show_char(next->tid % 10 + 0x30, 73, 0); // TODO REMOVE THIS CHAR
     switch_to(cur, next);
 }
 
