@@ -142,6 +142,11 @@ int32 __sys_read(fd_t fd, void *buf, u32 count)
     return ret;
 }
 
+void __sys_putchar(char ch)
+{
+    put_char(ch);
+}
+
 void init_syscall()
 {
     InterruptHandler handler = syscall_handler;
@@ -167,4 +172,5 @@ void init_syscall()
     syscall_table[SYS_NR_GETCWD] = __sys_getcwd;
     syscall_table[SYS_NR_STAT] = __sys_stat;
     syscall_table[SYS_NR_READ] = __sys_read;
+    syscall_table[SYS_NR_PUTCHAR] = __sys_putchar;
 }

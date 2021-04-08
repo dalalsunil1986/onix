@@ -23,6 +23,7 @@ void test_processa()
     char buf[size];
     while (true)
     {
+        sys_putchar('t');
         printf("[steven@onix]#");
         sys_read(onix_stdin, buf, size);
         buf[15] = 0;

@@ -29,6 +29,11 @@ u32 sys_write(char *str)
     return syscall1(SYS_NR_WRITE, str);
 }
 
+void sys_putchar(char ch)
+{
+    return syscall1(SYS_NR_PUTCHAR, ch);
+}
+
 void sys_sleep(u32 milliseconds)
 {
     syscall1(SYS_NR_SLEEP, milliseconds);

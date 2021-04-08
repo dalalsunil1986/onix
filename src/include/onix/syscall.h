@@ -11,6 +11,7 @@ enum SYSCALL_NR
     SYS_NR_FORK,
     SYS_NR_READ,
     SYS_NR_WRITE,
+    SYS_NR_PUTCHAR,
     SYS_NR_OPEN,
     SYS_NR_CLOSE,
     SYS_NR_WAITPID,
@@ -56,6 +57,7 @@ void sys_clear();
 
 u32 sys_read(fd_t fd, void *buf, u32 count);
 u32 sys_write(char *str);
+void sys_putchar(char ch);
 
 u32 sys_malloc(size_t size);
 void sys_free(void *ptr);
