@@ -182,6 +182,23 @@ Task *process_copy(Task *parent)
     task->cwd = malloc(MAX_PATH_LEN);
     memcpy(task->cwd, parent->cwd, strlen(parent->cwd));
 
+    // update arena block queue
+    for (size_t i = 0; i < DESC_COUNT; i++)
+    {
+        ArenaDesc *desc = task->adesc + i;
+        Queue *queue = &desc->free_list;
+        if (queue->size == 0)
+        {
+            queue->head.next = &queue->tail;
+            queue->tail.prev = &queue->head;
+        }
+        else
+        {
+            queue->head.next->prev = &queue->head;
+            queue->tail.prev->next = &queue->tail;
+        }
+    }
+
     // todo update open files...
 
     set_interrupt_status(old);

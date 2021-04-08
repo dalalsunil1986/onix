@@ -3,8 +3,13 @@
 #include <onix/assert.h>
 #include <onix/kernel/debug.h>
 
-// #define DEBUGP DEBUGK
+// #define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
 #define DEBUGP(fmt, args...)
+#endif
 
 void queue_init(Queue *queue)
 {
