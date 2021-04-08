@@ -274,7 +274,7 @@ int main()
     free_pages = 1000;
     Task *task = running_task();
     init_pid();
-    make_setup_task();
+    init_setup_task();
     init_harddisk();
     init_fs();
 #else

@@ -2,6 +2,15 @@
 #include <onix/kernel/mutex.h>
 #include <onix/assert.h>
 #include <onix/bitmap.h>
+#include <onix/kernel/debug.h>
+
+#define DEBUGINFO
+
+#ifdef DEBUGINFO
+#define DEBUGP DEBUGK
+#else
+#define DEBUGP(fmt, args...)
+#endif
 
 #define BITS_LEN ((MAX_PID + 1) / 8)
 
@@ -18,6 +27,7 @@ static PIDPool pool;
 
 void init_pid()
 {
+    DEBUGK("init pid...\n");
     pool.map.bits = bits;
     pool.map.length = BITS_LEN;
     pool.start = 0;

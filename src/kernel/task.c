@@ -128,14 +128,15 @@ void task_wrapper(Tasktarget target, int argc, char const *argv[])
 void task_create(Task *task, Tasktarget target, int argc, char const *argv[])
 {
     u32 stack = task->stack;
-    stack -= sizeof(InterruptFrame);
+    // stack -= sizeof(InterruptFrame);
     stack -= sizeof(ThreadFrame);
     task->stack = stack;
 
     ThreadFrame *frame = (ThreadFrame *)task->stack;
     frame->eip = task_wrapper;
     frame->target = target;
-    frame->args = argv;
+    frame->argc = argc;
+    frame->argv = argv;
     frame->ebp = 0x11111111; // 这里的值不重要，用于调试定位栈顶信息
     frame->ebx = 0x22222222;
     frame->edi = 0x33333333;
@@ -373,11 +374,11 @@ void schedule()
     switch_to(cur, next);
 }
 
-void make_setup_task()
+void init_setup_task()
 {
+    DEBUGK("init setup task...\n");
     Task *task = running_task();
     task_init(task, "init task", 50, USER_KERNEL);
-    task_create(task, NULL, NULL, NULL);
 
 #ifndef ONIX_KERNEL_DEBUG
     task->cwd = (char *)(0x12000);

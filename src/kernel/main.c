@@ -29,7 +29,7 @@ u32 __init_kernel()
 {
     init_gdt();
     init_pid();
-    make_setup_task();
+    init_setup_task();
     init_memory();
     init_arena();
     init_interrupt();

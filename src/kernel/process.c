@@ -84,7 +84,7 @@ void process_execute(Tasktarget *target, const char *name)
     task_init(task, name, DEFAULT_PRIORITY, USER_USER);
     create_user_mmap(task);
 
-    task_create(task, process_start, target);
+    task_create(task, process_start, target, 0);
     create_user_pde(task);
     push_task(task);
     push_ready_task(task);

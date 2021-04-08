@@ -17,7 +17,7 @@ Pointer gdt_ptr;
 
 void init_gdt()
 {
-    printk("Initializing GDT...\n");
+    DEBUGK("init GDT...\n");
     save_gdt(&gdt_ptr);
 
     DEBUGP("Gdt base 0x%X limit 0x%X 0x%X\n", gdt_ptr.base, gdt_ptr.limit, sizeof(Descriptor));

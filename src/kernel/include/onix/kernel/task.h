@@ -67,7 +67,8 @@ typedef struct ThreadFrame
     void(*addr); // placeholder
 
     Tasktarget *target;
-    void *args;
+    int argc;
+    char *argv;
     /* data */
 } ThreadFrame;
 
@@ -114,7 +115,7 @@ typedef struct Task
 void init_tasks();
 void schedule();
 
-void make_setup_task();
+void init_setup_task();
 Task *running_task();
 
 void push_task(Task *task);
