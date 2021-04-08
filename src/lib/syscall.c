@@ -43,7 +43,7 @@ void sys_free(void *ptr)
 char *sys_getcwd(char *buf, u32 size)
 {
 #ifndef ONIX_KERNEL_DEBUG
-    return syscall2(SYS_NR_CWD, buf, size);
+    return syscall2(SYS_NR_GETCWD, buf, size);
 #else
     return __sys_getcwd(buf, size);
 #endif

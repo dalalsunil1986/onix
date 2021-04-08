@@ -25,9 +25,3 @@ void test_processa()
     }
     DEBUGP("test process %d exit....\n", sys_getpid());
 }
-
-void test_task()
-{
-    DEBUGP("Hello test task, exit...\n");
-    sys_sleep(1000);
-}
