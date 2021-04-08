@@ -57,7 +57,6 @@ void buildin_cd(int argc, char *argv[])
 
 void buildin_ls(int argc, char *argv[])
 {
-
     if (argc == 1)
     {
         sys_getcwd(path, MAX_PATH_LEN);
@@ -71,7 +70,7 @@ void buildin_ls(int argc, char *argv[])
     int ret = sys_stat(path, &stat);
     if (ret != 0)
     {
-        DEBUGP("%s not exists...\n", path);
+        printf("%s is not exists...\n", path);
         return;
     }
     if (stat.type == FILETYPE_DIRECTORY)
@@ -85,7 +84,8 @@ void buildin_ls(int argc, char *argv[])
             entry = sys_readdir(dir);
             if (entry == NULL)
                 break;
-            printf("%s ", entry->filename);
+            basename(entry->filename, subpath);
+            printf("%s ", subpath);
         }
         printf("\n");
     }
@@ -96,11 +96,25 @@ void buildin_ls(int argc, char *argv[])
     }
 }
 
+void buildin_mkdir(int argc, char *argv[])
+{
+    if (argc != 2)
+    {
+        printf("mkdir: only support 1 argument!\n");
+        return;
+    }
+    abspath(argv[1], path);
+    if (!strcmp(path, "/"))
+    {
+        return;
+    }
+    return sys_mkdir(path);
+}
+
 void buildin_test(int argc, char *argv[])
 {
     printf("test...\n");
     void *buf = malloc(4);
-
     free(buf);
 }
 
@@ -122,6 +136,10 @@ static void execute(int argc, char *argv[])
     if (!strcmp(line, "ls"))
     {
         return buildin_ls(argc, argv);
+    }
+    if (!strcmp(line, "mkdir"))
+    {
+        return buildin_mkdir(argc, argv);
     }
     if (!strcmp(line, "test"))
     {

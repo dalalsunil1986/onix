@@ -60,7 +60,7 @@ static void init_idt()
 
 static void default_handler(int vector)
 {
-    printk("default interrupt handler 0x%X \n", vector);
+    // printk("default interrupt handler 0x%X \n", vector);
 }
 
 static void exception_handler(

@@ -81,6 +81,7 @@ char *__sys_getcwd(char *buf, u32 size)
     u32 length = strlen(task->cwd);
     u32 count = size < length ? size : length;
     memcpy(buf, task->cwd, count);
+    buf[count] = 0;
     return buf;
 }
 
@@ -151,7 +152,10 @@ fd_t __sys_close(fd_t fd);
 int32 __sys_lseek(fd_t fd, int32 offset, Whence whence);
 int32 __sys_unlink(const char *pathname);
 
-int32 __sys_mkdir(const char *pathname);
+int32 __sys_mkdir(const char *pathname)
+{
+    return onix_sys_mkdir(pathname);
+}
 
 Dir *__sys_opendir(const char *pathname)
 {
@@ -211,4 +215,5 @@ void init_syscall()
     syscall_table[SYS_NR_OPENDIR] = __sys_opendir;
     syscall_table[SYS_NR_READDIR] = __sys_readdir;
     syscall_table[SYS_NR_REWINDDIR] = __sys_rewinddir;
+    syscall_table[SYS_NR_MKDIR] = __sys_mkdir;
 }

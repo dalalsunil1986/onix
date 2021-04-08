@@ -71,6 +71,7 @@ char *sys_getcwd(char *buf, u32 size);
 int32 sys_chdir(const char *path);
 int32 sys_stat(const char *pathname, Stat *stat);
 
+int32 sys_mkdir(const char *pathname);
 int32 sys_opendir(const char *pathname);
 DirEntry *sys_readdir(Dir *dir);
 void sys_rewinddir(Dir *dir);

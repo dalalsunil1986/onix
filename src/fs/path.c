@@ -27,12 +27,17 @@ char *basename(char *path, char *name)
 {
     int length = strlen(path);
     char *ptr1 = strrchr(path, '/');
-    if (ptr1 == path || ptr1 == NULL)
+    int offset = ptr1 - path;
+    if (ptr1 == NULL)
     {
         memcpy(name, path, length);
+        name[length] = 0;
         return name;
     }
-    memcpy(name, path + 1, length - 1);
+
+    length = strlen(ptr1 + 1);
+    memcpy(name, ptr1 + 1, length);
+    name[length] = 0;
     return name;
 }
 

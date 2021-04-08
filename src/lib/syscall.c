@@ -86,6 +86,11 @@ int32 sys_stat(const char *pathname, Stat *stat)
 
 int32 sys_open(const char *pathname, FileFlag flags);
 
+int32 sys_mkdir(const char *pathname)
+{
+    return syscall1(SYS_NR_MKDIR, pathname);
+}
+
 int32 sys_opendir(const char *pathname)
 {
     return syscall1(SYS_NR_OPENDIR, pathname);
