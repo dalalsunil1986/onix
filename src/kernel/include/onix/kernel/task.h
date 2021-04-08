@@ -56,30 +56,14 @@ typedef struct InterruptFrame
     u32 ss;
 } InterruptFrame;
 
-typedef struct ThreadFrame
-{
-    u32 ebp;
-    u32 ebx;
-    u32 edi;
-    u32 esi;
-
-    void (*eip)(Tasktarget *target, void *args);
-    void(*addr); // placeholder
-
-    Tasktarget *target;
-    int argc;
-    char *argv;
-    /* data */
-} ThreadFrame;
-
-typedef struct ProcessFrame
+typedef struct TaskFrame
 {
     u32 ebp;
     u32 ebx;
     u32 edi;
     u32 esi;
     void (*eip)(Tasktarget *target, void *args);
-} ProcessFrame;
+} TaskFrame;
 
 typedef struct TaskArgs
 {

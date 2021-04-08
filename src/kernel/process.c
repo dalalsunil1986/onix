@@ -118,19 +118,19 @@ static void process_build_stack(Task *task)
     addr -= sizeof(InterruptFrame);
     InterruptFrame *iframe = (InterruptFrame *)addr;
 
-    addr -= sizeof(ProcessFrame);
-    ProcessFrame *pframe = addr;
+    addr -= sizeof(TaskFrame);
+    TaskFrame *tframe = addr;
 
     iframe->eax = 0;
 
-    pframe->ebp = 0xaa55aa55;
-    pframe->ebx = 0xaa55aa55;
-    pframe->edi = 0xaa55aa55;
-    pframe->esi = 0xaa55aa55;
+    tframe->ebp = 0xaa55aa55;
+    tframe->ebx = 0xaa55aa55;
+    tframe->edi = 0xaa55aa55;
+    tframe->esi = 0xaa55aa55;
 
-    pframe->eip = __interrupt_exit;
+    tframe->eip = __interrupt_exit;
 
-    task->stack = pframe;
+    task->stack = tframe;
 
     DEBUGP("interrupt exit 0x%X\n", __interrupt_exit);
 }

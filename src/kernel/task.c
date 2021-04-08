@@ -128,20 +128,23 @@ void task_wrapper(Tasktarget target, int argc, char const *argv[])
 void task_create(Task *task, Tasktarget target, int argc, char const *argv[])
 {
     u32 stack = task->stack;
-    // stack -= sizeof(InterruptFrame);
-    stack -= sizeof(ThreadFrame);
+    stack -= sizeof(TaskArgs);
+
+    TaskArgs *args = stack;
+    args->eip = task_wrapper;
+    args->target = target;
+    args->argc = argc;
+    args->argv = argv;
+
+    stack -= sizeof(TaskFrame);
     task->stack = stack;
 
-    ThreadFrame *frame = (ThreadFrame *)task->stack;
+    TaskFrame *frame = (TaskFrame *)task->stack;
     frame->eip = task_wrapper;
-    frame->target = target;
-    frame->argc = argc;
-    frame->argv = argv;
     frame->ebp = 0x11111111; // 这里的值不重要，用于调试定位栈顶信息
     frame->ebx = 0x22222222;
     frame->edi = 0x33333333;
     frame->esi = 0x44444444;
-    frame->addr = 0x55555555;
 }
 
 void init_file_table(Task *task)
@@ -403,9 +406,8 @@ extern void fork_task();
 void init_tasks()
 {
     CHECK_STACK;
-    DEBUGP("Size Taskframe %d\n", sizeof(InterruptFrame));
-    DEBUGP("Size Threadframe %d\n", sizeof(ThreadFrame));
-    DEBUGP("StackFrame size 0x%X\n", sizeof(ThreadFrame) + sizeof(InterruptFrame));
+
+    DEBUGK("init tasks...\n");
 
     init_pid();
 

@@ -19,8 +19,6 @@ extern IOQueue key_ioq;
 
 void init_task()
 {
-    __clear();
-
     u32 counter = 0;
     Task *task;
 
