@@ -21,10 +21,25 @@ extern int osh_task(int argc, char const *argv[]);
 void init_task()
 {
     clear();
-    while (true)
+    u32 pid = sys_fork();
+    if (pid)
     {
-        printf("Hello init....\n");
-        sys_sleep(1000);
+        u32 counter = 0;
+        while (true)
+        {
+            counter++;
+            char ch = ' ';
+            if ((counter % 2) != 0)
+            {
+                ch = 'K';
+            }
+            show_char(ch, 77, 0);
+            sys_sleep(1000);
+        }
+    }
+    else
+    {
+        osh_task(0, NULL);
     }
 }
 
