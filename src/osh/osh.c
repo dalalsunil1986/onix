@@ -193,6 +193,7 @@ static void execute(int argc, char *argv[])
     {
         return buildin_test(argc, argv);
     }
+    printf("osh: command not found: %s\n", argv[0]);
 }
 
 void readline(char *buf, u32 count)
