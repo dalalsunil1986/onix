@@ -35,6 +35,7 @@ void onix_inode_sync(Partition *part, Inode *inode)
     u32 nr = inode->nr;
     InodePosition pos;
     onix_inode_locate(part, nr, &pos);
+    assert(pos.sec_lba <= part->sec_cnt);
 
     char *buf = malloc(BLOCK_SIZE);
     if (buf == NULL)
@@ -43,10 +44,7 @@ void onix_inode_sync(Partition *part, Inode *inode)
     }
     memset(buf, 0, BLOCK_SIZE);
 
-    assert(pos.sec_lba <= part->sec_cnt);
-
     Inode pure_inode;
-
     memcpy(&pure_inode, inode, sizeof(Inode));
 
     pure_inode.open_cnts = 0;
@@ -54,9 +52,9 @@ void onix_inode_sync(Partition *part, Inode *inode)
     pure_inode.node.prev = NULL;
     pure_inode.node.next = NULL;
 
-    partition_read(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
+    onix_block_lba_read(part, pos.sec_lba, buf);
     memcpy((buf + pos.offset), &pure_inode, sizeof(Inode));
-    partition_write(part, pos.sec_lba, buf, BLOCK_SECTOR_COUNT);
+    onix_block_lba_write(part, pos.sec_lba, buf);
     free(buf);
 }
 
