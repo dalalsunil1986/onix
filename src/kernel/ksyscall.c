@@ -56,9 +56,17 @@ u32 __sys_getpid()
     return task->pid;
 }
 
-void __sys_clear()
+extern Queue tasks_queue;
+
+void __sys_ps()
 {
-    __clear();
+    Node *node = tasks_queue.tail.prev;
+    while (node != &tasks_queue.head)
+    {
+        Task *task = element_entry(Task, all_node, node);
+        printk("%d %08X %s\n", task->tid, task, task->name);
+        node = node->prev;
+    }
 }
 
 void __sys_sleep(u32 milliseconds)
@@ -195,6 +203,11 @@ void __sys_putchar(char ch)
     put_char(ch);
 }
 
+void __sys_clear()
+{
+    __clear();
+}
+
 void init_syscall()
 {
     InterruptHandler handler = syscall_handler;
@@ -212,6 +225,7 @@ void init_syscall()
     syscall_table[SYS_NR_EXIT] = __sys_exit;
     syscall_table[SYS_NR_FORK] = __sys_fork;
     syscall_table[SYS_NR_GETPID] = __sys_getpid;
+    syscall_table[SYS_NR_PS] = __sys_ps;
     syscall_table[SYS_NR_SLEEP] = __sys_sleep;
 
     syscall_table[SYS_NR_MALLOC] = __sys_malloc;

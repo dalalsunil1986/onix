@@ -32,6 +32,7 @@ enum SYSCALL_NR
     SYS_NR_STAT,
     SYS_NR_LSEEK,
     SYS_NR_GETPID,
+    SYS_NR_PS,
     SYS_NR_MOUNT,
     SYS_NR_UMOUNT,
     SYS_NR_SETUID,
@@ -59,6 +60,7 @@ void sys_exit(u32 code);
 void sys_sleep(u32 milliseconds);
 u32 sys_fork();
 u32 sys_getpid();
+void sys_ps();
 
 void sys_clear();
 void sys_putchar(char ch);

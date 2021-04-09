@@ -25,6 +25,11 @@ u32 sys_getpid()
     return syscall0(SYS_NR_GETPID);
 }
 
+void sys_ps()
+{
+    return syscall0(SYS_NR_PS);
+}
+
 void sys_sleep(u32 milliseconds)
 {
     syscall1(SYS_NR_SLEEP, milliseconds);

@@ -145,6 +145,11 @@ void buildin_rm(int argc, char *argv[])
     }
 }
 
+void buildin_ps()
+{
+    sys_ps();
+}
+
 void buildin_test(int argc, char *argv[])
 {
     // printf("test...\n");
@@ -159,6 +164,10 @@ static void execute(int argc, char *argv[])
     if (!strcmp(line, "pwd"))
     {
         return buildin_pwd();
+    }
+    if (!strcmp(line, "ps"))
+    {
+        return buildin_ps();
     }
     if (!strcmp(line, "clear"))
     {
