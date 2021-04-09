@@ -43,6 +43,7 @@ void buildin_clear()
 
 void buildin_ls(int argc, char *argv[])
 {
+    memset(path, 0, MAX_PATH_LEN);
     if (argc == 1)
     {
         sys_getcwd(path, MAX_PATH_LEN);
@@ -89,6 +90,7 @@ void buildin_mkdir(int argc, char *argv[])
         printf("mkdir: only support 1 argument!\n");
         return;
     }
+    memset(path, 0, MAX_PATH_LEN);
     abspath(argv[1], path);
 
     if (!strcmp(path, "/"))
@@ -110,6 +112,7 @@ void buildin_cd(int argc, char *argv[])
         printf("mkdir: only support 1 argument!\n");
         return;
     }
+    memset(path, 0, MAX_PATH_LEN);
     abspath(argv[1], path);
     return sys_chdir(path);
 }
@@ -238,6 +241,7 @@ int osh_task()
     while (true)
     {
         print_prompt();
+        memset(cmd, 0, MAX_CMD_LEN);
         readline(cmd, sizeof(cmd));
         if (cmd[0] == 0)
         {
