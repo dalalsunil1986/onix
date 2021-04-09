@@ -46,6 +46,113 @@ void onix_init_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry)
     entry->type = type;
 }
 
+static bool onix_commit_dir_entry(Partition *part, Inode *pinode, u32 idx, DirEntry *entry, void *buf)
+{
+    u32 dir_size = pinode->size;
+    u32 dir_entry_size = part->super_block->dir_entry_size;
+    u32 dir_entry_cnt = (BLOCK_SIZE / dir_entry_size);
+
+    assert(dir_size % dir_entry_size == 0);
+
+    onix_block_read(part, idx, buf);
+
+    u32 pidx = 0;
+    while (pidx < dir_entry_cnt)
+    {
+        DirEntry *pentry = (DirEntry *)buf + pidx;
+        if (pentry->type == FILETYPE_UNKNOWN)
+        {
+            memcpy(pentry, entry, dir_entry_size);
+            onix_block_write(part, idx, buf);
+            pinode->size += dir_entry_size;
+            return true;
+        }
+        pidx++;
+    }
+    return false;
+}
+
+bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
+{
+    char *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        return;
+    }
+
+#ifndef ONIX_KERNEL_DEBUG
+    u32 *blocks = malloc(ALL_BLOCKS_SIZE);
+    if (blocks == NULL)
+    {
+        free(buf);
+        return;
+    }
+#else
+    u32 blocks[INODE_ALL_BLOCKS];
+#endif
+
+    u32 idx = 0;
+    u32 step = 0;
+    bool success = false;
+
+    Inode *pinode = parent->inode;
+
+    onix_block_loads(part, pinode, blocks);
+
+    int32 block_bitmap_idx = -1;
+    idx = 0;
+    bool flag = false;
+
+    while (idx < INODE_ALL_BLOCKS)
+    {
+        if (blocks[idx] && onix_commit_dir_entry(part, pinode, blocks[idx], entry, buf))
+        {
+            success = true;
+            onix_inode_sync(part, pinode);
+            goto rollback;
+        }
+
+        if (blocks[idx]) // 有 block 但是已经满了的情况
+        {
+            idx++;
+            continue;
+        }
+
+        block_bitmap_idx = onix_block_bitmap_alloc_sync(part);
+        if (block_bitmap_idx == -1)
+        {
+            printk("allocate block bitmap failed ...\n");
+            goto rollback;
+        }
+
+        if (idx < DIRECT_BLOCK_CNT) // 直接块
+        {
+            pinode->blocks[idx] = blocks[idx] = block_bitmap_idx;
+            continue;
+        }
+        else if (idx == INDIRECT_BLOCK_IDX && !flag) // 一级间接块
+        {
+            pinode->blocks[idx] = block_bitmap_idx;
+            onix_inode_sync(part, pinode);
+            flag = true;
+            continue;
+        }
+
+        blocks[idx] = block_bitmap_idx;
+        char *blockbuf = (u32 *)blocks + INDIRECT_BLOCK_IDX;
+        onix_block_write(part, pinode->blocks[INDIRECT_BLOCK_IDX], blockbuf);
+        continue;
+    }
+    printk("directory is full!\n");
+
+rollback:
+    free(buf);
+#ifndef ONIX_KERNEL_DEBUG
+    free(blocks);
+#endif
+    return success;
+}
+
 Dir *onix_dir_open(Partition *part, u32 nr)
 {
     Dir *dir = malloc(sizeof(Dir));
@@ -70,26 +177,25 @@ void onix_dir_close(Partition *part, Dir *dir)
 
 DirEntry *onix_dir_read(Partition *part, Dir *dir)
 {
+#ifndef ONIX_KERNEL_DEBUG
+    u32 *blocks = malloc(ALL_BLOCKS_SIZE);
+    if (blocks == NULL)
+    {
+        return;
+    }
+#else
+    u32 blocks[INODE_ALL_BLOCKS];
+#endif
+
     DirEntry *entry = dir->buffer;
     Inode *inode = dir->inode;
+    char *buf = dir->buffer;
 
-    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
+    onix_block_loads(part, inode, blocks);
+
     u32 step = 0;
     bool success = false;
     u32 lba = 0;
-    if (blocks == NULL)
-    {
-        step = 1;
-        goto rollback;
-    }
-    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
-    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
-    u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
-    if (indirect_idx)
-    {
-        lba = onix_block_lba(part, indirect_idx);
-        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
-    }
 
     u32 entry_size = part->super_block->dir_entry_size;
     u32 entry_cnt = BLOCK_SIZE / entry_size;
@@ -100,7 +206,6 @@ DirEntry *onix_dir_read(Partition *part, Dir *dir)
     {
         if (dir->offset >= inode->size)
         {
-            step = 2;
             entry = NULL;
             goto rollback;
         }
@@ -110,9 +215,7 @@ DirEntry *onix_dir_read(Partition *part, Dir *dir)
             continue;
         }
 
-        memset(dir->buffer, 0, sizeof(dir->buffer));
-        lba = onix_block_lba(part, blocks[idx]);
-        partition_read(part, lba, dir->buffer, BLOCK_SECTOR_COUNT);
+        onix_block_read(part, blocks[idx], dir->buffer);
 
         u32 entry_idx = 0;
         while (entry_idx < entry_cnt)
@@ -131,23 +234,17 @@ DirEntry *onix_dir_read(Partition *part, Dir *dir)
             }
             assert(entry_offset == dir->offset);
             dir->offset += entry_size;
-            step = 2;
             goto rollback;
         }
         idx++;
     }
-    step = 2;
     entry = NULL;
 rollback:
-    switch (step)
-    {
-    case 2:
-        free(blocks);
-    case 1:
-        break;
-    default:
-        break;
-    }
+
+#ifndef ONIX_KERNEL_DEBUG
+    free(blocks);
+#endif
+
     return entry;
 }
 
@@ -369,135 +466,6 @@ rollback:
         break;
     }
     return ret;
-}
-
-bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
-{
-    Inode *dir_inode = parent->inode;
-    u32 dir_size = dir_inode->size;
-    u32 dir_entry_size = root_part->super_block->dir_entry_size;
-
-    assert(dir_size % dir_entry_size == 0);
-
-    u32 dir_entry_cnt = (BLOCK_SIZE / dir_entry_size);
-    int32 block_lba = -1;
-
-    u32 idx = 0;
-    u32 step = 0;
-    bool success = false;
-    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
-    if (blocks == NULL)
-    {
-        step = 1;
-        goto rollback;
-    }
-
-    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
-    // u32 blocks[INODE_ALL_BLOCKS] = {0};
-
-    memcpy(blocks, dir_inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
-
-    u32 lba = 0;
-    u32 indirect_idx = dir_inode->blocks[INDIRECT_BLOCK_IDX];
-    if (indirect_idx)
-    {
-        lba = onix_block_lba(part, indirect_idx);
-        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
-    }
-
-    char *buf = malloc(BLOCK_SIZE);
-    if (buf == NULL)
-    {
-        step = 2;
-        goto rollback;
-    }
-
-    memset(buf, 0, BLOCK_SIZE);
-
-    DirEntry *dir_entry = buf;
-
-    int32 block_bitmap_idx = -1;
-
-    idx = 0;
-    bool flag = false;
-
-    while (idx < INODE_ALL_BLOCKS)
-    {
-        if (blocks[idx] != 0)
-        {
-            lba = onix_block_lba(part, blocks[idx]);
-            partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
-            u8 dir_entry_idx = 0;
-            while (dir_entry_idx < dir_entry_cnt)
-            {
-                DirEntry *dir_ptr = (dir_entry + dir_entry_idx);
-                if (dir_ptr->type == FILETYPE_UNKNOWN)
-                {
-                    memcpy(dir_ptr, entry, dir_entry_size);
-                    partition_write(part, lba, buf, BLOCK_SECTOR_COUNT);
-                    dir_inode->size += dir_entry_size;
-                    step = 3;
-                    success = true;
-                    goto rollback;
-                }
-                dir_entry_idx++;
-            }
-            idx++;
-            continue;
-        }
-
-        block_bitmap_idx = onix_block_bitmap_alloc_sync(part);
-        if (block_bitmap_idx == -1)
-        {
-            printk("allocate block bitmap failed ...\n");
-            step = 3;
-            goto rollback;
-        }
-        if (idx < DIRECT_BLOCK_CNT) // 直接块
-        {
-            dir_inode->blocks[idx] = blocks[idx] = block_bitmap_idx;
-            continue;
-        }
-        else if (idx >= INDIRECT_BLOCK_IDX && flag) // 一级间接块
-        {
-            blocks[idx] = block_bitmap_idx;
-            lba = onix_block_lba(part, dir_inode->blocks[INDIRECT_BLOCK_IDX]);
-            partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
-            continue;
-        }
-        dir_inode->blocks[idx] = block_bitmap_idx;
-        u32 bitmap_idx = onix_block_bitmap_alloc_sync(part);
-        if (block_lba == -1)
-        {
-            bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);
-            dir_inode->blocks[idx] = 0;
-            printk("alloc block bitmap failed\n");
-            step = 3;
-            goto rollback;
-        }
-
-        assert(idx == INDIRECT_BLOCK_IDX);
-        dir_inode->blocks[idx] = block_bitmap_idx;
-        onix_inode_sync(part, dir_inode);
-        flag = true;
-        continue;
-    }
-    printk("directory is full!\n");
-    step = 3;
-
-rollback:
-    switch (step)
-    {
-    case 3:
-        free(buf);
-    case 2:
-        free(blocks);
-    case 1:
-        break;
-    default:
-        break;
-    }
-    return success;
 }
 
 static bool onix_delete_dir_block(Partition *part, Inode *inode, u32 *blocks, u32 block_idx)

@@ -40,7 +40,7 @@ void onix_block_write(Partition *part, u32 idx, void *buf)
     return onix_block_lba_write(part, lba, buf);
 }
 
-void onix_block_loads(Partition *part, Inode *inode, void *blocks)
+void onix_block_loads(Partition *part, Inode *inode, u32 blocks[INODE_ALL_BLOCKS])
 {
     memset(blocks, 0, ALL_BLOCKS_SIZE);
     memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
