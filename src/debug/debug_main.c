@@ -79,10 +79,10 @@ void test_inode()
 {
     // PBMB;
     u32 idx = 5;
-    u32 nr = 5;
+    u32 nr = onix_inode_bitmap_alloc_sync(part);
     DEBUGP("inode open %d\n", nr);
     Inode *inode = onix_inode_open(part, nr);
-    for (size_t i = 0; i < DIRECT_BLOCK_CNT; i++)
+    for (size_t i = 0; i < 3; i++)
     {
         idx = onix_block_bitmap_alloc_sync(part);
         inode->blocks[i] = idx;
@@ -120,7 +120,7 @@ void test_dir()
         DEBUGP("test dir alloc inode bitmap\n");
         nr = onix_inode_bitmap_alloc_sync(part);
         DEBUGP("file %s is not exists, then create it.\n", filename);
-        onix_create_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
+        onix_init_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
         onix_sync_dir_entry(part, root_dir, &entry);
     }
     else
@@ -292,10 +292,10 @@ void test_function()
     part = root_part;
     print_format_info(part, part->super_block);
     // test_path();
-    test_read_write();
+    // test_read_write();
     // test_fsbitmap();
-    test_inode();
-    // test_dir();
+    // test_inode();
+    test_dir();
     // test_file();
     // test_fssys_call();
     // test_cwd();

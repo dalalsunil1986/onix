@@ -8,7 +8,7 @@ Dir *onix_open_root_dir(Partition *part);
 
 int32 onix_search_file(const char *pathname, SearchRecord *record);
 bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry);
-void onix_create_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry);
+void onix_init_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry);
 bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry);
 bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry);
 

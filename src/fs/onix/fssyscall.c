@@ -311,7 +311,7 @@ int32 onix_sys_mkdir(const char *pathname)
     DirEntry *entry = &holder;
     memset(entry, 0, sizeof(holder));
 
-    onix_create_dir_entry(name, nr, FILETYPE_DIRECTORY, entry);
+    onix_init_dir_entry(name, nr, FILETYPE_DIRECTORY, entry);
 
     memset(buf, 0, BLOCK_SIZE);
     if (!onix_sync_dir_entry(part, parent, entry))

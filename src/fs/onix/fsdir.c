@@ -19,6 +19,12 @@
 Dir root_dir;
 extern Partition *root_part;
 
+void init_dir()
+{
+    root_dir.inode = NULL;
+    onix_open_root_dir(root_part);
+}
+
 Dir *onix_open_root_dir(Partition *part)
 {
     if (root_dir.inode != NULL)
@@ -29,6 +35,15 @@ Dir *onix_open_root_dir(Partition *part)
     root_dir.offset = 0;
     root_dir.part = part;
     return &root_dir;
+}
+
+void onix_init_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry)
+{
+    assert(strlen(filename) <= MAX_FILENAME_LENGTH);
+    memset(entry->filename, 0, sizeof(entry->filename));
+    memcpy(entry->filename, filename, strlen(filename));
+    entry->inode_nr = nr;
+    entry->type = type;
 }
 
 Dir *onix_dir_open(Partition *part, u32 nr)
@@ -356,15 +371,6 @@ rollback:
     return ret;
 }
 
-void onix_create_dir_entry(char *filename, u32 nr, FileType type, DirEntry *entry)
-{
-    assert(strlen(filename) <= MAX_FILENAME_LENGTH);
-    memset(entry->filename, 0, sizeof(entry->filename));
-    memcpy(entry->filename, filename, strlen(filename));
-    entry->inode_nr = nr;
-    entry->type = type;
-}
-
 bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
 {
     Inode *dir_inode = parent->inode;
@@ -661,10 +667,4 @@ rollback:
         break;
     }
     return success;
-}
-
-void init_dir()
-{
-    root_dir.inode = NULL;
-    onix_open_root_dir(root_part);
 }

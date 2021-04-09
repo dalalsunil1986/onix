@@ -60,7 +60,7 @@ bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, 
     DirEntry entry;
     memset(&entry, 0, sizeof(DirEntry));
 
-    onix_create_dir_entry(name, nr, FILETYPE_REGULAR, &entry);
+    onix_init_dir_entry(name, nr, FILETYPE_REGULAR, &entry);
 
     if (!onix_sync_dir_entry(part, parent, &entry))
     {
