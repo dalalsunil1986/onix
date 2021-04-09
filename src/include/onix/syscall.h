@@ -60,8 +60,6 @@ void sys_sleep(u32 milliseconds);
 u32 sys_fork();
 u32 sys_getpid();
 
-u32 sys_read(fd_t fd, void *buf, u32 count);
-u32 sys_write(fd_t fd, void *buf, u32 count);
 void sys_clear();
 void sys_putchar(char ch);
 
@@ -71,6 +69,10 @@ void sys_free(void *ptr);
 char *sys_getcwd(char *buf, u32 size);
 int32 sys_chdir(const char *path);
 int32 sys_stat(const char *pathname, Stat *stat);
+
+u32 sys_read(fd_t fd, void *buf, u32 count);
+u32 sys_write(fd_t fd, void *buf, u32 count);
+int32 sys_unlink(const char *pathname);
 
 int32 sys_mkdir(const char *pathname);
 int32 sys_rmdir(const char *pathname);

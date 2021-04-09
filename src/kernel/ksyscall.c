@@ -154,7 +154,11 @@ fd_t __sys_open(const char *pathname, FileFlag flags);
 fd_t __sys_close(fd_t fd);
 
 int32 __sys_lseek(fd_t fd, int32 offset, Whence whence);
-int32 __sys_unlink(const char *pathname);
+
+int32 __sys_unlink(const char *pathname)
+{
+    return onix_sys_unlink(pathname);
+}
 
 int32 __sys_mkdir(const char *pathname)
 {
@@ -213,15 +217,17 @@ void init_syscall()
     syscall_table[SYS_NR_MALLOC] = __sys_malloc;
     syscall_table[SYS_NR_FREE] = __sys_free;
 
-    syscall_table[SYS_NR_STAT] = __sys_stat;
-    syscall_table[SYS_NR_READ] = __sys_read;
-    syscall_table[SYS_NR_WRITE] = __sys_write;
-
     syscall_table[SYS_NR_PUTCHAR] = __sys_putchar;
     syscall_table[SYS_NR_CLEAR] = __sys_clear;
 
     syscall_table[SYS_NR_CHDIR] = __sys_chdir;
     syscall_table[SYS_NR_GETCWD] = __sys_getcwd;
+
+    syscall_table[SYS_NR_STAT] = __sys_stat;
+    syscall_table[SYS_NR_READ] = __sys_read;
+    syscall_table[SYS_NR_WRITE] = __sys_write;
+
+    syscall_table[SYS_NR_ULINK] = __sys_unlink;
 
     syscall_table[SYS_NR_OPENDIR] = __sys_opendir;
     syscall_table[SYS_NR_CLOSEDIR] = __sys_closedir;

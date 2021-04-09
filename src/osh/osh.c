@@ -141,8 +141,7 @@ void buildin_rm(int argc, char *argv[])
     }
     else if (stat.type == FILETYPE_REGULAR)
     {
-        // DEBUGP("%s is file...\n", path);
-        printf("%s\n", path);
+        return sys_unlink(path);
     }
 }
 
