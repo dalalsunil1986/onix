@@ -109,10 +109,11 @@ void test_dir()
     DirEntry holder;
     DirEntry *entry = &holder;
 
-    char filename[] = "hello";
+    char filename[] = "file     ";
     u32 count = 1;
     while (count++)
     {
+        sprintf(filename, "file %04d", count);
         u32 nr = onix_inode_bitmap_alloc_sync(part);
         onix_init_dir_entry(filename, nr, FILETYPE_REGULAR, entry);
         bool success = onix_sync_dir_entry(part, parent, entry);
@@ -122,32 +123,20 @@ void test_dir()
     }
 
     parent->offset = 0;
-
     int item = 0;
-    while (true)
+    while (item < 100)
     {
         DirEntry *child = onix_dir_read(part, parent);
         if (child == NULL)
             break;
         item++;
     }
-    assert(item == parent->inode->size / sizeof(DirEntry));
 
-    // DEBUGP("test dir search file %s\n", filename);
-    // bool exists = onix_search_dir_entry(part, root_dir, filename, &entry);
-    // if (!exists)
-    // {
-    //     // PBMB;
-    //     DEBUGP("test dir alloc inode bitmap\n");
+    char filesearch[] = "file 1234";
+    DEBUGP("test dir search file %s\n", filesearch);
+    bool exists = onix_search_dir_entry(part, parent, filesearch, &entry);
+    assert(exists);
 
-    //     DEBUGP("file %s is not exists, then create it.\n", filename);
-    //     onix_init_dir_entry(filename, nr, FILETYPE_REGULAR, &entry);
-    //     onix_sync_dir_entry(part, root_dir, &entry);
-    // }
-    // else
-    // {
-    //     DEBUGP("file %s is exists, congratulations!!!\n");
-    // }
     // // PBMB;
     // SearchRecord *record = malloc(sizeof(SearchRecord));
     // memset(record, 0, sizeof(SearchRecord));

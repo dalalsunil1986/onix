@@ -77,7 +77,7 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
     char *buf = malloc(BLOCK_SIZE);
     if (buf == NULL)
     {
-        return;
+        return false;
     }
 
 #ifndef ONIX_KERNEL_DEBUG
@@ -85,7 +85,7 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
     if (blocks == NULL)
     {
         free(buf);
-        return;
+        return false;
     }
 #else
     u32 blocks[INODE_ALL_BLOCKS];
@@ -181,7 +181,7 @@ DirEntry *onix_dir_read(Partition *part, Dir *dir)
     u32 *blocks = malloc(ALL_BLOCKS_SIZE);
     if (blocks == NULL)
     {
-        return;
+        return NULL;
     }
 #else
     u32 blocks[INODE_ALL_BLOCKS];
@@ -248,6 +248,77 @@ rollback:
     return entry;
 }
 
+bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry)
+{
+    u8 *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        return false;
+    }
+#ifndef ONIX_KERNEL_DEBUG
+    u32 *blocks = malloc(ALL_BLOCKS_SIZE);
+    if (blocks == NULL)
+    {
+        free(buf);
+        return NULL;
+    }
+#else
+    u32 blocks[INODE_ALL_BLOCKS];
+#endif
+
+    u32 step = 0;
+    bool success = false;
+
+    u32 idx = 0;
+    u32 lba = 0;
+
+    onix_block_loads(part, dir->inode, blocks);
+
+    DirEntry *pentry = buf;
+    u32 dir_entry_size = part->super_block->dir_entry_size;
+    u32 dir_entry_cnt = BLOCK_SIZE / dir_entry_size;
+
+    idx = 0;
+    while (idx < INODE_ALL_BLOCKS)
+    {
+        if (!blocks[idx])
+        {
+            idx++;
+            continue;
+        }
+        onix_block_read(part, blocks[idx], buf);
+
+        u32 entry_idx = 0;
+        while (entry_idx < dir_entry_cnt)
+        {
+            pentry = (DirEntry *)buf + entry_idx;
+            if (!strcmp(pentry->filename, name))
+            {
+                memcpy(entry, pentry, dir_entry_size);
+                success = true;
+                step = 3;
+                goto rollback;
+            }
+            entry_idx++;
+        }
+        idx++;
+    }
+    step = 3;
+rollback:
+    switch (step)
+    {
+    case 3:
+        free(buf);
+    case 2:
+#ifndef ONIX_KERNEL_DEBUG
+        free(blocks);
+#endif
+    default:
+        break;
+    }
+    return success;
+}
+
 bool onix_dir_remove(Partition *part, Dir *parent, Dir *dir, DirEntry *entry)
 {
     Inode *inode = dir->inode;
@@ -275,86 +346,6 @@ bool onix_dir_empty(Partition *part, Dir *dir)
 {
     Inode *inode = dir->inode;
     return (inode->size == part->super_block->dir_entry_size * 2);
-}
-
-bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry)
-{
-    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
-    u32 step = 0;
-    bool success = false;
-    if (blocks == NULL)
-    {
-        step = 1;
-        goto rollback;
-    }
-
-    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
-
-    u8 *buf = malloc(BLOCK_SIZE);
-    if (buf == NULL)
-    {
-        step = 2;
-        goto rollback;
-    }
-
-    memset(buf, 0, BLOCK_SIZE);
-
-    u32 idx = 0;
-    u32 lba = 0;
-
-    memcpy(blocks, dir->inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
-    u32 indirect_idx = dir->inode->blocks[INDIRECT_BLOCK_IDX];
-    if (indirect_idx)
-    {
-        lba = onix_block_lba(part, indirect_idx);
-        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
-    }
-
-    DirEntry *dir_ptr = buf;
-    u32 dir_entry_size = part->super_block->dir_entry_size;
-    u32 dir_entry_cnt = BLOCK_SIZE / dir_entry_size;
-
-    idx = 0;
-    while (idx < INODE_ALL_BLOCKS)
-    {
-        if (blocks[idx] == 0)
-        {
-            idx++;
-            continue;
-        }
-        partition_read(part, onix_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
-        u32 entry_idx = 0;
-
-        while (entry_idx < dir_entry_cnt)
-        {
-            if (!strcmp(dir_ptr->filename, name))
-            {
-                memcpy(entry, dir_ptr, dir_entry_size);
-                success = true;
-                step = 3;
-                goto rollback;
-            }
-            entry_idx++;
-            dir_ptr++;
-        }
-        idx++;
-        dir_ptr = buf;
-        memset(buf, 0, BLOCK_SIZE);
-    }
-    step = 3;
-rollback:
-    switch (step)
-    {
-    case 3:
-        free(buf);
-    case 2:
-        free(blocks);
-    case 1:
-        break;
-    default:
-        break;
-    }
-    return success;
 }
 
 int32 onix_search_file(const char *pathname, SearchRecord *record)
