@@ -21,6 +21,7 @@ char *dirname(char *path, char *name)
     {
         *name++ = *ptr++;
     }
+    *name = 0;
     return ptr;
 }
 

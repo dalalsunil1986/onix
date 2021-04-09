@@ -140,6 +140,12 @@ void test_dir()
     free(record);
 }
 
+void test_mkdir()
+{
+    onix_sys_mkdir("/hello");
+    onix_sys_mkdir("/hello/test");
+}
+
 void test_file()
 {
     // PBMB;
@@ -283,7 +289,7 @@ void test_function()
 {
 #endif
     part = root_part;
-    // print_format_info(part, part->super_block);
+    print_format_info(part, part->super_block);
     // test_path();
     // test_read_write();
     // test_fsbitmap();
@@ -292,9 +298,10 @@ void test_function()
     // test_file();
     // test_fssys_call();
     // test_cwd();
+    test_mkdir();
     DEBUGP("Debug finish.....\n");
 #ifdef ONIX_KERNEL_DEBUG
-    // task_destory(task);
+    task_destory(task);
 #endif
-    osh_task();
+    // osh_task();
 }

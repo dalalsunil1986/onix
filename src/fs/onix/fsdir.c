@@ -295,12 +295,15 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
 
         if (!onix_search_dir_entry(part, parent, name, entry))
         {
+            record->parent = parent;
             step = 3;
+            ret = FILE_NULL;
             goto rollback;
         }
 
         if (entry->type == FILETYPE_REGULAR)
         {
+            record->parent = parent;
             record->type = FILETYPE_REGULAR;
             ret = entry->inode_nr;
             step = 3;
