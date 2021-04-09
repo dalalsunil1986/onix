@@ -152,6 +152,7 @@ bool onix_dir_remove(Partition *part, Dir *parent, Dir *dir, DirEntry *entry)
     {
         return -1;
     }
+
     onix_delete_dir_entry(part, parent, entry);
     onix_inode_delete(part, inode->nr);
     free(buf);
@@ -269,7 +270,11 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
     assert(abuf[0] == '/' && pathlen >= 1 && pathlen < MAX_PATH_LEN);
 
     char *subpath = abuf;
+
     Dir *parent = &root_dir;
+    Dir *current = &root_dir;
+    Dir *next = &root_dir;
+
     DirEntry *entry = &record->entry;
 
     char *name = malloc(MAX_FILENAME_LENGTH);
@@ -293,9 +298,11 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
         strcat(record->search_path, "/");
         strcat(record->search_path, name);
 
-        if (!onix_search_dir_entry(part, parent, name, entry))
+        if (!onix_search_dir_entry(part, next, name, entry))
         {
-            record->parent = parent;
+            onix_dir_close(part, parent);
+            onix_dir_close(part, current);
+            record->parent = next;
             step = 3;
             ret = FILE_NULL;
             goto rollback;
@@ -303,26 +310,34 @@ int32 onix_search_file(const char *pathname, SearchRecord *record)
 
         if (entry->type == FILETYPE_REGULAR)
         {
-            record->parent = parent;
-            record->type = FILETYPE_REGULAR;
+            onix_dir_close(part, parent);
+            onix_dir_close(part, current);
+            record->parent = next;
             ret = entry->inode_nr;
+            record->type = FILETYPE_REGULAR;
             step = 3;
             goto rollback;
         }
 
         if (entry->type == FILETYPE_DIRECTORY)
         {
-            record->type = FILETYPE_DIRECTORY;
-            record->parent = parent;
-            nr = parent->inode->nr;
             onix_dir_close(part, parent);
-            parent = onix_dir_open(part, entry->inode_nr);
+            parent = current;
+            current = next;
+            record->type = FILETYPE_DIRECTORY;
+            next = onix_dir_open(part, entry->inode_nr);
             ret = entry->inode_nr;
         }
         memset(name, 0, sizeof(name));
         if (subpath)
         {
             subpath = dirname(subpath, name);
+        }
+        if (!name[0])
+        {
+            onix_dir_close(part, parent);
+            record->parent = current;
+            onix_dir_close(part, next);
         }
     }
     step = 3;

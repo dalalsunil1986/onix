@@ -20,4 +20,6 @@ void onix_sys_rewinddir(Dir *dir);
 
 int32 onix_sys_stat(const char *pathname, Stat *stat);
 
+void onix_list_dir(Dir *dir);
+
 #endif

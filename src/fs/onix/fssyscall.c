@@ -482,7 +482,7 @@ int32 onix_sys_rmdir(const char *pathname)
         goto rollback;
     }
 
-    Partition *part = get_path_part(pathname);
+    Partition *part = get_path_part(name);
     SearchRecord *record = malloc(sizeof(SearchRecord));
     if (record == NULL)
     {
@@ -516,6 +516,7 @@ int32 onix_sys_rmdir(const char *pathname)
         step = 4;
         goto rollback;
     }
+
     if (!onix_dir_remove(part, record->parent, dir, &record->entry))
     {
         ret = 0;
@@ -616,4 +617,22 @@ rollback:
         break;
     }
     return ret;
+}
+
+void onix_list_dir(Dir *dir)
+{
+    DEBUGP("-----------0x%X-----------\n", dir->inode);
+    DirEntry *entry = NULL;
+    char *subpath = malloc(MAX_PATH_LEN);
+    memset(subpath, 0, MAX_PATH_LEN);
+    onix_sys_rewinddir(dir);
+    while (true)
+    {
+        entry = onix_sys_readdir(dir);
+        if (entry == NULL)
+            break;
+        basename(entry->filename, subpath);
+        DEBUGP("%s \n", subpath);
+    }
+    free(subpath);
 }

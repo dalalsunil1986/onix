@@ -144,6 +144,7 @@ void test_mkdir()
 {
     onix_sys_mkdir("/hello");
     onix_sys_mkdir("/hello/test");
+    onix_sys_rmdir("/hello/test");
 }
 
 void test_file()
