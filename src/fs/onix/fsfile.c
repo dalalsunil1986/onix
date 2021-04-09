@@ -177,7 +177,7 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
     if (inode->blocks[INDIRECT_BLOCK_IDX])
     {
         // 一级间接表存在，读入；
-        lba = get_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
+        lba = onix_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
         partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
         while (blocks[idx])
         {
@@ -197,7 +197,7 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
     { // 写入不完整的最后一个扇区
         write_bytes = MIN(block_left_bytes, count);
 
-        lba = get_block_lba(part, blocks[last_idx]);
+        lba = onix_block_lba(part, blocks[last_idx]);
 
         partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
 
@@ -256,7 +256,7 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
         {
             blocks[idx] = new_blocks[new_block_idx++];
         }
-        lba = get_block_lba(part, blocks[idx]);
+        lba = onix_block_lba(part, blocks[idx]);
         if (count >= BLOCK_SIZE)
         {
             partition_write(part, lba, content, BLOCK_SECTOR_COUNT);
@@ -290,7 +290,7 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
         }
         else if (flag && idx >= INDIRECT_BLOCK_IDX)
         {
-            lba = get_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
+            lba = onix_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
             partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
             break;
         }
@@ -365,7 +365,7 @@ int32 onix_file_read(OnixFile *file, const void *content, int32 count)
     if (inode->blocks[INDIRECT_BLOCK_IDX])
     {
         // 一级间接表存在，读入；
-        lba = get_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
+        lba = onix_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
         partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
     }
 
@@ -387,7 +387,7 @@ int32 onix_file_read(OnixFile *file, const void *content, int32 count)
 
     if (block_remain_bytes)
     {
-        lba = get_block_lba(part, blocks[idx]);
+        lba = onix_block_lba(part, blocks[idx]);
         partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
         if (count <= block_left_bytes)
         {
@@ -406,7 +406,7 @@ int32 onix_file_read(OnixFile *file, const void *content, int32 count)
     }
     while (blocks[idx])
     {
-        lba = get_block_lba(part, blocks[idx]);
+        lba = onix_block_lba(part, blocks[idx]);
         if (count >= BLOCK_SIZE)
         {
             partition_read(part, lba, content, BLOCK_SECTOR_COUNT);

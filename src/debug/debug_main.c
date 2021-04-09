@@ -292,14 +292,14 @@ void test_function()
     part = root_part;
     print_format_info(part, part->super_block);
     // test_path();
-    // test_read_write();
+    test_read_write();
     // test_fsbitmap();
-    // test_inode();
+    test_inode();
     // test_dir();
     // test_file();
     // test_fssys_call();
     // test_cwd();
-    test_mkdir();
+    // test_mkdir();
     DEBUGP("Debug finish.....\n");
 #ifdef ONIX_KERNEL_DEBUG
     task_destory(task);

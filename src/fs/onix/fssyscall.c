@@ -335,7 +335,7 @@ int32 onix_sys_mkdir(const char *pathname)
     entry->inode_nr = parent->inode->nr;
     entry->type = FILETYPE_DIRECTORY;
 
-    partition_write(part, get_block_lba(part, idx), buf, BLOCK_SECTOR_COUNT);
+    partition_write(part, onix_block_lba(part, idx), buf, BLOCK_SECTOR_COUNT);
 
     inode->size = part->super_block->dir_entry_size * 2;
 

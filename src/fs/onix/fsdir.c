@@ -72,7 +72,7 @@ DirEntry *onix_dir_read(Partition *part, Dir *dir)
     u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
     if (indirect_idx)
     {
-        lba = get_block_lba(part, indirect_idx);
+        lba = onix_block_lba(part, indirect_idx);
         partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
     }
 
@@ -96,7 +96,7 @@ DirEntry *onix_dir_read(Partition *part, Dir *dir)
         }
 
         memset(dir->buffer, 0, sizeof(dir->buffer));
-        lba = get_block_lba(part, blocks[idx]);
+        lba = onix_block_lba(part, blocks[idx]);
         partition_read(part, lba, dir->buffer, BLOCK_SECTOR_COUNT);
 
         u32 entry_idx = 0;
@@ -194,7 +194,7 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
     u32 indirect_idx = dir->inode->blocks[INDIRECT_BLOCK_IDX];
     if (indirect_idx)
     {
-        lba = get_block_lba(part, indirect_idx);
+        lba = onix_block_lba(part, indirect_idx);
         partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
     }
 
@@ -210,7 +210,7 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
             idx++;
             continue;
         }
-        partition_read(part, get_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
+        partition_read(part, onix_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
         u32 entry_idx = 0;
 
         while (entry_idx < dir_entry_cnt)
@@ -395,7 +395,7 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
     u32 indirect_idx = dir_inode->blocks[INDIRECT_BLOCK_IDX];
     if (indirect_idx)
     {
-        lba = get_block_lba(part, indirect_idx);
+        lba = onix_block_lba(part, indirect_idx);
         partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
     }
 
@@ -419,7 +419,7 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
     {
         if (blocks[idx] != 0)
         {
-            lba = get_block_lba(part, blocks[idx]);
+            lba = onix_block_lba(part, blocks[idx]);
             partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
             u8 dir_entry_idx = 0;
             while (dir_entry_idx < dir_entry_cnt)
@@ -455,7 +455,7 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
         else if (idx >= INDIRECT_BLOCK_IDX && flag) // 一级间接块
         {
             blocks[idx] = block_bitmap_idx;
-            lba = get_block_lba(part, dir_inode->blocks[INDIRECT_BLOCK_IDX]);
+            lba = onix_block_lba(part, dir_inode->blocks[INDIRECT_BLOCK_IDX]);
             partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
             continue;
         }
@@ -522,7 +522,7 @@ static bool onix_delete_dir_block(Partition *part, Inode *inode, u32 *blocks, u3
         return;
     }
     blocks[block_idx] = 0;
-    lba = get_block_lba(part, inode->blocks[INDIRECT_BLOCK_CNT]);
+    lba = onix_block_lba(part, inode->blocks[INDIRECT_BLOCK_CNT]);
     partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SIZE);
     return true;
 }
@@ -551,7 +551,7 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
     u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
     if (indirect_idx)
     {
-        lba = get_block_lba(part, indirect_idx);
+        lba = onix_block_lba(part, indirect_idx);
         partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
     }
 
@@ -582,7 +582,7 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
             continue;
         }
 
-        partition_read(part, get_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
+        partition_read(part, onix_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
         u32 entry_idx = 0;
         u32 file_count = 0;
         u32 dir_count = 0;
@@ -636,7 +636,7 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
         }
         // 删除目录项
         memset(found_entry, 0, dir_entry_size);
-        partition_write(part, get_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
+        partition_write(part, onix_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
 
         // 同步父目录大小
         assert(inode->size >= dir_entry_size);
