@@ -94,14 +94,15 @@ Node *queue_traversal(Queue *queue, traversal visit, int arg)
     if (queue_empty(queue))
         return NULL;
 
-    Node *node = queue->head.next;
-    while (node != &queue->tail)
+    Node *node = queue->tail.prev;
+
+    while (node != &queue->head)
     {
         if (visit(node, arg))
         {
             return node;
         }
-        node = node->next;
+        node = node->prev;
     }
     return NULL;
 }
