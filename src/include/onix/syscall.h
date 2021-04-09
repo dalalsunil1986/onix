@@ -19,6 +19,7 @@ enum SYSCALL_NR
     SYS_NR_LINK,
     SYS_NR_ULINK,
     SYS_NR_OPENDIR,
+    SYS_NR_CLOSEDIR,
     SYS_NR_READDIR,
     SYS_NR_REWINDDIR,
     SYS_NR_EXEC,
@@ -72,7 +73,9 @@ int32 sys_chdir(const char *path);
 int32 sys_stat(const char *pathname, Stat *stat);
 
 int32 sys_mkdir(const char *pathname);
+int32 sys_rmdir(const char *pathname);
 int32 sys_opendir(const char *pathname);
+int32 sys_closedir(Dir *dir);
 DirEntry *sys_readdir(Dir *dir);
 void sys_rewinddir(Dir *dir);
 

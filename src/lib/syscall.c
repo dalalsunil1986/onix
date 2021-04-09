@@ -91,9 +91,19 @@ int32 sys_mkdir(const char *pathname)
     return syscall1(SYS_NR_MKDIR, pathname);
 }
 
+int32 sys_rmdir(const char *pathname)
+{
+    return syscall1(SYS_NR_RMDIR, pathname);
+}
+
 int32 sys_opendir(const char *pathname)
 {
     return syscall1(SYS_NR_OPENDIR, pathname);
+}
+
+int32 sys_closedir(Dir *dir)
+{
+    return syscall1(SYS_NR_CLOSEDIR, dir);
 }
 
 DirEntry *sys_readdir(Dir *dir)

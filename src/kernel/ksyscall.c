@@ -166,8 +166,15 @@ Dir *__sys_opendir(const char *pathname)
     return onix_sys_opendir(pathname);
 }
 
-int32 __sys_closedir(Dir *dir);
-int32 __sys_rmdir(const char *pathname);
+int32 __sys_closedir(Dir *dir)
+{
+    return onix_sys_closedir(dir);
+}
+
+int32 __sys_rmdir(const char *pathname)
+{
+    return onix_sys_rmdir(pathname);
+}
 
 DirEntry *__sys_readdir(Dir *dir)
 {
@@ -217,7 +224,9 @@ void init_syscall()
     syscall_table[SYS_NR_GETCWD] = __sys_getcwd;
 
     syscall_table[SYS_NR_OPENDIR] = __sys_opendir;
+    syscall_table[SYS_NR_CLOSEDIR] = __sys_closedir;
     syscall_table[SYS_NR_READDIR] = __sys_readdir;
     syscall_table[SYS_NR_REWINDDIR] = __sys_rewinddir;
     syscall_table[SYS_NR_MKDIR] = __sys_mkdir;
+    syscall_table[SYS_NR_RMDIR] = __sys_rmdir;
 }
