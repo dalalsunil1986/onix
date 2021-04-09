@@ -98,16 +98,23 @@ char *__sys_getcwd(char *buf, u32 size)
 
 int32 __sys_chdir(const char *path)
 {
-    if (!exists(path))
-    {
-        printk("%s not exists...\n", path);
-        return -1;
-    }
     u32 size = strlen(path);
     assert(size <= MAX_PATH_LEN);
-    Task *task = running_task();
     memset(pathbuf, 0, MAX_PATH_LEN);
     abspath(path, pathbuf);
+    Stat stat;
+    int ret = onix_sys_stat(pathbuf, &stat);
+    if (ret != 0)
+    {
+        printk("%s is not exists...\n", pathbuf);
+        return -1;
+    }
+    if (stat.type != FILETYPE_DIRECTORY)
+    {
+        printk("%s is not directory...\n", pathbuf);
+        return -1;
+    }
+    Task *task = running_task();
     memcpy(task->cwd, pathbuf, MAX_PATH_LEN);
     return 0;
 }
