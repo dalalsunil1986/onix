@@ -33,6 +33,7 @@ void __sys_default()
 
 void __sys_test()
 {
+    print_irq_mask();
     DEBUGP("syscall test called\n");
 }
 

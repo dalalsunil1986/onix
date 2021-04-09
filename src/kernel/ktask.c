@@ -90,3 +90,13 @@ void fork_task()
         push_ready_task(task);
     }
 }
+
+void test_task()
+{
+    while (true)
+    {
+        // print_irq_mask();
+        // task_hanging(running_task());
+        task_yield();
+    }
+}

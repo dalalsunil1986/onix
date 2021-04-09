@@ -34,8 +34,8 @@ static void init_pic()
     outb(PIC_S_DATA, 2);                     // ICW3: 设置从片连接到主片的IR2引脚
     outb(PIC_S_DATA, ICW4_8086);             // ICW4: 8086模式, 正常EOI
 
-    // outb(PIC_M_DATA, 0b11111100);
-    // outb(PIC_S_DATA, 0b11111111);
+    outb(PIC_M_DATA, 0b11111111); // 关闭所有中断
+    outb(PIC_S_DATA, 0b11111111);
 }
 
 static void init_idt()
@@ -60,7 +60,7 @@ static void init_idt()
 
 static void default_handler(int vector)
 {
-    // printk("default interrupt handler 0x%X \n", vector);
+    printk("default interrupt handler 0x%X \n", vector);
 }
 
 static void exception_handler(
@@ -161,17 +161,29 @@ void set_interrupt_status(bool status)
 
 void enable_irq(u32 irq)
 {
-    // DEBUGP("enable irq %d\n", irq);
+    assert(irq >= 0 && irq < 16);
     if (irq < 8)
         outb(PIC_M_DATA, inb(PIC_M_DATA) & ~(1 << irq));
     else
-        outb(PIC_S_DATA, inb(PIC_S_DATA) & ~(1 << irq));
+        outb(PIC_S_DATA, inb(PIC_S_DATA) & ~(1 << (irq - 8)));
 }
 
 void disable_irq(u32 irq)
 {
+    assert(irq >= 0 && irq < 16);
     if (irq < 8)
         outb(PIC_M_DATA, inb(PIC_M_DATA) | (1 << irq));
     else
-        outb(PIC_S_DATA, inb(PIC_S_DATA) | (1 << irq));
+        outb(PIC_S_DATA, inb(PIC_S_DATA) | (1 << (irq - 8)));
+}
+
+void print_irq_mask()
+{
+    u8 data;
+
+    data = inb(PIC_M_DATA);
+    printk("M 0x%X\n", data);
+
+    data = inb(PIC_S_DATA);
+    printk("S 0x%X\n", data);
 }

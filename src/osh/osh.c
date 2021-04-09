@@ -90,7 +90,7 @@ void buildin_mkdir(int argc, char *argv[])
         return;
     }
     abspath(argv[1], path);
-    
+
     if (!strcmp(path, "/"))
     {
         return;
@@ -116,9 +116,10 @@ void buildin_cd(int argc, char *argv[])
 
 void buildin_test(int argc, char *argv[])
 {
-    printf("test...\n");
-    void *buf = malloc(4);
-    free(buf);
+    // printf("test...\n");
+    // void *buf = malloc(4);
+    // free(buf);
+    sys_test();
 }
 
 static void execute(int argc, char *argv[])

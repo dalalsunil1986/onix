@@ -268,6 +268,7 @@ void task_hanging(Task *task)
     {
         queue_remove(&tasks_ready, &task->node);
     }
+    schedule();
     set_interrupt_status(old);
 }
 
@@ -430,9 +431,11 @@ void init_tasks()
 
 extern void fork_task();
 extern void sweep_task();
+extern void test_task();
 
 void start_tasks()
 {
     task_start(fork_task, 0, NULL, "fork task", 16);
     task_start(sweep_task, 0, NULL, "sweep task", 16);
+    task_start(test_task, 0, NULL, "test task", 16);
 }
