@@ -111,9 +111,11 @@ void test_dir()
 
     char filename[] = "file     ";
     u32 count = 1;
-    while (count++)
+    while (count++ && (parent->inode->size / sizeof(DirEntry)) < 100)
     {
         sprintf(filename, "file %04d", count);
+        DEBUGP("%s \n", filename);
+
         u32 nr = onix_inode_bitmap_alloc_sync(part);
         onix_init_dir_entry(filename, nr, FILETYPE_REGULAR, entry);
         bool success = onix_sync_dir_entry(part, parent, entry);
@@ -132,29 +134,34 @@ void test_dir()
         item++;
     }
 
-    char filesearch[] = "file 1234";
-    DEBUGP("test dir search file %s\n", filesearch);
-    bool exists = onix_search_dir_entry(part, parent, filesearch, &entry);
-    assert(exists);
+    char filesearch[] = "file 0012";
+    DEBUGP("search file %s\n", filesearch);
+    bool exists = onix_search_dir_entry(part, parent, filesearch, entry);
 
-    // // PBMB;
-    // SearchRecord *record = malloc(sizeof(SearchRecord));
-    // memset(record, 0, sizeof(SearchRecord));
-    // // PBMB;
-    // nr = onix_search_file(filename, record);
-    // DEBUGP("search file %s nr %d\n", filename, nr);
-    // // PBMB;
+    SearchRecord *record = malloc(sizeof(SearchRecord));
+    memset(record, 0, sizeof(SearchRecord));
 
-    // DEBUGP("delete dir entry ....\n");
-    // onix_delete_dir_entry(part, root_dir, &entry);
-    // free(record);
+    int nr = onix_search_file(filesearch, record);
+    DEBUGP("search file %s nr %d\n", filesearch, nr);
+
+    if (nr != FILE_NULL)
+    {
+        DEBUGP("delete dir entry ....\n");
+        onix_delete_dir_entry(part, parent, entry->filename);
+    }
+
+    free(record);
+    DEBUGP("Size %d\n", parent->inode->size / sizeof(DirEntry));
 }
 
 void test_mkdir()
 {
     onix_sys_mkdir("/hello");
+    onix_list_dir("/");
     onix_sys_mkdir("/hello/test");
+    onix_list_dir("/hello");
     onix_sys_rmdir("/hello/test");
+    onix_list_dir("/hello");
 }
 
 void test_file()
@@ -305,11 +312,11 @@ void test_function()
     // test_read_write();
     // test_fsbitmap();
     // test_inode();
-    test_dir();
+    // test_dir();
     // test_file();
     // test_fssys_call();
     // test_cwd();
-    // test_mkdir();
+    test_mkdir();
     DEBUGP("Debug finish.....\n");
 #ifdef ONIX_KERNEL_DEBUG
     task_destory(task);

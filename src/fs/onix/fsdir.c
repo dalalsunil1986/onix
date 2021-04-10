@@ -139,8 +139,7 @@ bool onix_sync_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
         }
 
         blocks[idx] = block_bitmap_idx;
-        char *blockbuf = (u32 *)blocks + INDIRECT_BLOCK_IDX;
-        onix_block_write(part, pinode->blocks[INDIRECT_BLOCK_IDX], blockbuf);
+        onix_block_sync_indirect(part, pinode->blocks[INDIRECT_BLOCK_IDX], blocks);
         continue;
     }
     printk("directory is full!\n");
@@ -248,7 +247,7 @@ rollback:
     return entry;
 }
 
-bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entry)
+bool onix_search_dir_entry(Partition *part, Dir *parent, char *name, DirEntry *entry)
 {
     u8 *buf = malloc(BLOCK_SIZE);
     if (buf == NULL)
@@ -260,19 +259,17 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
     if (blocks == NULL)
     {
         free(buf);
-        return NULL;
+        return false;
     }
 #else
     u32 blocks[INODE_ALL_BLOCKS];
 #endif
-
-    u32 step = 0;
     bool success = false;
 
     u32 idx = 0;
     u32 lba = 0;
 
-    onix_block_loads(part, dir->inode, blocks);
+    onix_block_loads(part, parent->inode, blocks);
 
     DirEntry *pentry = buf;
     u32 dir_entry_size = part->super_block->dir_entry_size;
@@ -296,27 +293,107 @@ bool onix_search_dir_entry(Partition *part, Dir *dir, char *name, DirEntry *entr
             {
                 memcpy(entry, pentry, dir_entry_size);
                 success = true;
-                step = 3;
                 goto rollback;
             }
             entry_idx++;
         }
         idx++;
     }
-    step = 3;
 rollback:
-    switch (step)
-    {
-    case 3:
-        free(buf);
-    case 2:
+    free(buf);
 #ifndef ONIX_KERNEL_DEBUG
-        free(blocks);
+    free(blocks);
 #endif
-    default:
-        break;
-    }
     return success;
+}
+
+int32 onix_search_file(const char *pathname, SearchRecord *record)
+{
+    char *name = malloc(MAX_FILENAME_LENGTH);
+    if (name == NULL)
+    {
+        return FILE_NULL;
+    }
+    char *path = malloc(MAX_PATH_LEN);
+    if (path == NULL)
+    {
+        free(name);
+        return FILE_NULL;
+    }
+
+    memset(path, 0, MAX_PATH_LEN);
+    memset(name, 0, MAX_FILENAME_LENGTH);
+
+    int32 ret = FILE_NULL;
+    u32 step = 0;
+    Partition *part = get_path_part(pathname);
+
+    abspath(pathname, path);
+
+    if (!strcmp(path, "/"))
+    {
+        record->parent = &root_dir;
+        record->type = FILETYPE_DIRECTORY;
+        memcpy(record->search_path, "/", 2);
+        ret = 0;
+        goto rollback;
+    }
+
+    u32 pathlen = strlen(path);
+    assert(path[0] == '/' && pathlen >= 1 && pathlen < MAX_PATH_LEN);
+
+    Dir *parent = &root_dir;
+    u32 parent_nr = 0;
+
+    DirEntry *entry = &record->entry;
+
+    record->parent = parent;
+    record->type = FILETYPE_UNKNOWN;
+
+    char *subpath = dirname(path, name);
+
+    while (name[0])
+    {
+        assert(strlen(record->search_path) < MAX_PATH_LEN);
+        strcat(record->search_path, "/");
+        strcat(record->search_path, name);
+
+        if (!onix_search_dir_entry(part, parent, name, entry))
+        {
+            goto rollback;
+        }
+        if (entry->type == FILETYPE_REGULAR)
+        {
+            ret = entry->inode_nr;
+            record->type = FILETYPE_REGULAR;
+            goto rollback;
+        }
+
+        memset(name, 0, MAX_FILENAME_LENGTH);
+
+        if (subpath)
+        {
+            subpath = dirname(subpath, name);
+        }
+
+        if (entry->type == FILETYPE_DIRECTORY)
+        {
+            parent_nr = parent->inode->nr;
+            onix_dir_close(part, parent);
+            record->type = FILETYPE_DIRECTORY;
+            parent = onix_dir_open(part, entry->inode_nr);
+            record->parent = parent;
+        }
+    }
+    onix_dir_close(part, record->parent);
+    record->parent = onix_dir_open(part, parent_nr);
+    record->type = FILETYPE_DIRECTORY;
+    ret = entry->inode_nr;
+
+rollback:
+    free(name);
+    free(path);
+    return ret;
 }
 
 bool onix_dir_remove(Partition *part, Dir *parent, Dir *dir, DirEntry *entry)
@@ -329,16 +406,8 @@ bool onix_dir_remove(Partition *part, Dir *parent, Dir *dir, DirEntry *entry)
         assert(inode->blocks[idx] == 0);
         idx++;
     }
-
-    char *buf = malloc(BLOCK_SIZE);
-    if (buf == NULL)
-    {
-        return -1;
-    }
-
-    onix_delete_dir_entry(part, parent, entry);
+    onix_delete_dir_entry(part, parent, entry->filename);
     onix_inode_delete(part, inode->nr);
-    free(buf);
     return 0;
 }
 
@@ -348,124 +417,13 @@ bool onix_dir_empty(Partition *part, Dir *dir)
     return (inode->size == part->super_block->dir_entry_size * 2);
 }
 
-int32 onix_search_file(const char *pathname, SearchRecord *record)
-{
-    // PBMB;
-    char *abuf = malloc(MAX_PATH_LEN);
-    int32 ret = FILE_NULL;
-    u32 step = 0;
-    if (abuf == NULL)
-    {
-        step = 1;
-        goto rollback;
-    }
-
-    abspath(pathname, abuf);
-    if (!strcmp(abuf, "/"))
-    {
-        record->parent = &root_dir;
-        record->type = FILETYPE_DIRECTORY;
-        record->search_path[0] = 0;
-    }
-    Partition *part = get_path_part(pathname);
-
-    u32 pathlen = strlen(abuf);
-    assert(abuf[0] == '/' && pathlen >= 1 && pathlen < MAX_PATH_LEN);
-
-    char *subpath = abuf;
-
-    Dir *parent = &root_dir;
-    Dir *current = &root_dir;
-    Dir *next = &root_dir;
-
-    DirEntry *entry = &record->entry;
-
-    char *name = malloc(MAX_FILENAME_LENGTH);
-    if (name == NULL)
-    {
-        step = 2;
-        goto rollback;
-    }
-
-    memset(name, 0, MAX_FILENAME_LENGTH);
-
-    record->parent = parent;
-    record->type = FILETYPE_UNKNOWN;
-
-    u32 nr = 0;
-
-    subpath = dirname(subpath, name);
-    while (name[0])
-    {
-        assert(strlen(record->search_path) < MAX_PATH_LEN);
-        strcat(record->search_path, "/");
-        strcat(record->search_path, name);
-
-        if (!onix_search_dir_entry(part, next, name, entry))
-        {
-            onix_dir_close(part, parent);
-            onix_dir_close(part, current);
-            record->parent = next;
-            step = 3;
-            ret = FILE_NULL;
-            goto rollback;
-        }
-
-        if (entry->type == FILETYPE_REGULAR)
-        {
-            onix_dir_close(part, parent);
-            onix_dir_close(part, current);
-            record->parent = next;
-            ret = entry->inode_nr;
-            record->type = FILETYPE_REGULAR;
-            step = 3;
-            goto rollback;
-        }
-
-        if (entry->type == FILETYPE_DIRECTORY)
-        {
-            onix_dir_close(part, parent);
-            parent = current;
-            current = next;
-            record->type = FILETYPE_DIRECTORY;
-            next = onix_dir_open(part, entry->inode_nr);
-            ret = entry->inode_nr;
-        }
-        memset(name, 0, sizeof(name));
-        if (subpath)
-        {
-            subpath = dirname(subpath, name);
-        }
-        if (!name[0])
-        {
-            onix_dir_close(part, parent);
-            record->parent = current;
-            onix_dir_close(part, next);
-        }
-    }
-    step = 3;
-rollback:
-    switch (step)
-    {
-    case 3:
-        free(name);
-    case 2:
-        free(abuf);
-    case 1:
-        break;
-    default:
-        break;
-    }
-    return ret;
-}
-
 static bool onix_delete_dir_block(Partition *part, Inode *inode, u32 *blocks, u32 block_idx)
 {
+    if (block_idx == 0) // 第一个块不能删
+        return false;
+
     u32 idx = block_idx;
     u32 lba;
-    if (inode->nr == part->super_block->root_inode_nr && idx == 0)
-        // 根目录的第一个块不能删
-        return;
 
     onix_block_bitmap_rollback_sync(part, idx);
 
@@ -474,122 +432,112 @@ static bool onix_delete_dir_block(Partition *part, Inode *inode, u32 *blocks, u3
         inode->blocks[idx] = 0;
         return true;
     }
+
     idx = INDIRECT_BLOCK_IDX;
     u32 iblock_count = 0;
     while (idx < INODE_ALL_BLOCKS)
     {
         if (blocks[idx])
+        {
+            idx++;
             iblock_count++;
+        }
     }
-    if (iblock_count == 1)
+
+    assert(iblock_count >= 1);
+
+    if (iblock_count > 1)
     {
-        inode->blocks[INDIRECT_BLOCK_IDX] = 0;
+        blocks[block_idx] = 0;
+        onix_block_sync_indirect(part, inode->blocks[INDIRECT_BLOCK_IDX], blocks);
         return;
     }
-    blocks[block_idx] = 0;
-    lba = onix_block_lba(part, inode->blocks[INDIRECT_BLOCK_CNT]);
-    partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SIZE);
+
+    onix_block_bitmap_rollback_sync(part, blocks[block_idx]);
+    inode->blocks[INDIRECT_BLOCK_IDX] = 0;
     return true;
 }
 
-bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
+bool onix_delete_dir_entry(Partition *part, Dir *parent, char *name)
 {
-    assert(strcmp(entry->filename, "."));  // 不是当前目录
-    assert(strcmp(entry->filename, "..")); // 不是父目录
-
-    Inode *inode = parent->inode;
-    u32 step = 0;
+    u8 *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        return false;
+    }
+#ifndef ONIX_KERNEL_DEBUG
+    u32 *blocks = malloc(ALL_BLOCKS_SIZE);
+    if (blocks == NULL)
+    {
+        free(buf);
+        return false;
+    }
+#else
+    u32 blocks[INODE_ALL_BLOCKS];
+#endif
     bool success = false;
+    Inode *inode = parent->inode;
 
-    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
-    if (blocks == NULL)
-    {
-        step = 1;
-        goto rollback;
-    }
+    onix_block_loads(part, inode, blocks);
 
-    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
-
-    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
-
-    u32 lba = 0;
-    u32 indirect_idx = inode->blocks[INDIRECT_BLOCK_IDX];
-    if (indirect_idx)
-    {
-        lba = onix_block_lba(part, indirect_idx);
-        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
-    }
-
-    char *buf = malloc(BLOCK_SIZE);
-    if (blocks == NULL)
-    {
-        step = 2;
-        goto rollback;
-    }
-
-    memset(buf, 0, BLOCK_SIZE);
-
-    DirEntry *dir_ptr = buf;
-    DirEntry *found_entry = NULL;
-
+    DirEntry *entry = buf;
+    DirEntry *found = NULL;
     u32 dir_entry_size = part->super_block->dir_entry_size;
     u32 dir_entry_cnt = BLOCK_SIZE / dir_entry_size;
 
     u32 idx = 0;
+    u32 file_count = 0;
+    u32 dir_count = 0;
 
-    u32 block_cnt = INODE_ALL_BLOCKS;
-
-    while (idx < block_cnt)
+    while (idx < INODE_ALL_BLOCKS)
     {
-        if (blocks[idx] == 0)
+        if (!blocks[idx])
         {
             idx++;
             continue;
         }
 
-        partition_read(part, onix_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
-        u32 entry_idx = 0;
-        u32 file_count = 0;
-        u32 dir_count = 0;
+        onix_block_read(part, blocks[idx], buf);
 
+        u32 entry_idx = 0;
         while (entry_idx < dir_entry_cnt)
         {
-            dir_ptr = buf + dir_entry_size * entry_idx;
-            if (dir_ptr->type == FILETYPE_UNKNOWN)
+            entry = (DirEntry *)buf + entry_idx;
+            if (entry->type == FILETYPE_UNKNOWN)
             {
                 entry_idx++;
                 continue;
             }
-            if (!strcmp(dir_ptr->filename, "."))
+            if (!strcmp(entry->filename, "."))
             {
                 entry_idx++;
                 continue;
             }
-            if (!strcmp(dir_ptr->filename, ".."))
+            if (!strcmp(entry->filename, ".."))
             {
                 entry_idx++;
                 continue;
             }
-
-            if (!strcmp(dir_ptr->filename, entry->filename))
+            if (!strcmp(entry->filename, name))
             {
-                found_entry = dir_ptr;
+                found = entry;
             }
-            if (dir_ptr->type == FILETYPE_REGULAR)
+            if (entry->type == FILETYPE_REGULAR)
             {
                 file_count++;
                 entry_idx++;
                 continue;
             }
-            else if (dir_ptr->type == FILETYPE_DIRECTORY)
+            else if (entry->type == FILETYPE_DIRECTORY)
             {
                 dir_count++;
                 entry_idx++;
                 continue;
             }
+            entry_idx++;
         }
 
-        if (!found_entry)
+        if (!found)
         {
             idx++;
             continue;
@@ -599,31 +547,23 @@ bool onix_delete_dir_entry(Partition *part, Dir *parent, DirEntry *entry)
         {
             onix_delete_dir_block(part, inode, blocks, idx);
         }
+
         // 删除目录项
-        memset(found_entry, 0, dir_entry_size);
-        partition_write(part, onix_block_lba(part, blocks[idx]), buf, BLOCK_SECTOR_COUNT);
+        memset(found, 0, dir_entry_size);
+        onix_block_write(part, blocks[idx], buf);
 
         // 同步父目录大小
-        assert(inode->size >= dir_entry_size);
+        assert(inode->size % dir_entry_size == 0 && inode->size >= dir_entry_size);
         inode->size -= dir_entry_size;
         onix_inode_sync(part, inode);
-        step = 3;
         success = true;
         goto rollback;
     }
-    step = 3;
-
+    printk("%s is not exists...\n", name);
 rollback:
-    switch (step)
-    {
-    case 3:
-        free(buf);
-    case 2:
-        free(blocks);
-    case 1:
-        break;
-    default:
-        break;
-    }
+    free(buf);
+#ifndef ONIX_KERNEL_DEBUG
+    free(blocks);
+#endif
     return success;
 }

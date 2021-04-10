@@ -50,3 +50,9 @@ void onix_block_loads(Partition *part, Inode *inode, u32 blocks[INODE_ALL_BLOCKS
         onix_block_read(part, idx, blocks + INDIRECT_BLOCK_IDX);
     }
 }
+
+void onix_block_sync_indirect(Partition *part, u32 indirect_idx, u32 blocks[INODE_ALL_BLOCKS])
+{
+    char *blockbuf = (u32 *)blocks + INDIRECT_BLOCK_IDX;
+    onix_block_write(part, indirect_idx, blockbuf);
+}

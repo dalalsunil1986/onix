@@ -213,7 +213,7 @@ int32 onix_sys_unlink(const char *pathname)
     assert(idx == MAX_OPEN_FILES);
 
     Dir *parent = record->parent;
-    onix_delete_dir_entry(part, parent, &record->entry);
+    onix_delete_dir_entry(part, parent, &record->entry.filename);
     onix_inode_delete(part, nr);
     onix_dir_close(part, record->parent);
     ret = 0;
@@ -260,8 +260,6 @@ int32 onix_sys_mkdir(const char *pathname)
         goto rollback;
     }
 
-    Partition *part = get_path_part(pathname);
-
     int depth = path_depth(pathname);
     int search_path = path_depth(record->search_path);
     if (depth != search_path)
@@ -269,6 +267,8 @@ int32 onix_sys_mkdir(const char *pathname)
         step = 4;
         goto rollback;
     }
+
+    Partition *part = get_path_part(pathname);
 
     Dir *parent = record->parent;
     char *name = malloc(MAX_FILENAME_LENGTH);
@@ -619,9 +619,15 @@ rollback:
     return ret;
 }
 
-void onix_list_dir(Dir *dir)
+void onix_list_dir(char *pathname)
 {
-    DEBUGP("-----------0x%X-----------\n", dir->inode);
+    Dir *dir = onix_sys_opendir(pathname);
+    if (dir == NULL)
+    {
+        printk("%s is not exits...\n", pathname);
+        return;
+    }
+    DEBUGP("-----------%s-----------\n", pathname);
     DirEntry *entry = NULL;
     char *subpath = malloc(MAX_PATH_LEN);
     memset(subpath, 0, MAX_PATH_LEN);
@@ -631,8 +637,9 @@ void onix_list_dir(Dir *dir)
         entry = onix_sys_readdir(dir);
         if (entry == NULL)
             break;
-        basename(entry->filename, subpath);
-        DEBUGP("%s \n", subpath);
+        printk("%s | ", entry->filename);
     }
+    printk("\n");
     free(subpath);
+    onix_sys_closedir(dir);
 }
