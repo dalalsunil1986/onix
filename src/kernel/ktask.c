@@ -88,6 +88,7 @@ void fork_task()
         parent->message = task->pid;
         push_ready_task(parent);
         push_ready_task(task);
+        push_task(task);
     }
 }
 
