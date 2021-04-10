@@ -20,46 +20,42 @@ extern int osh_task();
 
 void init_task()
 {
-    pid_t pid = sys_fork();
-    if (pid)
-    {
-        printf("this is parent wait!!!\n");
-        int status;
-        sys_wait(&status);
-        printf("this is parent wait finish %d!!!\n", status);
-    }
-    else
-    {
-        printf("This is child!!!\n");
-        sys_exit(0);
-        printf("this is child exited!!!\n");
-    }
-
-    // clear();
-    // u32 pid = sys_fork();
+    // pid_t pid = sys_fork();
     // if (pid)
     // {
-    //     u32 counter = 0;
-    //     while (true)
-    //     {
-    //         counter++;
-    //         char ch = ' ';
-    //         if ((counter % 2) != 0)
-    //         {
-    //             ch = 'K';
-    //         }
-    //         show_char(ch, 79, 0);
-    //         sys_sleep(1000);
-    //     }
+    //     printf("this is parent wait!!!\n");
+    //     int status;
+    //     sys_wait(&status);
+    //     printf("this is parent wait finish %d!!!\n", status);
     // }
     // else
     // {
-    //     osh_task(0, NULL);
+    //     printf("This is child!!!\n");
+    //     sys_exit(0);
+    //     printf("this is child exited!!!\n");
     // }
-    // while (true)
-    // {
-    //     sys_sleep(1000);
-    // }
+
+    clear();
+    u32 pid = sys_fork();
+    if (pid)
+    {
+        u32 counter = 0;
+        while (true)
+        {
+            counter++;
+            char ch = ' ';
+            if ((counter % 2) != 0)
+            {
+                ch = 'K';
+            }
+            show_char(ch, 79, 0);
+            sys_sleep(1000);
+        }
+    }
+    else
+    {
+        osh_task(0, NULL);
+    }
 }
 
 void sweep_task()
