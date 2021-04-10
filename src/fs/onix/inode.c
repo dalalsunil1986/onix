@@ -60,6 +60,7 @@ void onix_inode_sync(Partition *part, Inode *inode)
 
 static Inode *onix_inode_search(Partition *part, u32 nr)
 {
+    return NULL; // todo open inode in kernel memory
     Node *node = part->open_inodes.head.next;
     Inode *inode;
 

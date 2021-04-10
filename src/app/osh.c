@@ -1,6 +1,7 @@
 #include <onix/stdio.h>
 #include <onix/syscall.h>
 #include <onix/string.h>
+#include <onix/stdlib.h>
 #include <onix/assert.h>
 #include <fs/file.h>
 #include <fs/path.h>
@@ -64,6 +65,10 @@ void buildin_ls(int argc, char *argv[])
     {
         // DEBUGP("%s is dir...\n", path);
         Dir *dir = sys_opendir(path);
+        if (dir == NULL)
+        {
+            return;
+        }
         DirEntry *entry = NULL;
         sys_rewinddir(dir);
         while (true)
