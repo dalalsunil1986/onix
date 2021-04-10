@@ -20,27 +20,46 @@ extern int osh_task();
 
 void init_task()
 {
-    clear();
-    u32 pid = sys_fork();
+    pid_t pid = sys_fork();
     if (pid)
     {
-        u32 counter = 0;
-        while (true)
-        {
-            counter++;
-            char ch = ' ';
-            if ((counter % 2) != 0)
-            {
-                ch = 'K';
-            }
-            show_char(ch, 79, 0);
-            sys_sleep(1000);
-        }
+        printf("this is parent wait!!!\n");
+        int status;
+        sys_wait(&status);
+        printf("this is parent wait finish %d!!!\n", status);
     }
     else
     {
-        osh_task(0, NULL);
+        printf("This is child!!!\n");
+        sys_exit(0);
+        printf("this is child exited!!!\n");
     }
+
+    // clear();
+    // u32 pid = sys_fork();
+    // if (pid)
+    // {
+    //     u32 counter = 0;
+    //     while (true)
+    //     {
+    //         counter++;
+    //         char ch = ' ';
+    //         if ((counter % 2) != 0)
+    //         {
+    //             ch = 'K';
+    //         }
+    //         show_char(ch, 79, 0);
+    //         sys_sleep(1000);
+    //     }
+    // }
+    // else
+    // {
+    //     osh_task(0, NULL);
+    // }
+    // while (true)
+    // {
+    //     sys_sleep(1000);
+    // }
 }
 
 void sweep_task()
@@ -87,6 +106,7 @@ void fork_task()
         parent->message = task->pid;
         push_ready_task(parent);
         push_ready_task(task);
+        push_task(task);
     }
 }
 
@@ -94,23 +114,33 @@ void join_task()
 {
     while (true)
     {
-        Task *task = task_status_task(TASK_WAITING);
-        Task *child = task_child_task(task->pid, NULL);
+        Task *parent = task_status_task(TASK_WAITING);
+        if (parent == NULL)
+        {
+            task_yield();
+            continue;
+        }
+
+        Task *child = task_child_task(parent->pid, NULL);
+
         if (child == NULL)
         {
-            task->message = -1;
-            push_ready_task(task);
+            DEBUGP("There is no child for %s\n", parent->name);
+            parent->message = -1;
+            push_ready_task(parent);
+            continue;
         }
-        while (child)
+        while (child != NULL)
         {
             if (child->status == TASK_HANGING)
             {
-                task->message = child->exit_code;
+                DEBUGP("task hanging %s \n", child->name);
+                parent->message = child->exit_code;
                 task_block(child, TASK_DIED);
-                push_ready_task(task);
+                push_ready_task(parent);
                 break;
             }
-            child = task_child_task(task->pid, child);
+            child = task_child_task(parent->pid, child);
         }
     }
 }
@@ -119,8 +149,6 @@ void test_task()
 {
     while (true)
     {
-        // print_irq_mask();
-        // task_hanging(running_task());
         task_yield();
     }
 }

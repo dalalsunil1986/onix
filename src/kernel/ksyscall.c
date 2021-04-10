@@ -41,6 +41,7 @@ void __sys_exit(u32 code)
 {
     // DEBUGP("syscall exit called\n");
     Task *task = running_task();
+    DEBUGP("syscall wait 0x%08X\n", task);
     task->exit_code = code;
     task_exit(task);
 }
@@ -48,8 +49,9 @@ void __sys_exit(u32 code)
 void __sys_wait(int32 *status)
 {
     Task *task = running_task();
+    DEBUGP("syscall wait 0x%08X\n", task);
     task_block(task, TASK_WAITING);
-    
+    *status = task->message;
 }
 
 u32 __sys_fork()
@@ -73,7 +75,7 @@ void __sys_ps()
     while (node != &tasks_queue.head)
     {
         Task *task = element_entry(Task, all_node, node);
-        printk("%d %08X %s\n", task->tid, task, task->name);
+        printk("%d %08X %s\n", task->pid, task, task->name);
         node = node->prev;
     }
 }
@@ -239,6 +241,7 @@ void init_syscall()
 
     syscall_table[SYS_NR_TEST] = __sys_test;
     syscall_table[SYS_NR_EXIT] = __sys_exit;
+    syscall_table[SYS_NR_WAIT] = __sys_wait;
     syscall_table[SYS_NR_FORK] = __sys_fork;
     syscall_table[SYS_NR_GETPID] = __sys_getpid;
     syscall_table[SYS_NR_PS] = __sys_ps;

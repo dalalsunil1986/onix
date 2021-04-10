@@ -8,6 +8,7 @@ enum SYSCALL_NR
 {
     SYS_NR_TEST,
     SYS_NR_EXIT,
+    SYS_NR_WAIT,
     SYS_NR_FORK,
     SYS_NR_READ,
     SYS_NR_WRITE,
@@ -57,6 +58,7 @@ extern u32 syscall3(u32 nr, u32 arg1, u32 arg2, u32 arg3);
 u32 sys_test();
 
 void sys_exit(u32 code);
+void sys_wait(int32 *status);
 void sys_sleep(u32 milliseconds);
 u32 sys_fork();
 u32 sys_getpid();

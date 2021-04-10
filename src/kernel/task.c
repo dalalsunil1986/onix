@@ -13,7 +13,7 @@
 #include <onix/kernel/clock.h>
 #include <onix/kernel/pid.h>
 
-// #define DEBUGINFO
+#define DEBUGINFO
 
 #ifdef DEBUGINFO
 #define DEBUGP DEBUGK
@@ -32,6 +32,7 @@ Task *idle;
 void push_task(Task *task)
 {
     bool old = disable_int();
+    assert(!queue_find(&tasks_queue, &task->all_node));
     queue_push(&tasks_queue, &task->all_node);
     set_interrupt_status(old);
 }
@@ -73,7 +74,7 @@ Task *task_status_task(TASK_STATUS status)
 {
     bool old = disable_int();
     Node *node = queue_traversal(&tasks_queue, task_check_status, status);
-    if (!node)
+    if (node == NULL)
         return NULL;
     Task *task = element_entry(Task, all_node, node);
     set_interrupt_status(old);
@@ -84,8 +85,9 @@ Task *task_child_task(pid_t pid, Task *child)
 {
     if (queue_empty(&tasks_queue))
         return NULL;
+
     Node *node = NULL;
-    if (child != NULL)
+    if (child == NULL)
     {
         node = tasks_queue.tail.prev;
     }
@@ -93,6 +95,7 @@ Task *task_child_task(pid_t pid, Task *child)
     {
         node = &child->all_node.prev;
     }
+
     while (node != &tasks_queue.head)
     {
         Task *task = element_entry(Task, all_node, node);
@@ -196,8 +199,7 @@ void task_init(Task *task, char *name, int priority, int user)
 
     memset(task, 0, sizeof(*task));
     strcpy(task->name, name);
-    task->tid = allocate_pid();
-    task->pid = cur->pid;
+    task->pid = allocate_pid();
     task->ppid = 0;
     task->status = TASK_INIT;
     task->priority = priority;
@@ -246,18 +248,6 @@ Task *task_start(Tasktarget target, int argc, char const *argv[], const char *na
     return task;
 }
 
-void task_hanging(Task *task)
-{
-    bool old = disable_int();
-    task->status = TASK_HANGING;
-    if (queue_find(&tasks_ready, &task->node))
-    {
-        queue_remove(&tasks_ready, &task->node);
-    }
-    schedule();
-    set_interrupt_status(old);
-}
-
 void task_block(Task *task, TASK_STATUS status)
 {
     bool old = disable_int();
@@ -298,7 +288,7 @@ void task_yield()
 
 void task_exit(Task *task)
 {
-    DEBUGP("Task exit 0x%08X\n", task);
+    DEBUGP("Task exit 0x%08X name %s\n", task, task->name);
     // todo close file...
     task_block(task, TASK_HANGING);
     schedule();
@@ -306,9 +296,10 @@ void task_exit(Task *task)
 
 void task_destory(Task *task)
 {
-    release_pid(task->tid);
+    bool old = disable_int();
+    release_pid(task->pid);
     DEBUGP("free pages %d\n", free_pages);
-    if (task->pid == task->tid && task->user != 0)
+    if (task->user != 0)
     {
         free_user_pde(task);
         page_free(task->vaddr.mmap.bits, 1);
@@ -320,7 +311,9 @@ void task_destory(Task *task)
         task->cwd = NULL;
     }
     page_free(task, 1);
-    DEBUGP("free pages %d tasks count %d died count %d\n", free_pages, tasks_queue.size, tasks_died.size);
+    queue_remove(&tasks_queue, &task->all_node);
+    DEBUGP("free pages %d tasks count %d\n", free_pages, tasks_queue.size);
+    set_interrupt_status(old);
 }
 
 void schedule()

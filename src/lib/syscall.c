@@ -15,6 +15,11 @@ void sys_exit(u32 code)
     return;
 }
 
+void sys_wait(int32 *status)
+{
+    syscall1(SYS_NR_WAIT, status);
+}
+
 u32 sys_fork()
 {
     return syscall0(SYS_NR_FORK);

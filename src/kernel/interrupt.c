@@ -102,7 +102,7 @@ static void exception_handler(
     printk("    EIP     : 0x%08X\n", eip);
     printk("    CS      : 0x%02X\n", cs);
 
-    task_hanging(running_task());
+    task_block(running_task(), TASK_HANGING);
     halt();
 }
 

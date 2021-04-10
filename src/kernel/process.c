@@ -124,14 +124,12 @@ void process_execute(Tasktarget *target, int argc, char const *argv[], const cha
     push_ready_task(task);
 
     task->ppid = cur->pid;
-    task->pid = task->tid;
 }
 
 static void process_copy_task(Task *parent, Task *task)
 {
     memcpy(task, parent, PG_SIZE);
-    task->tid = allocate_pid();
-    task->pid = task->tid;
+    task->pid = allocate_pid();
     task->ppid = parent->pid;
 
     task->all_node.next = NULL;

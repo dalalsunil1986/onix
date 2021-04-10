@@ -82,7 +82,6 @@ typedef struct Task
     Node all_node;
     TASK_STATUS status;
     u8 priority;
-    u32 tid;
     u32 pid;
     u32 ppid;
     u32 ticks;
@@ -114,7 +113,6 @@ void task_init(Task *task, char *name, int priority, int user);
 void task_create(Task *task, Tasktarget target, int argc, char const *argv[]);
 Task *task_start(Tasktarget target, int argc, char const *argv[], const char *name, int priority);
 
-void task_hanging(Task *task);
 void task_block(Task *task, TASK_STATUS status);
 void task_unblock(Task *task);
 void task_yield();
