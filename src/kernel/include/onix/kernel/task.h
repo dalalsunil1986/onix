@@ -24,6 +24,7 @@ typedef enum TASK_STATUS
     TASK_READY,
     TASK_BLOCKED,
     TASK_WAITING,
+    TASK_FORKING,
     TASK_HANGING,
     TASK_DIED,
 } TASK_STATUS;
@@ -105,13 +106,14 @@ Task *running_task();
 
 void push_task(Task *task);
 void push_ready_task(Task *task);
+Task *task_status_task(TASK_STATUS status);
 
 void task_init(Task *task, char *name, int priority, int user);
 void task_create(Task *task, Tasktarget target, int argc, char const *argv[]);
 Task *task_start(Tasktarget target, int argc, char const *argv[], const char *name, int priority);
 
 void task_hanging(Task *task);
-void task_block(Task *task);
+void task_block(Task *task, TASK_STATUS status);
 void task_unblock(Task *task);
 void task_yield();
 

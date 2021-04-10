@@ -38,7 +38,7 @@ void sema_down(Semaphore *sema)
         }
         queue_push(&sema->waiters, &task->node);
         DEBUGP("Block %X ...\n", task);
-        task_block(task);
+        task_block(task, TASK_BLOCKED);
         DEBUGP("sema down 0x%X value %d \n", sema, sema->value);
     }
     sema->value--;

@@ -23,10 +23,6 @@
 
 Queue tasks_queue;
 Queue tasks_ready;
-Queue tasks_died;
-Queue tasks_fork;
-
-u32 init_stack_top;
 
 extern void switch_to(Task *current, Task *next);
 extern void process_activate(Task *next);
@@ -65,56 +61,23 @@ void push_ready_task(Task *task)
     set_interrupt_status(old);
 }
 
-Task *pop_fork_task()
+static bool task_check_status(Node *node, TASK_STATUS status)
+{
+    Task *task = element_entry(Task, all_node, node);
+    if (task->status == status)
+        return true;
+    return false;
+}
+
+Task *task_status_task(TASK_STATUS status)
 {
     bool old = disable_int();
-    if (queue_empty(&tasks_fork))
-    {
+    Node *node = queue_traversal(&tasks_queue, task_check_status, status);
+    if (!node)
         return NULL;
-    }
-    assert(!queue_empty(&tasks_fork));
-    Task *task = element_entry(Task, node, queue_popback(&tasks_fork));
-    assert(task->magic == TASK_MAGIC);
+    Task *task = element_entry(Task, all_node, node);
     set_interrupt_status(old);
     return task;
-}
-
-void push_fork_task(Task *task)
-{
-    bool old = disable_int();
-    task->status = TASK_WAITING;
-    if (queue_find(&tasks_ready, &task->node))
-    {
-        queue_remove(&tasks_ready, &task->node);
-    }
-    assert(!queue_find(&tasks_fork, &task->node));
-    queue_push(&tasks_fork, &task->node);
-    schedule();
-    set_interrupt_status(old);
-}
-
-Task *pop_died_task()
-{
-    if (queue_empty(&tasks_died))
-        return NULL;
-    assert(!queue_empty(&tasks_ready));
-    Task *task = element_entry(Task, node, queue_popback(&tasks_died));
-    assert(task->magic == TASK_MAGIC);
-    return task;
-}
-
-void push_died_task(Task *task)
-{
-    bool old = disable_int();
-    task->status = TASK_DIED;
-    if (queue_find(&tasks_ready, &task->node))
-    {
-        queue_remove(&tasks_ready, &task->node);
-    }
-    queue_remove(&tasks_queue, &task->all_node);
-    assert(!queue_find(&tasks_died, &task->node));
-    queue_push(&tasks_died, &task->node);
-    set_interrupt_status(old);
 }
 
 void ktask_wrapper(Tasktarget target, int argc, char const *argv[])
@@ -272,13 +235,17 @@ void task_hanging(Task *task)
     set_interrupt_status(old);
 }
 
-void task_block(Task *task)
+void task_block(Task *task, TASK_STATUS status)
 {
     bool old = disable_int();
     Task *cur = running_task();
-    assert(task->status != TASK_BLOCKED);
-    task->status = TASK_BLOCKED;
 
+    assert(status != TASK_RUNNING);
+    task->status = status;
+    if (queue_find(&tasks_ready, &task->node))
+    {
+        queue_remove(&tasks_ready, &task->node);
+    }
     if (cur == task)
     {
         schedule();
@@ -290,7 +257,6 @@ void task_block(Task *task)
 void task_unblock(Task *task)
 {
     bool old = disable_int();
-    assert(task->status == TASK_BLOCKED);
     push_ready_task(task);
     set_interrupt_status(old);
 }
@@ -299,22 +265,12 @@ void task_yield()
 {
     Task *task = running_task();
 
-    // DEBUGP("yield task 0x%X\n", task);
-
     bool old = disable_int();
     assert(!queue_find(&tasks_ready, &task->node));
 
     push_ready_task(task);
     schedule();
     set_interrupt_status(old);
-}
-
-u32 task_fork()
-{
-    Task *task = running_task();
-    push_fork_task(task);
-    DEBUGK("task %x\n", task);
-    return task->message;
 }
 
 bool task_check_tid(Node *node, pid_t pid)
@@ -338,7 +294,7 @@ void task_exit(Task *task)
 {
     DEBUGP("Task exit 0x%08X\n", task);
     // todo close file...
-    push_died_task(task);
+    task_block(task, TASK_DIED);
     schedule();
 }
 
@@ -423,8 +379,6 @@ void init_tasks()
 
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
-    queue_init(&tasks_died);
-    queue_init(&tasks_fork);
 
     idle = task_start(idle_task, 0, NULL, "idle task", 1);
 }

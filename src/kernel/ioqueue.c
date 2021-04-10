@@ -44,7 +44,7 @@ static void ioqueue_wait(Task **waiter)
     // DEBUGP("iowaiter 0x%08X waiter 0x%08X\n", waiter, *waiter);
     assert((waiter != NULL) && (*waiter == NULL));
     *waiter = running_task();
-    task_block(*waiter);
+    task_block(*waiter, TASK_BLOCKED);
 }
 
 static void ioqueue_weakup(Task **waiter)

@@ -47,7 +47,9 @@ void __sys_exit(u32 code)
 
 u32 __sys_fork()
 {
-    return task_fork();
+    Task *task = running_task();
+    task_block(task, TASK_FORKING);
+    return task->message;
 }
 
 u32 __sys_getpid()

@@ -51,7 +51,7 @@ void sweep_task()
         task = running_task();
         assert(task->magic == TASK_MAGIC);
 
-        task = pop_died_task();
+        task = task_status_task(TASK_DIED);
         if (task != NULL)
         {
             task_destory(task);
@@ -66,19 +66,18 @@ void idle_task()
     {
         Task *task = running_task();
         assert(task->magic == TASK_MAGIC);
-        task_block(task);
+        task_block(task, TASK_BLOCKED);
         pause();
     }
 }
 
-extern Task *pop_fork_task();
 extern Task *process_copy(Task *parent);
 
 void fork_task()
 {
     while (true)
     {
-        Task *parent = pop_fork_task();
+        Task *parent = task_status_task(TASK_FORKING);
         if (parent == NULL)
         {
             task_yield();
