@@ -45,6 +45,13 @@ void __sys_exit(u32 code)
     task_exit(task);
 }
 
+void __sys_wait(int32 *status)
+{
+    Task *task = running_task();
+    task_block(task, TASK_WAITING);
+    
+}
+
 u32 __sys_fork()
 {
     Task *task = running_task();

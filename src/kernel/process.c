@@ -256,5 +256,5 @@ extern void init_task();
 
 void start_process()
 {
-    process_execute(init_task, 0, NULL, "init task");
+    process_execute(init_task, 0, NULL, "init");
 }

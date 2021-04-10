@@ -80,6 +80,29 @@ Task *task_status_task(TASK_STATUS status)
     return task;
 }
 
+Task *task_child_task(pid_t pid, Task *child)
+{
+    if (queue_empty(&tasks_queue))
+        return NULL;
+    Node *node = NULL;
+    if (child != NULL)
+    {
+        node = tasks_queue.tail.prev;
+    }
+    else
+    {
+        node = &child->all_node.prev;
+    }
+    while (node != &tasks_queue.head)
+    {
+        Task *task = element_entry(Task, all_node, node);
+        if (task->ppid == pid)
+            return task;
+        node = node->prev;
+    }
+    return NULL;
+}
+
 void ktask_wrapper(Tasktarget target, int argc, char const *argv[])
 {
     assert(!get_interrupt_status());
@@ -273,28 +296,11 @@ void task_yield()
     set_interrupt_status(old);
 }
 
-bool task_check_tid(Node *node, pid_t pid)
-{
-    Task *task = element_entry(Task, all_node, node);
-    if (task->pid == pid)
-        return true;
-    return false;
-}
-
-Task *task_found(pid_t tid)
-{
-    Node *node = queue_traversal(&tasks_queue, task_check_tid, tid);
-    if (!node)
-        return NULL;
-    Task *task = element_entry(Task, all_node, node);
-    return task;
-}
-
 void task_exit(Task *task)
 {
     DEBUGP("Task exit 0x%08X\n", task);
     // todo close file...
-    task_block(task, TASK_DIED);
+    task_block(task, TASK_HANGING);
     schedule();
 }
 
@@ -380,16 +386,18 @@ void init_tasks()
     queue_init(&tasks_queue);
     queue_init(&tasks_ready);
 
-    idle = task_start(idle_task, 0, NULL, "idle task", 1);
+    idle = task_start(idle_task, 0, NULL, "idle", 1);
 }
 
 extern void fork_task();
 extern void sweep_task();
+extern void join_task();
 extern void test_task();
 
 void start_tasks()
 {
-    task_start(fork_task, 0, NULL, "fork task", 16);
-    task_start(sweep_task, 0, NULL, "sweep task", 16);
-    task_start(test_task, 0, NULL, "test task", 16);
+    task_start(fork_task, 0, NULL, "fork", 16);
+    task_start(sweep_task, 0, NULL, "sweep", 16);
+    task_start(join_task, 0, NULL, "join", 16);
+    task_start(test_task, 0, NULL, "test", 16);
 }

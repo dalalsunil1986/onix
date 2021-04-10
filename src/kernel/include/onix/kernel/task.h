@@ -5,6 +5,7 @@
 #include <onix/queue.h>
 #include <onix/kernel/memory.h>
 #include <onix/kernel/arena.h>
+#include <onix/kernel/pid.h>
 #include <fs/file.h>
 
 #define TASK_MAGIC 0x20210323
@@ -107,6 +108,7 @@ Task *running_task();
 void push_task(Task *task);
 void push_ready_task(Task *task);
 Task *task_status_task(TASK_STATUS status);
+Task *task_child_task(pid_t pid, Task *child);
 
 void task_init(Task *task, char *name, int priority, int user);
 void task_create(Task *task, Tasktarget target, int argc, char const *argv[]);

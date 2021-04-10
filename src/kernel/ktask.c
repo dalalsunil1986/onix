@@ -90,6 +90,31 @@ void fork_task()
     }
 }
 
+void join_task()
+{
+    while (true)
+    {
+        Task *task = task_status_task(TASK_WAITING);
+        Task *child = task_child_task(task->pid, NULL);
+        if (child == NULL)
+        {
+            task->message = -1;
+            push_ready_task(task);
+        }
+        while (child)
+        {
+            if (child->status == TASK_HANGING)
+            {
+                task->message = child->exit_code;
+                task_block(child, TASK_DIED);
+                push_ready_task(task);
+                break;
+            }
+            child = task_child_task(task->pid, child);
+        }
+    }
+}
+
 void test_task()
 {
     while (true)
