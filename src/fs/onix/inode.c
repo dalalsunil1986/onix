@@ -140,11 +140,15 @@ void onix_inode_erase(Partition *part, u32 nr)
 
 void onix_inode_delete(Partition *part, u32 nr)
 {
+#ifndef ONIX_KERNEL_DEBUG
     u32 *blocks = malloc(ALL_BLOCKS_SIZE);
     if (blocks == NULL)
     {
         return;
     }
+#else
+    u32 blocks[INODE_ALL_BLOCKS];
+#endif
 
     Inode *inode = onix_inode_open(part, nr);
     assert(inode->nr == nr);
@@ -158,14 +162,17 @@ void onix_inode_delete(Partition *part, u32 nr)
     }
 
     idx = 0;
-    while (blocks[idx])
+    while (blocks[idx] && idx < INODE_ALL_BLOCKS)
     {
         onix_block_bitmap_rollback_sync(part, blocks[idx]);
+        blocks[idx] = 0;
         idx++;
     }
     onix_inode_bitmap_rollback_sync(part, nr);
     onix_inode_close(part, inode);
+#ifndef ONIX_KERNEL_DEBUG
     free(blocks);
+#endif
 }
 
 void onix_inode_init(u32 nr, Inode *inode)

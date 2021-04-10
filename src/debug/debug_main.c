@@ -174,7 +174,7 @@ void test_file()
     file->part = NULL;
     file->offset = 0;
 
-    char filename[] = "A file.txt";
+    char filename[] = "file.txt";
     Dir *root = onix_open_root_dir(part);
     bool success = onix_file_create(part, root, file, filename, O_C);
     u32 nr = file->inode->nr;
@@ -186,18 +186,36 @@ void test_file()
     onix_file_close(file);
 
     // PBMB;
-    char buf[] = "hello world this is a file content\0";
+    char buf[] = "the quick brown fox jumps over a lazy dog and last bit of 64 bit";
 
     onix_file_open(part, file, nr, O_R | O_W);
 
     // PBMB;
 
-    onix_file_write(file, buf, sizeof(buf));
+    Inode *inode = file->inode;
+
+    while (true)
+    {
+        int size = onix_file_write(file, buf, 64);
+        if (size < 0)
+            break;
+        DEBUGP("write file size %d KB\n", file->inode->size / 1024);
+    }
 
     // PBMB;
     memset(buf, 0, sizeof(buf));
 
     file->offset = 0;
+    while (true)
+    {
+        int size = onix_file_read(file, buf, 64);
+        if (size < 0)
+            break;
+        if (file->offset % 1024 == 0)
+        {
+            DEBUGP("%s offset %d\n", buf, file->offset);
+        }
+    }
 
     onix_file_read(file, buf, sizeof(buf));
     DEBUGP("%s\n", buf);
@@ -313,10 +331,10 @@ void test_function()
     // test_fsbitmap();
     // test_inode();
     // test_dir();
-    // test_file();
+    test_file();
     // test_fssys_call();
     // test_cwd();
-    test_mkdir();
+    // test_mkdir();
     DEBUGP("Debug finish.....\n");
 #ifdef ONIX_KERNEL_DEBUG
     task_destory(task);

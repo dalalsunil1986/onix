@@ -22,30 +22,28 @@
 bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, FileFlag flags)
 {
     void *buf = malloc(BLOCK_SIZE);
-    bool success = false;
-    u32 step = 0;
     if (buf == NULL)
     {
-        step = 1;
-        goto rollback;
+        return false;
+    }
+
+    Inode *inode = malloc(sizeof(Inode));
+    if (inode == NULL)
+    {
+        free(buf);
+        return;
     }
 
     memset(buf, 0, BLOCK_SIZE);
+    memset(inode, 0, sizeof(Inode));
+
+    bool success = false;
+    u32 step = 0;
 
     u32 nr = onix_inode_bitmap_alloc(part);
     DEBUGP("inode alloc %u\n", nr);
     if (nr == -1)
     {
-        step = 2;
-        goto rollback;
-    }
-
-    Inode *inode = malloc(sizeof(Inode));
-    memset(inode, 0, sizeof(Inode));
-
-    if (inode == NULL)
-    {
-        step = 3;
         goto rollback;
     }
 
@@ -65,7 +63,7 @@ bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, 
     if (!onix_sync_dir_entry(part, parent, &entry))
     {
         printk("Onix sync directory fail!!!\n");
-        step = 3;
+        step = 1;
         goto rollback;
     }
     onix_inode_sync(part, parent->inode);
@@ -74,20 +72,16 @@ bool onix_file_create(Partition *part, Dir *parent, OnixFile *file, char *name, 
     queue_push(&part->open_inodes, &inode->node);
     inode->open_cnts = 1;
     success = true;
-    step = 2;
 
 rollback:
     switch (step)
     {
-    case 3:
-        onix_inode_bitmap_rollback(part, nr);
-    case 2:
-        free(buf);
     case 1:
-        break;
+        onix_inode_bitmap_rollback(part, nr);
     default:
         break;
     }
+    free(buf);
     return success;
 }
 
@@ -134,58 +128,47 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
     if (file->offset + count > MAX_FILE_SIZE)
     {
         printk("Exceed onix max file size...\n");
-        return 0;
+        return -1;
     }
-
-    u32 bytes = 0;
-    u32 step = 0;
 
     char *buf = malloc(BLOCK_SIZE);
     if (buf == NULL)
     {
-        step = 1;
-        goto rollback;
+        return -1;
     }
 
+    u32 *new_blocks = malloc(ALL_BLOCKS_SIZE);
+    if (new_blocks == NULL)
+    {
+        free(buf);
+        return -1;
+    }
+
+#ifndef ONIX_KERNEL_DEBUG
+    u32 *blocks = malloc(ALL_BLOCKS_SIZE);
+    if (blocks == NULL)
+    {
+        free(buf);
+        free(new_blocks);
+        return -1;
+    }
+#else
+    u32 blocks[INODE_ALL_BLOCKS];
+#endif
+
     memset(buf, 0, BLOCK_SIZE);
+    memset(new_blocks, 0, ALL_BLOCKS_SIZE);
+
+    u32 bytes = 0;
+    u32 step = 0;
 
     u32 block_start = file->offset / BLOCK_SIZE;                                       // 起始块
     u32 block_remain_bytes = file->offset % BLOCK_SIZE;                                // 起始块已占用空间
     u32 block_left_bytes = block_remain_bytes ? (BLOCK_SIZE - block_remain_bytes) : 0; // 起始块剩余空间
 
-    u32 idx = 0;
     Inode *inode = file->inode;
 
-    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
-    if (blocks == NULL)
-    {
-        step = 2;
-        goto rollback;
-    }
-
-    memset(blocks, 0, INODE_ALL_BLOCKS * sizeof(u32));
-
-    while (idx < DIRECT_BLOCK_CNT && inode->blocks[idx] > 0)
-    {
-        blocks[idx] = inode->blocks[idx];
-        idx++;
-    }
-
-    u32 used_direct_blocks = idx;
-
-    u32 lba = 0;
-    if (inode->blocks[INDIRECT_BLOCK_IDX])
-    {
-        // 一级间接表存在，读入；
-        lba = onix_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
-        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
-        while (blocks[idx])
-        {
-            idx++;
-        }
-    }
-
-    u32 valid_blocks = idx;
+    u32 valid_blocks = onix_block_loads(part, inode, blocks);
     u32 used_blocks = block_start;
     u32 left_blocks = valid_blocks - used_blocks;
 
@@ -197,13 +180,9 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
     { // 写入不完整的最后一个扇区
         write_bytes = MIN(block_left_bytes, count);
 
-        lba = onix_block_lba(part, blocks[last_idx]);
-
-        partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
-
+        onix_block_read(part, blocks[last_idx], buf);
         memcpy(buf + block_remain_bytes, content, write_bytes);
-
-        partition_write(part, lba, buf, BLOCK_SECTOR_COUNT);
+        onix_block_write(part, blocks[last_idx], buf);
 
         bytes = write_bytes;
         content += bytes;
@@ -222,25 +201,22 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
     u32 total_blocks = round_up(count - block_left_bytes, BLOCK_SIZE);
     int32 need_blocks = total_blocks - left_blocks;
 
-    u32 free_direct_blocks = DIRECT_BLOCK_CNT - used_direct_blocks;
-
-    if (need_blocks > 0 && (free_direct_blocks < need_blocks) && !inode->blocks[INDIRECT_BLOCK_IDX])
+    if ((need_blocks + valid_blocks) > INDIRECT_BLOCK_IDX && inode->blocks[INDIRECT_BLOCK_IDX] == 0)
     {
         // 直接块不够写，需要间接块
         // 间接块不存在
         need_blocks++;
     }
 
-    u32 new_blocks[INODE_ALL_BLOCKS] = {0};
     u32 block_idx = -1;
-    idx = 0;
+    u32 idx = 0;
     while (idx < need_blocks)
     {
-        block_idx = onix_inode_bitmap_alloc(part);
+        block_idx = onix_block_bitmap_alloc(part);
         if (block_idx == -1)
         {
             printk("Onix inode block allocate failed.\n");
-            step = 4;
+            step = 1;
             goto rollback;
         }
         new_blocks[idx] = block_idx;
@@ -256,10 +232,9 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
         {
             blocks[idx] = new_blocks[new_block_idx++];
         }
-        lba = onix_block_lba(part, blocks[idx]);
         if (count >= BLOCK_SIZE)
         {
-            partition_write(part, lba, content, BLOCK_SECTOR_COUNT);
+            onix_block_write(part, blocks[idx], content);
             content += BLOCK_SIZE;
             bytes += BLOCK_SIZE;
             file->offset += BLOCK_SIZE;
@@ -269,13 +244,14 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
         {
             memset(buf, 0, sizeof(buf));
             memcpy(buf, content, count);
-            partition_write(part, lba, buf, BLOCK_SECTOR_COUNT);
+            onix_block_write(part, blocks[idx], buf);
             bytes += count;
             file->offset += count;
             break;
         }
     }
 
+    // 以下同步 inode->blocks
     idx = 0;
     bool flag = false;
     while (idx < INODE_ALL_BLOCKS)
@@ -288,19 +264,13 @@ int32 onix_file_write(OnixFile *file, const void *content, int32 count)
             idx++;
             continue;
         }
-        else if (flag && idx >= INDIRECT_BLOCK_IDX)
+        else if (idx == INDIRECT_BLOCK_IDX && inode->blocks[idx] == 0)
         {
-            lba = onix_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
-            partition_write(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
-            break;
+            inode->blocks[idx] = new_blocks[new_block_idx++];
         }
 
-        assert(idx == INDIRECT_BLOCK_IDX);
-        if (blocks[idx] == 0)
-        {
-            blocks[idx] = new_blocks[new_block_idx++];
-            flag = true;
-        }
+        onix_block_sync_indirect(part, inode->blocks[idx], blocks);
+        break;
     }
 sync_inode:
     if (file->offset > file->inode->size)
@@ -314,33 +284,56 @@ sync_inode:
         onix_bitmap_sync(part, new_blocks[idx], BLOCK_BITMAP);
         idx++;
     }
-    step = 3;
 
 rollback:
     switch (step)
     {
-    case 4:
+    case 1:
         idx = 0;
         while (new_blocks[idx])
         {
             onix_block_bitmap_rollback(part, new_blocks[idx]);
             idx++;
         }
-    case 3:
-        free(blocks);
-    case 2:
-        free(buf);
+        bytes = -1;
     default:
         break;
     }
+    free(buf);
+    free(new_blocks);
+#ifndef ONIX_KERNEL_DEBUG
+    free(blocks);
+#endif
+    return bytes;
 }
 
 int32 onix_file_read(OnixFile *file, const void *content, int32 count)
 {
-    Partition *part = file->part;
-
     assert(count > 0);
+    if (file->offset + count > MAX_FILE_SIZE)
+    {
+        printk("Exceed onix max file size...\n");
+        return -1;
+    }
 
+    char *buf = malloc(BLOCK_SIZE);
+    if (buf == NULL)
+    {
+        return -1;
+    }
+
+#ifndef ONIX_KERNEL_DEBUG
+    u32 *blocks = malloc(ALL_BLOCKS_SIZE);
+    if (blocks == NULL)
+    {
+        free(buf);
+        return -1;
+    }
+#else
+    u32 blocks[INODE_ALL_BLOCKS];
+#endif
+
+    Partition *part = file->part;
     u32 block_start = file->offset / BLOCK_SIZE; // 起始块
 
     assert(block_start < INODE_ALL_BLOCKS);
@@ -353,21 +346,7 @@ int32 onix_file_read(OnixFile *file, const void *content, int32 count)
     u32 step = 0;
     int32 bytes = EOF;
 
-    u32 *blocks = malloc(INODE_ALL_BLOCKS * sizeof(u32));
-    if (blocks == NULL)
-    {
-        step = 1;
-        goto rollback;
-    }
-    memcpy(blocks, inode->blocks, DIRECT_BLOCK_CNT * sizeof(u32));
-
-    u32 lba = 0;
-    if (inode->blocks[INDIRECT_BLOCK_IDX])
-    {
-        // 一级间接表存在，读入；
-        lba = onix_block_lba(part, inode->blocks[INDIRECT_BLOCK_IDX]);
-        partition_read(part, lba, blocks + INDIRECT_BLOCK_IDX, BLOCK_SECTOR_COUNT);
-    }
+    u32 valid_blocks = onix_block_loads(part, inode, blocks);
 
     if (!blocks[block_start])
     {
@@ -377,23 +356,14 @@ int32 onix_file_read(OnixFile *file, const void *content, int32 count)
 
     u32 idx = block_start;
 
-    char *buf = malloc(BLOCK_SIZE);
-    if (buf == NULL)
-    {
-        step = 2;
-        goto rollback;
-    }
-    memset(buf, 0, BLOCK_SIZE);
-
     if (block_remain_bytes)
     {
-        lba = onix_block_lba(part, blocks[idx]);
-        partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
+        onix_block_read(part, blocks[idx], buf);
+
         if (count <= block_left_bytes)
         {
             memcpy(content, buf + block_remain_bytes, count);
             file->offset += count;
-            step = 3;
             bytes = count;
             goto rollback;
         }
@@ -406,40 +376,29 @@ int32 onix_file_read(OnixFile *file, const void *content, int32 count)
     }
     while (blocks[idx])
     {
-        lba = onix_block_lba(part, blocks[idx]);
         if (count >= BLOCK_SIZE)
         {
-            partition_read(part, lba, content, BLOCK_SECTOR_COUNT);
+            onix_block_read(part, blocks[idx], content);
             content += BLOCK_SIZE;
             bytes += BLOCK_SIZE;
             file->offset += BLOCK_SIZE;
         }
         else
         {
-            partition_read(part, lba, buf, BLOCK_SECTOR_COUNT);
+            onix_block_read(part, blocks[idx], buf);
             memcpy(content, buf, count);
             bytes += count;
             file->offset += count;
-            step = 3;
             goto rollback;
         }
         idx++;
     }
-    step = 3;
 
 rollback:
-    switch (step)
-    {
-    case 3:
-        free(buf);
-    case 2:
-        free(blocks);
-    case 1:
-        break;
-    default:
-        break;
-    }
-
+    free(buf);
+#ifndef ONIX_KERNEL_DEBUG
+    free(blocks);
+#endif
     return bytes;
 }
 
