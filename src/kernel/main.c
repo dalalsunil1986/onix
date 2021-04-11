@@ -4,7 +4,6 @@ int main()
     *video = 'A';
     while (1)
     {
-
     }
     return 0;
 }

@@ -7,6 +7,7 @@ BOOT_INCLUDE:=$(SRC)/boot
 INCLUDE:=$(SRC)/include
 
 BOCHS=bochs
+BOCHSGDB=bochs-gdb-a20
 ASM=nasm
 CC=gcc
 LD=ld
@@ -16,9 +17,9 @@ ENTRYPOINT = 0xC0010000
 ASM_FLAGS= -f elf
 
 CFLAGS = -I $(INCLUDE) -c -fno-builtin -m32 -fno-stack-protector \
-		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra 
+		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -Wall -Wextra -g
 
-LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
+LDFLAGS = -m elf_i386 -Ttext $(ENTRYPOINT)
 
 
 .PHONY: clean
@@ -53,6 +54,10 @@ endif
 bochs: $(BUILD)/harddisk.img
 	@rm -rf $(BUILD)/harddisk.img.lock
 	cd $(BUILD) && $(BOCHS) -q  -f bochsrc
+
+gdb: $(BUILD)/harddisk.img
+	@rm -rf $(BUILD)/harddisk.img.lock
+	cd $(BUILD) && $(BOCHSGDB) -q -f bochsrc.gdb
 
 clean:
 	rm -rf $(BUILD)/boot.bin
