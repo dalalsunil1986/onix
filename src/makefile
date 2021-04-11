@@ -18,7 +18,7 @@ FS_INCLUDE:=$(SRC_DIR)
 INCLUDE:= -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -I $(FS_INCLUDE)
 
 BOCHS=bochs
-BOCHSGDB=bochs-gdb-a20
+BOCHSGDB=bochs-gdb
 ASM=nasm
 CC=gcc
 LD=ld
