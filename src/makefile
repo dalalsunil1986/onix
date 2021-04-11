@@ -18,22 +18,23 @@ FS_INCLUDE:=$(SRC_DIR)
 INCLUDE:= -I $(ONIX_INCLUDE) -I $(KERNEL_INCLUDE) -I $(FS_INCLUDE)
 
 BOCHS=bochs
+BOCHSGDB=bochs-gdb-a20
 ASM=nasm
 CC=gcc
 LD=ld
 
 ENTRYPOINT = 0xC0020000
 
-ASM_FLAGS= -f elf
+ASM_FLAGS= -f elf -g 
 
 REAL_CFLAGS = $(INCLUDE) -fno-builtin -m32 -fno-stack-protector \
-		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -w \
+		-nostdlib -nostdinc -nostartfiles -nodefaultlibs -w -g \
 		-D ONIX_DEBUG \
 		# -Wall -Wextra
 
 DEBUG_CFLAGS = $(INCLUDE) -m32 -w -D ONIX_KERNEL_DEBUG -D ONIX_DEBUG -g 
 
-LDFLAGS = -m elf_i386 -s -Ttext $(ENTRYPOINT)
+LDFLAGS = -m elf_i386 -Ttext $(ENTRYPOINT)
 
 all: dirs $(REAL_TARGET)
 
@@ -98,7 +99,7 @@ DEBUG_C:= $(DEBUG_SRC)/debug_lib.c \
 
 # for boot.bin / loader.bin
 $(BUILD)/%.bin: $(BOOT_DIR)/%.asm
-	$(ASM) -I $(BOOT_INCLUDE) $< -o $@
+	$(ASM) -g -I $(BOOT_INCLUDE) $< -o $@
 
 $(REAL_DIR)/%.o: $(KERNEL_SRC)/%.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
@@ -198,6 +199,11 @@ bochs: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	@rm -rf $(BUILD)/harddisk.img.lock
 	@rm -rf $(BUILD)/bx_enh_dbg.ini
 	cd $(BUILD) && $(BOCHS) -q  -f bochsrc
+
+gdb: $(BUILD)/harddisk.img $(BUILD)/slave.img
+	@rm -rf $(BUILD)/harddisk.img.lock
+	cd $(BUILD) && $(BOCHSGDB) -q -f bochsrc.gdb
+
 
 image: $(BUILD)/harddisk.img $(BUILD)/slave.img
 	-
