@@ -25,10 +25,10 @@ LDFLAGS = -m elf_i386 -Ttext $(ENTRYPOINT)
 .PHONY: clean
 
 $(BUILD)/boot.bin: $(BOOT)/boot.asm
-	$(ASM) -I $(BOOT_INCLUDE) $< -o $@
+	$(ASM) -g -I $(BOOT_INCLUDE) $< -o $@
 
 $(BUILD)/loader.bin: $(BOOT)/loader.asm
-	$(ASM) -I $(BOOT_INCLUDE) $< -o $@
+	$(ASM) -g -I $(BOOT_INCLUDE) $< -o $@
 
 $(BUILD)/start.o: $(KERNEL)/start.asm
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
