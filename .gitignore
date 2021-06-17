@@ -2,3 +2,4 @@
 build/bochs-gdb/bochs-2.6.11.tar.gz
 build/*.img
 build/bx_enh_dbg.ini
+build/boot.bin
