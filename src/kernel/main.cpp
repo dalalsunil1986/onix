@@ -1,8 +1,10 @@
+#include <onix/types.h>
+
 namespace onix
 {
     namespace kernel
     {
-        extern "C"
+        EXTERN
         {
             short ards_count = 0;
             short ards_buffer = 0;
