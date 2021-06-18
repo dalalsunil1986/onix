@@ -1,3 +1,7 @@
+; (C) Copyright 2021 Steven;
+; @author: Steven kangweibaby@163.com
+; @date: 2021-06-18
+
 %include "boot.inc"
 
 LOADER_STACK_TOP equ LOADER_BASE_ADDR

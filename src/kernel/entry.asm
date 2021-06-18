@@ -2,6 +2,7 @@
 ; @author: Steven kangweibaby@163.com
 ; @date: 2021-06-17
 ; 内核入口
+
 %include "boot.inc"
 
 [bits 32]

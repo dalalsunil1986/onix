@@ -1,5 +1,10 @@
 #pragma once
 
+/* (C) Copyright 2021 Steven;
+* @author: Steven kangweibaby@163.com
+* @date: 2021-06-18
+*/
+
 #include <onix/types.h>
 
 namespace onix
