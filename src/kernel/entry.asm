@@ -19,6 +19,7 @@ _start:
 
     mov esp, KERNEL_STACK_TOP
     call main
+
 halt:
     xchg bx, bx
     jmp halt

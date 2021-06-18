@@ -25,7 +25,8 @@ define make_dirs
 endef
 
 KERNEL_ASM:= $(SRC)/kernel/entry.asm
-KERNEL_CPP:= $(SRC)/kernel/main.cpp
+KERNEL_CPP:= $(SRC)/kernel/io.cpp \
+				$(SRC)/kernel/main.cpp
 
 
 KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \
