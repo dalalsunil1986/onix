@@ -1,5 +1,4 @@
 %include "boot.inc"
-%include "elf.inc"
 
 LOADER_STACK_TOP equ LOADER_BASE_ADDR
 

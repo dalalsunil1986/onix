@@ -5,11 +5,15 @@
 %include "boot.inc"
 
 [bits 32]
-global __kernel_entry
-__kernel_entry:
+extern main
+
+global _start
+_start:
     mov esp, KERNEL_STACK_TOP
-    mov byte [gs:0], 'E'
+    call main
     xchg bx, bx
+    xchg bx, bx
+
 halt:
     jmp $
 

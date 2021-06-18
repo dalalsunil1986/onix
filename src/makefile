@@ -5,17 +5,19 @@ BOCHS=bochs
 BOCHSGDB=bochs-gdb
 ASM=nasm
 LD=ld
-CC=g++
+CPP=g++
 
 BOOT_INCLUDE:=$(SRC)/boot
 
 # ----------------------------
 
-# DEBUG:=-g
-DEBUG:=
+DEBUG:=-g
+# DEBUG:=
 ENTRYPOINT = 0x21000
 ASM_FLAGS= -f elf $(DEBUG)
-LDFLAGS = -m elf_i386 -static -Ttext $(ENTRYPOINT) -e __kernel_entry 
+LDFLAGS = -m elf_i386 -static -Ttext $(ENTRYPOINT) 
+CPPFLAGS= -m32 $(DEBUG) -fno-builtin -fno-stack-protector -fno-pie -fno-pic\
+			-nostdlib -nostdinc -nostartfiles -nodefaultlibs -fpermissive -w \
 
 # 创建相关目录
 define make_dirs
@@ -23,9 +25,11 @@ define make_dirs
 endef
 
 KERNEL_ASM:= $(SRC)/kernel/entry.asm
+KERNEL_CPP:= $(SRC)/kernel/main.cpp
 
 
-KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o)
+KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \
+				$(KERNEL_CPP:$(SRC)/%.cpp=$(BUILD)/%.o)
 
 # for boot.bin / loader.bin
 $(BUILD)/%.bin: $(SRC)/boot/%.asm
@@ -35,6 +39,10 @@ $(BUILD)/%.bin: $(SRC)/boot/%.asm
 $(BUILD)/%.o: $(SRC)/%.asm
 	$(call make_dirs,$(dir $@))
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
+
+$(BUILD)/%.o: $(SRC)/%.cpp
+	$(call make_dirs,$(dir $@))
+	$(CPP) $(CPPFLAGS) -c $< -o $@
 
 $(BUILD)/kernel.bin: $(KERNEL_OBJECTS)
 	$(call make_dirs,$(dir $@))
@@ -61,14 +69,29 @@ endif
 image: $(BUILD)/master.img $(BUILD)/slave.img
 	-
 
-.PHONY:bochs
+.PHONY: bochs
 bochs: image
 	rm -rf $(BUILD)/bx_enh_dbg.ini
 	cd $(BUILD) && $(BOCHS) -q -f bochsrc -unlock
 
-.PHONY:bochs
+.PHONY: gdb
 gdb: image
 	cd $(BUILD) && $(BOCHSGDB) -q -f bochsrc.gdb -unlock
+
+LAUNCHER:=launcher.sh
+.PHONY: launcher
+launcher:
+	@cd $(BUILD) && chmod +x $(LAUNCHER)
+	@cd $(BUILD) && ./$(LAUNCHER)
+
+.PHONY: kill
+kill:
+	ps -ef | grep bochs-gdb | grep -v grep | awk '{print $$2}' | xargs -r kill -9
+
+.PHONY: terminate
+terminate:
+	ps -ef | grep ./launcher.sh | grep -v grep | awk '{print $$2}' | xargs -r kill -9
+	ps -ef | grep bochs-gdb | grep -v grep | awk '{print $$2}' | xargs -r kill -9
 
 .PHONY:clean
 clean:
