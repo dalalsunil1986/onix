@@ -6,14 +6,19 @@
 
 [bits 32]
 extern main
+extern ards_count
+extern ards_buffer
+extern gdt_ptr
 
 global _start
 _start:
+
+    pop word [gdt_ptr]
+    pop word [ards_buffer]
+    pop word [ards_count]
+
     mov esp, KERNEL_STACK_TOP
     call main
-    xchg bx, bx
-    xchg bx, bx
-
 halt:
-    jmp $
-
+    xchg bx, bx
+    jmp halt

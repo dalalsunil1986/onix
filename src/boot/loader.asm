@@ -24,8 +24,6 @@ check_memory:
     inc word [ards_count]
     cmp ebx, 0
     jnz .check_next
-
-    mov cx, [ards_count]
     ; 检测内存成功，跳转到准备保护模式
     jmp prepare_protect_mode
 

@@ -8,7 +8,7 @@ LD=ld
 CPP=g++
 
 BOOT_INCLUDE:=$(SRC)/boot
-
+INCLUDE:=$(SRC)/include
 # ----------------------------
 
 DEBUG:=-g
@@ -42,7 +42,7 @@ $(BUILD)/%.o: $(SRC)/%.asm
 
 $(BUILD)/%.o: $(SRC)/%.cpp
 	$(call make_dirs,$(dir $@))
-	$(CPP) $(CPPFLAGS) -c $< -o $@
+	$(CPP) $(CPPFLAGS) -I $(INCLUDE) -c $< -o $@
 
 $(BUILD)/kernel.bin: $(KERNEL_OBJECTS)
 	$(call make_dirs,$(dir $@))
