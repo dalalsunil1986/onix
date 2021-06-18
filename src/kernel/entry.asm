@@ -8,14 +8,19 @@
 [bits 32]
 extern main
 extern ards_count
-extern ards_buffer
+extern descriptor
 extern gdt_ptr
 
 global _start
 _start:
+    xchg bx, bx
 
     pop word [gdt_ptr]
-    pop word [ards_buffer]
+
+    xor eax, eax
+    pop ax
+    mov [descriptor], eax
+
     pop word [ards_count]
 
     mov esp, KERNEL_STACK_TOP

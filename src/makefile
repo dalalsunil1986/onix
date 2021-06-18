@@ -15,7 +15,7 @@ DEBUG:=-g
 # DEBUG:=
 ENTRYPOINT = 0x21000
 ASM_FLAGS= -f elf $(DEBUG)
-LDFLAGS = -m elf_i386 -static -Ttext $(ENTRYPOINT) 
+LDFLAGS = -m elf_i386 -static -Ttext $(ENTRYPOINT)
 CPPFLAGS= -m32 $(DEBUG) -fno-builtin -fno-stack-protector -fno-pie -fno-pic\
 			-nostdlib -nostdinc -nostartfiles -nodefaultlibs -fpermissive -w \
 
@@ -25,13 +25,18 @@ define make_dirs
 endef
 
 KERNEL_ASM:= $(SRC)/kernel/entry.asm
+
 KERNEL_CPP:= $(SRC)/kernel/io.cpp \
 			$(SRC)/kernel/console.cpp \
+			$(SRC)/kernel/memory.cpp \
 			$(SRC)/kernel/main.cpp
+
+KERNEL_LAB:= $(SRC)/lib/string.cpp
 
 
 KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \
-				$(KERNEL_CPP:$(SRC)/%.cpp=$(BUILD)/%.o)
+				$(KERNEL_CPP:$(SRC)/%.cpp=$(BUILD)/%.o) \
+				$(KERNEL_LAB:$(SRC)/%.cpp=$(BUILD)/%.o)
 
 # for boot.bin / loader.bin
 $(BUILD)/%.bin: $(SRC)/boot/%.asm

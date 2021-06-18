@@ -1,20 +1,21 @@
-#include <onix/types.h>
-#include <onix/console.h>
 /* (C) Copyright 2021 Steven;
 * @author: Steven kangweibaby@163.com
 * @date: 2021-06-18
 */
 
+#include <onix/types.h>
+#include <onix/console.h>
+#include <onix/memory.h>
+
 namespace onix
 {
     EXTERN
     {
-        short ards_count = 0;
-        short ards_buffer = 0;
         short gdt_ptr = 0;
-
         int main()
         {
+            memory::init_ards();
+
             auto value = console::get_cursor();
             console::set_cursor(255);
             console::clear();
