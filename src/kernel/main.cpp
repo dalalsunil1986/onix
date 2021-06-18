@@ -14,7 +14,7 @@ namespace onix
         short gdt_ptr = 0;
         int main()
         {
-            memory::init_ards();
+            memory::ards::initialize();
 
             auto value = console::get_cursor();
             console::set_cursor(255);

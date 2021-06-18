@@ -9,20 +9,22 @@ namespace onix
 {
     namespace memory
     {
-        static const u8 MAX_ARDS_COUNT = 20;
-
-        struct ards
+        namespace ards
         {
-            u64 base;
-            u64 size;
-            u32 type;
-        } _packed;
+            static const u8 MAX_ARDS_COUNT = 20;
+            struct ards
+            {
+                u64 base;
+                u64 size;
+                u32 type;
+            } _packed;
 
-        extern ards ards_holder[MAX_ARDS_COUNT];
+            extern ards ards_holder[MAX_ARDS_COUNT];
 
-        EXTERN u32 ards_count;
-        EXTERN ards *descriptor;
+            EXTERN u32 ards_count;
+            EXTERN ards *ards_descriptor;
 
-        void init_ards();
+            void initialize();
+        }
     }
 }

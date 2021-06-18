@@ -8,7 +8,7 @@
 [bits 32]
 extern main
 extern ards_count
-extern descriptor
+extern ards_descriptor
 extern gdt_ptr
 
 global _start
@@ -19,7 +19,7 @@ _start:
 
     xor eax, eax
     pop ax
-    mov [descriptor], eax
+    mov [ards_descriptor], eax
 
     pop word [ards_count]
 
