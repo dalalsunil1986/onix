@@ -17,6 +17,7 @@ namespace onix
 
             auto value = console::get_cursor();
             console::set_cursor(255);
+            console::clear();
         }
     }
 };

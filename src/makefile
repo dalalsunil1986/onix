@@ -42,6 +42,10 @@ $(BUILD)/%.o: $(SRC)/%.asm
 	$(call make_dirs,$(dir $@))
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
 
+$(BUILD)/%.o: $(SRC)/%.cpp $(INCLUDE)/%.h 
+	$(call make_dirs,$(dir $@))
+	$(CPP) $(CPPFLAGS) -I $(INCLUDE) -c $< -o $@
+
 $(BUILD)/%.o: $(SRC)/%.cpp
 	$(call make_dirs,$(dir $@))
 	$(CPP) $(CPPFLAGS) -I $(INCLUDE) -c $< -o $@

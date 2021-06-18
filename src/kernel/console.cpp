@@ -19,3 +19,16 @@ void onix::console::set_cursor(u16 cursor)
     onix::io::outb(CRT_ADDR_REG, CRT_CURSOR_LOW);
     onix::io::outb(CRT_DATA_REG, cursor & 0xff);
 }
+
+void onix::console::clear()
+{
+    console::text *ptr = (console::text *)VGA_MEM_BASE;
+    u32 count = VGA_TEXT_SIZE;
+    while (count--)
+    {
+        ptr->text = ' ';
+        ptr->style = VGA_DEFAULT_STYLE;
+        ptr++;
+    }
+    set_cursor(0);
+}
