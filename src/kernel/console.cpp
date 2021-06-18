@@ -32,3 +32,12 @@ void onix::console::clear()
     }
     set_cursor(0);
 }
+
+void onix::console::putchar(char text)
+{
+    u32 cursor = get_cursor();
+    console::text *ptr = (console::text *)VGA_MEM_BASE;
+    ptr[cursor].text = text;
+    cursor++;
+    set_cursor(cursor);
+}

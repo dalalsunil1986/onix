@@ -30,6 +30,7 @@ namespace onix
         };
 
         void clear();
+        void putchar(char text);
 
         u16 get_cursor();
         void set_cursor(u16 cursor);

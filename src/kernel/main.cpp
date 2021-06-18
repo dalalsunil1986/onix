@@ -12,12 +12,16 @@ namespace onix
 
         int main()
         {
-            char *video = (char *)(0xb8000);
-            *video = 'K';
-
             auto value = console::get_cursor();
             console::set_cursor(255);
             console::clear();
+
+            char *message = "hello world\0";
+            char *ptr = message;
+            do
+            {
+                console::putchar(*ptr);
+            } while (*(++ptr));
         }
     }
 };
