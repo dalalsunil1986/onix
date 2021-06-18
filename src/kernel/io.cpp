@@ -1,12 +1,12 @@
-#include <onix/kernel/io.h>
+#include <onix/io.h>
 
-void onix::kernel::outb(u16 port, u8 value)
+void onix::io::outb(u16 port, u8 value)
 {
     asm volatile(
         "out %%al, %%dx\n" ::"d"(port), "a"(value));
 }
 
-u8 onix::kernel::inb(u16 port)
+u8 onix::io::inb(u16 port)
 {
     u8 value = 0;
     asm volatile(
@@ -16,13 +16,13 @@ u8 onix::kernel::inb(u16 port)
     return value;
 }
 
-void onix::kernel::outw(u16 port, u16 value)
+void onix::io::outw(u16 port, u16 value)
 {
     asm volatile(
         "out %%ax, %%dx\n" ::"d"(port), "a"(value));
 }
 
-u16 onix::kernel::inw(u16 port)
+u16 onix::io::inw(u16 port)
 {
     u16 value = 0;
     asm volatile(
