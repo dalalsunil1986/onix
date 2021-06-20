@@ -16,7 +16,7 @@ DEBUG:=-g
 ENTRYPOINT = 0xC0011000
 ASM_FLAGS= -f elf $(DEBUG)
 LDFLAGS = -m elf_i386 -static -Ttext $(ENTRYPOINT)
-CPPFLAGS= -m32 $(DEBUG) -fno-builtin -fno-stack-protector -fno-pie -fno-pic\
+CFLAGS= -m32 $(DEBUG) -fno-builtin -fno-stack-protector -fno-pie -fno-pic\
 			-nostdlib -nostdinc -nostartfiles -nodefaultlibs -w \
 
 # 创建相关目录
@@ -27,7 +27,11 @@ endef
 
 KERNEL_ASM:= $(SRC)/kernel/start.asm
 
-KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o)
+KERNEL_C:= $(SRC)/kernel/main.c
+
+
+KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \
+				$(KERNEL_C:$(SRC)/%.c=$(BUILD)/%.o) \
 
 # for boot.bin / loader.bin
 $(BUILD)/%.bin: $(SRC)/boot/%.asm
@@ -37,6 +41,10 @@ $(BUILD)/%.bin: $(SRC)/boot/%.asm
 $(BUILD)/%.o: $(SRC)/%.asm
 	$(call make_dirs,$(dir $@))
 	$(ASM) $(ASM_FLAGS) -I $(BOOT_INCLUDE) $< -o $@
+
+$(BUILD)/%.o: $(SRC)/%.c
+	$(call make_dirs,$(dir $@))
+	$(CC) $(CFLAGS) -I $(INCLUDE) -c $< -o $@
 
 $(BUILD)/kernel.bin: $(KERNEL_OBJECTS)
 	$(call make_dirs,$(dir $@))
