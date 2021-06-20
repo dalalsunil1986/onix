@@ -16,11 +16,16 @@ LOADER_SECTOR_SIZE  equ 4 ; loader.bin 在硬盘上占用几个扇区
 LOADER_STACK_TOP equ LOADER_BASE_ADDR
 
 ; 将 kernel 加载到 KERNEL_LOAD_ADDR 的位置
-KERNEL_LOAD_ADDR    equ 0x20000 ; kernel.bin 加载的物理内存地址
-KERNEL_BASE_ADDR    equ 0x21000 ; kernel 的入口地址
-KERNEL_STACK_TOP    equ 0x20000 ; kernel 初始的栈顶
+KERNEL_LOAD_ADDR    equ 0xC0010000 ; kernel.bin 加载的物理内存地址
+KERNEL_BASE_ADDR    equ 0xC0011000 ; kernel 的入口地址
+KERNEL_STACK_TOP    equ 0xC0010000 ; kernel 初始的栈顶
 KERNEL_SECTOR_START equ 100 ; kernel.bin 在硬盘上的起始扇区
 KERNEL_SECTOR_SIZE  equ 200 ; kernel.bin 在硬盘上占用几个扇区 100KB
+
+PAGE_DIR_ADDR   equ 0x2000
+PAGE_SIZE       equ 0x1000 ; 4K = 4096
+PAGE_ATTR       equ 0b111
+BASE_ADDRESS_LIMIT  equ 0x100000; 1M 的空间
 
 %macro BIOS_PRINT_FUNCTION 0
 %ifndef BIOS_PRINT_FUNCTION

@@ -13,7 +13,7 @@ INCLUDE:=$(SRC)/include
 
 DEBUG:=-g
 # DEBUG:=
-ENTRYPOINT = 0x21000
+ENTRYPOINT = 0xC0011000
 ASM_FLAGS= -f elf $(DEBUG)
 LDFLAGS = -m elf_i386 -static -Ttext $(ENTRYPOINT)
 CPPFLAGS= -m32 $(DEBUG) -fno-builtin -fno-stack-protector -fno-pie -fno-pic\

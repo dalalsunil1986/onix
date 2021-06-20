@@ -66,6 +66,7 @@ protect_mode_start:
     mov ax, video_selector
     mov gs, ax
 
+    call setup_page
     call load_kernel
 
     xor ebx, ebx
@@ -82,6 +83,62 @@ load_kernel:
     mov ebx, KERNEL_LOAD_ADDR
     mov ecx, KERNEL_SECTOR_SIZE
     call read_disk
+    ret
+
+setup_page:
+    ; xchg bx, bx
+    mov ecx, PAGE_SIZE * 2
+    mov esi, 0
+
+.reset:
+    mov byte [PAGE_DIR_ADDR + esi], 0
+    inc esi
+    loop .reset
+
+    ; xchg bx, bx
+
+.pde: ; PDE 页目录表，只有一个
+
+    ; 0000_0000_00b 对应的页表
+    ; 设置基础页目录，使前 1M 内存映射到自己
+    ; 使虚拟地址 3G 后的内存也映射到 1M 内存中
+
+    mov eax, PAGE_DIR_ADDR + PAGE_SIZE;
+    or eax, PAGE_ATTR
+    mov [PAGE_DIR_ADDR + 0], eax
+    mov [PAGE_DIR_ADDR + (0x300 * 4)], eax; 第 0x300 个目录项，每个目录项占四个字节
+
+    ; 使最高的目录指向自己，方便修改，这将浪费一个表项，使虚拟地址最高的 4M 无法访问，
+    ; 不过也没关系，一般程序不会用到那么高的地址
+
+    mov eax, PAGE_DIR_ADDR
+    or eax, PAGE_ATTR
+    mov [PAGE_DIR_ADDR + (0x3ff * 4)], eax;
+
+    ; 低端 1M 内存 / 4KB = 256
+
+    ; xchg bx, bx
+
+    mov ebx, PAGE_DIR_ADDR + PAGE_SIZE;
+    mov ecx, (BASE_ADDRESS_LIMIT / PAGE_SIZE)  ; 256
+    mov esi, 0
+    mov edx, PAGE_ATTR
+
+.pte:
+    mov [ebx + esi * 4], edx
+    add edx, PAGE_SIZE
+    inc esi
+    loop .pte
+
+    ; 设置 CR3 寄存器
+    mov eax, PAGE_DIR_ADDR
+    mov cr3, eax
+
+    ; 打开分页功能 打开cr0的pg位(第31位)
+    mov eax, cr0
+    or eax, 10000000_00000000_00000000_00000000b
+    mov cr0, eax
+
     ret
 
 READ_DISK_FUNCTION
