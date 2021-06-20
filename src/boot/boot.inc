@@ -1,10 +1,26 @@
+; (C) Copyright 2021 Steven;
+; @author: Steven kangweibaby@163.com
+; @date: 2021-04-16
 
-BOOT_BASE_ADDR      equ 0x7c00
+; 在机器肯定有的 1M 物理内存中
+; 0x500 ~ 0x7BFF 有 29.75 KB 的可用区域
+; 0x7E00 ~ 0x9FBFF 有 607.6KB 的可用区域
+; 由于物理内存大小事先不知道，但是以上两个区域应该肯定可以使用;
 
-LOADER_BASE_ADDR    equ 0x1000
-LOADER_START_SECTOR equ 0x2
-LOADER_SECTOR_SIZE  equ 4
+BOOT_BASE_ADDR equ 0x7c00 ; 主引导扇区加载的位置
 
+; 将 loader 加载到 LOADER_BASE_ADDR 的位置，这里的设置一定要与 makefile 中的一致
+LOADER_BASE_ADDR equ 0x1000 ; loader.bin 加载的物理内存地址
+LOADER_SECTOR_START equ 0x2 ; loader.bin 在硬盘上的起始扇区
+LOADER_SECTOR_SIZE  equ 4 ; loader.bin 在硬盘上占用几个扇区
+LOADER_STACK_TOP equ LOADER_BASE_ADDR
+
+; 将 kernel 加载到 KERNEL_LOAD_ADDR 的位置
+KERNEL_LOAD_ADDR    equ 0x20000 ; kernel.bin 加载的物理内存地址
+KERNEL_BASE_ADDR    equ 0x21000 ; kernel 的入口地址
+KERNEL_STACK_TOP    equ 0x20000 ; kernel 初始的栈顶
+KERNEL_SECTOR_START equ 100 ; kernel.bin 在硬盘上的起始扇区
+KERNEL_SECTOR_SIZE  equ 200 ; kernel.bin 在硬盘上占用几个扇区 100KB
 
 %macro BIOS_PRINT_FUNCTION 0
 %ifndef BIOS_PRINT_FUNCTION

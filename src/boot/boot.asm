@@ -5,16 +5,19 @@ section boot vstart=BOOT_BASE_ADDR
     mov ax, 3
     int 0x10; clean screen
 
+    mov sp, BOOT_BASE_ADDR
+
     mov si, message
     call bios_print
 
     call load_loader
+
     jmp 0:LOADER_BASE_ADDR
 
     ud2; should never here
 
 load_loader:
-    mov eax, LOADER_START_SECTOR
+    mov eax, LOADER_SECTOR_START
     mov bx, LOADER_BASE_ADDR
     mov cx, LOADER_SECTOR_SIZE ; 2KB
     call read_disk
