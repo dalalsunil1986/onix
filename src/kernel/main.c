@@ -17,8 +17,11 @@ int main()
     cursor = get_cursor();
     clear();
 
-    char *message = "hello world!!!\n\0";
-    printk(message);
+    u32 count = 1;
+    while (count++)
+    {
+        printk("hello, onix %d\n", count);
+    }
 
     return 0;
 }

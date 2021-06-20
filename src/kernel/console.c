@@ -38,6 +38,14 @@ void clear()
     set_cursor(0);
 }
 
+static void scroll()
+{
+    int cpos = 0;
+    char *dest = (char *)VGA_MEM_BASE;
+    char *src = dest + (VGA_WIDTH * 2);
+    memcpy(dest, src, (VGA_HEIGHT - 1) * (VGA_WIDTH * 2));
+}
+
 static inline int get_x(int cursor)
 {
     return cursor % VGA_WIDTH;
@@ -56,6 +64,12 @@ static inline int get_pos(int x, int y)
 void put_char(char ch)
 {
     u32 cursor = get_cursor();
+    if (cursor >= (VGA_HEIGHT - 1) * VGA_WIDTH)
+    {
+        scroll();
+        cursor -= VGA_WIDTH;
+    }
+
     char_t *ptr = (char_t *)VGA_MEM_BASE;
 
     u32 x = get_x(cursor);
@@ -82,5 +96,12 @@ void put_char(char ch)
         cursor++;
         break;
     }
+
+    if (cursor >= (VGA_HEIGHT - 1) * VGA_WIDTH)
+    {
+        scroll();
+        cursor -= VGA_WIDTH;
+    }
+
     set_cursor(cursor);
 }
