@@ -4,3 +4,4 @@ build/*.img
 build/bx_enh_dbg.ini
 build/*.bin
 build/kernel
+build/*.lock
