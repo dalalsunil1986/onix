@@ -27,7 +27,9 @@ endef
 
 KERNEL_ASM:= $(SRC)/kernel/start.asm
 
-KERNEL_C:= $(SRC)/kernel/main.c
+KERNEL_C:= 	$(SRC)/kernel/io.c \
+			$(SRC)/kernel/console.c \
+			$(SRC)/kernel/main.c
 
 
 KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \

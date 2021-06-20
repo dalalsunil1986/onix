@@ -24,5 +24,9 @@
 			}],
 		}]
 	},
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"console.h": "c"
+		}
+	}
 }
