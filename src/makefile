@@ -33,6 +33,7 @@ KERNEL_C:= 	$(SRC)/kernel/io.c \
 			$(SRC)/kernel/main.c
 
 KERNEL_LIB:= $(SRC)/lib/string.c \
+			$(SRC)/lib/assert.c \
 			$(SRC)/lib/vsprintf.c \
 
 KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \

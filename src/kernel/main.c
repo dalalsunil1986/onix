@@ -5,6 +5,7 @@
 
 #include <onix/console.h>
 #include <onix/printk.h>
+#include <onix/assert.h>
 
 int main()
 {
@@ -21,7 +22,10 @@ int main()
     while (count++)
     {
         printk("hello, onix %d\n", count);
+        break;
     }
+    assert(true);
+    assert(false);
 
     return 0;
 }
