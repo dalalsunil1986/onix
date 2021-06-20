@@ -20,7 +20,19 @@
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
+#define VGA_TEXT_SIZE (VGA_MEM_SIZE / 2)
+#define VGA_TEXT_HEIGHT (VGA_TEXT_SIZE / VGA_WIDTH)
+#define VGA_DEFAULT_STYLE 0b00000111
+
+typedef struct char_t
+{
+    char text;
+    char style;
+} char_t;
+
 u16 get_cursor();
 void set_cursor(u16 cursor);
+
+void clear();
 
 #endif

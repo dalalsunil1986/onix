@@ -14,6 +14,7 @@ int main()
     cursor = 1;
     set_cursor(cursor);
     cursor = get_cursor();
+    clear();
 
     return 0;
 }
