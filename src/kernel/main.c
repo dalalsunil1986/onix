@@ -16,5 +16,12 @@ int main()
     cursor = get_cursor();
     clear();
 
+    char *message = "hello world!!!\n\0";
+    char *ptr = message;
+    while (*ptr)
+    {
+        putchar(*ptr++);
+    }
+
     return 0;
 }

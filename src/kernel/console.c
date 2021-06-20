@@ -37,3 +37,50 @@ void clear()
     }
     set_cursor(0);
 }
+
+static inline int get_x(int cursor)
+{
+    return cursor % VGA_WIDTH;
+}
+
+static inline int get_y(int cursor)
+{
+    return cursor / VGA_WIDTH;
+}
+
+static inline int get_pos(int x, int y)
+{
+    return y * VGA_WIDTH + x;
+}
+
+void put_char(char ch)
+{
+    u32 cursor = get_cursor();
+    char_t *ptr = (char_t *)VGA_MEM_BASE;
+
+    u32 x = get_x(cursor);
+    u32 y = get_y(cursor);
+
+    switch (ch)
+    {
+    case '\b':
+        x = x >= 1 ? x - 1 : 0;
+        cursor--;
+        ptr[cursor].text = ' ';
+        cursor = get_pos(x, y);
+        break;
+    case '\n':
+    case '\r':
+        cursor = get_pos(0, y + 1);
+        break;
+    case '\t':
+        break;
+    case '\x1b': // esc
+        break;
+    default:
+        ptr[cursor].text = ch;
+        cursor++;
+        break;
+    }
+    set_cursor(cursor);
+}

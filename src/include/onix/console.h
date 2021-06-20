@@ -33,6 +33,7 @@ typedef struct char_t
 u16 get_cursor();
 void set_cursor(u16 cursor);
 
+void put_char(char ch);
 void clear();
 
 #endif
