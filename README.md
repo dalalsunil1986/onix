@@ -2,8 +2,6 @@
 
 [本文档地址](https://github.com/StevenBaby/onix)
 
-原系统用 C 实现，计划用 C++ 重写。
-
 ## 开发环境
 
 ---
