@@ -28,7 +28,10 @@
 		"files.associations": {
 			"console.h": "c",
 			"printk.h": "c",
-			"stdarg.h": "c"
+			"stdarg.h": "c",
+			"string.h": "c",
+			"assert.h": "c",
+			"global.h": "c"
 		}
 	}
 }

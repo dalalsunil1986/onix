@@ -6,9 +6,13 @@
 #include <onix/console.h>
 #include <onix/printk.h>
 #include <onix/assert.h>
+#include <onix/global.h>
 
 int main()
 {
+    clear();
+    init_gdt();
+
     char *video = 0xb8000;
     *video = 'A';
 

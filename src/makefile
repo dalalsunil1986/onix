@@ -30,6 +30,8 @@ KERNEL_ASM:= $(SRC)/kernel/start.asm
 KERNEL_C:= 	$(SRC)/kernel/io.c \
 			$(SRC)/kernel/console.c \
 			$(SRC)/kernel/printk.c \
+			$(SRC)/kernel/debug.c \
+			$(SRC)/kernel/global.c \
 			$(SRC)/kernel/main.c
 
 KERNEL_LIB:= $(SRC)/lib/string.c \
