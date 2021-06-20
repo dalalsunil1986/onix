@@ -29,11 +29,15 @@ KERNEL_ASM:= $(SRC)/kernel/start.asm
 
 KERNEL_C:= 	$(SRC)/kernel/io.c \
 			$(SRC)/kernel/console.c \
+			$(SRC)/kernel/printk.c \
 			$(SRC)/kernel/main.c
 
+KERNEL_LIB:= $(SRC)/lib/string.c \
+			$(SRC)/lib/vsprintf.c \
 
 KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \
 				$(KERNEL_C:$(SRC)/%.c=$(BUILD)/%.o) \
+				$(KERNEL_LIB:$(SRC)/%.c=$(BUILD)/%.o) \
 
 # for boot.bin / loader.bin
 $(BUILD)/%.bin: $(SRC)/boot/%.asm
@@ -87,3 +91,4 @@ clean:
 	rm -rf $(BUILD)/*.lock
 	rm -rf $(BUILD)/*.bin
 	rm -rf $(BUILD)/kernel
+	rm -rf $(BUILD)/lib

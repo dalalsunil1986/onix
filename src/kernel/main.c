@@ -4,6 +4,7 @@
 */
 
 #include <onix/console.h>
+#include <onix/printk.h>
 
 int main()
 {
@@ -17,11 +18,7 @@ int main()
     clear();
 
     char *message = "hello world!!!\n\0";
-    char *ptr = message;
-    while (*ptr)
-    {
-        putchar(*ptr++);
-    }
+    printk(message);
 
     return 0;
 }
