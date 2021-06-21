@@ -31,7 +31,8 @@
 			"stdarg.h": "c",
 			"string.h": "c",
 			"assert.h": "c",
-			"global.h": "c"
+			"global.h": "c",
+			"types.h": "c"
 		}
 	}
 }

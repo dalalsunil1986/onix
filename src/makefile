@@ -30,16 +30,18 @@ endef
 
 KERNEL_ASM:= $(SRC)/kernel/start.asm
 
-KERNEL_C:= 	$(SRC)/kernel/io.c \
+KERNEL_C:= 	$(SRC)/kernel/main.c \
+			$(SRC)/kernel/io.c \
 			$(SRC)/kernel/console.c \
 			$(SRC)/kernel/printk.c \
 			$(SRC)/kernel/debug.c \
 			$(SRC)/kernel/global.c \
-			$(SRC)/kernel/main.c
+			
 
 KERNEL_LIB:= $(SRC)/lib/string.c \
 			$(SRC)/lib/assert.c \
 			$(SRC)/lib/vsprintf.c \
+			$(SRC)/lib/bitmap.c \
 
 KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \
 				$(KERNEL_C:$(SRC)/%.c=$(BUILD)/%.o) \

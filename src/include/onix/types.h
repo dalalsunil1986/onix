@@ -8,6 +8,10 @@
 
 #define _packed __attribute__((packed))
 
+#ifndef EOF
+#define EOF -1
+#endif
+
 #ifndef _BOOL
 typedef unsigned char bool;
 static const bool false = 0;

@@ -7,29 +7,22 @@
 #include <onix/printk.h>
 #include <onix/assert.h>
 #include <onix/global.h>
+#include <onix/bitmap.h>
 
 int main()
 {
     clear();
     init_gdt();
 
-    char *video = 0xb8000;
-    *video = 'A';
+    char bits[1024];
+    Bitmap map;
+    bitmap_init(&map, bits, sizeof(bits));
 
-    u16 cursor = get_cursor();
-    cursor = 1;
-    set_cursor(cursor);
-    cursor = get_cursor();
-    clear();
+    auto value = bitmap_test(&map, 0);
+    bitmap_set(&map, 0, 1);
+    value = bitmap_test(&map, 0);
 
-    u32 count = 1;
-    while (count++)
-    {
-        printk("hello, onix %d\n", count);
-        break;
-    }
-    assert(true);
-    assert(false);
+    auto start = bitmap_scan(&map, 10);
 
     return 0;
 }
