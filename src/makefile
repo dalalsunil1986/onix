@@ -11,11 +11,14 @@ BOOT_INCLUDE:=$(SRC)/boot
 INCLUDE:=$(SRC)/include
 # ----------------------------
 
+
+DEBUG:=
 DEBUG:=-g
-# DEBUG:=
+
 ENTRYPOINT = 0xC0011000
+LDS:= $(BUILD)/kernel.lds
 ASM_FLAGS= -f elf $(DEBUG)
-LDFLAGS = -m elf_i386 -static -Ttext $(ENTRYPOINT)
+LDFLAGS = -m elf_i386 -static -Ttext $(ENTRYPOINT) -T $(LDS)
 CFLAGS= -m32 $(DEBUG) -fno-builtin -fno-stack-protector -fno-pie -fno-pic\
 			-nostdlib -nostdinc -nostartfiles -nodefaultlibs -w \
 
@@ -75,8 +78,14 @@ ifeq ("$(wildcard $(BUILD)/slave.img)", "")
 	bximage -q -hd=128 -mode=create -sectsize=512 -imgmode=flat $@
 endif
 
+.PHONY:image
 image: $(BUILD)/master.img $(BUILD)/slave.img
 	-
+
+.PHONY:test
+test: $(BUILD)/kernel.bin
+	strip $<
+	readelf -a $<
 
 .PHONY:bochs
 bochs: image
