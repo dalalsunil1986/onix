@@ -10,6 +10,13 @@
 
 #define GDT_SIZE 128
 
+#define PL0 0b0
+#define PL1 0b1
+#define PL2 0b10
+#define PL3 0b11
+#define TI_GDT 0b000
+#define TI_LDT 0b100
+
 /* 存储段描述符/系统段描述符 */
 typedef struct Descriptor /* 共 8 个字节 */
 {
