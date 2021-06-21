@@ -61,10 +61,9 @@ protect_mode_start:
     mov es, ax
     mov fs, ax
     mov ss, ax
-    mov esp, LOADER_STACK_TOP
-
-    mov ax, video_selector
     mov gs, ax
+
+    mov esp, LOADER_STACK_TOP
 
     call setup_page
     call load_kernel
@@ -159,16 +158,12 @@ ards_buffer:
 
 code_selector equ (1 << 3)
 data_selector equ (2 << 3)
-video_selector equ (3 << 3)
 
 code_base equ 0
 code_limit equ (0x100000 - 1)
 
 data_base equ 0
 data_limit equ (0x100000 - 1)
-
-video_base equ 0xb8000
-video_limit equ (0xBFFFF - 0xB8000)
 
 gdt_ptr:
     dw (gdt_end - gdt_base - 1); limit
@@ -196,12 +191,4 @@ gdt_data:
     db ((data_limit >> 16) & 0xf) | 0b1_1_0_0_0000 ; 段界限 16~ 19 / attribute 2
     db (data_base >> 24) & 0xff; 段基地址 31 ~ 24
 
-gdt_video:
-    ; 第三号描述符 - video
-    dw video_limit & 0xffff; 段界限 0 ~ 15
-    dw video_base & 0xffff; 段基地址 0 ~ 15
-    db (video_base >> 16) & 0xff; 段基地址 16 ~ 23
-    db 0b_1_00_1_0010; attribute 
-    db ((video_limit >> 16) & 0xf) | 0b0_1_0_0_0000 ; 段界限 16~ 19 / attribute 2
-    db (video_base >> 24) & 0xff; 段基地址 31 ~ 24
 gdt_end:
