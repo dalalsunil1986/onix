@@ -75,6 +75,7 @@ static void init_entry(page_entry_t *entry, u32 index)
 
 static u32 scan_page(addr_t *addr, u32 size)
 {
+    assert(size > 0);
     u32 index = bitmap_scan(&addr->mmap, size);
     if (index == EOF)
     {
@@ -86,6 +87,17 @@ static u32 scan_page(addr_t *addr, u32 size)
 
     DEBUGK("scan page 0x%08X size %d\n", page, size);
     return page;
+}
+
+static u32 reset_page(addr_t *addr, u32 page, u32 size)
+{
+    assert((page % PAGE_SIZE) == 0);
+    assert(size > 0);
+    u32 index = (page - addr->start) >> 12;
+    for (size_t i = 0; i < size; i++)
+    {
+        bitmap_set(&addr->mmap, index + i, 0);
+    }
 }
 
 static page_table_t get_pde()
@@ -159,6 +171,12 @@ void init_memory()
 {
     INFOK("Initializing Memory Management System...\n");
     init_kernel_mmap();
+    u32 page;
+    for (size_t i = 1; i < 10; i++)
+    {
+        page = scan_page(&physical_addr, i);
+        reset_page(&physical_addr, page, i);
+    }
 }
 
 page_table_t get_cr3()
