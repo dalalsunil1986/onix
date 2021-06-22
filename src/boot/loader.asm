@@ -1,5 +1,7 @@
 %include "boot.inc"
 
+[bits 16]
+
 section loader vstart=LOADER_BASE_ADDR
 
     mov si, message
@@ -54,7 +56,7 @@ prepare_protect_mode:
     ud2; 理论上，不可能到达这里
 
 [bits 32]
-; 一下为 32 为模式程序
+; 以下为 32 为模式程序
 protect_mode_start:
     mov ax, data_selector
     mov ds, ax
