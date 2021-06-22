@@ -6,21 +6,21 @@
 #include <onix/bitmap.h>
 #include <onix/string.h>
 
-void bitmap_init(Bitmap *bitmap, char *buffer, u32 length)
+void bitmap_init(bitmap_t *bitmap, char *buffer, u32 length)
 {
     memset(buffer, 0, length);
     bitmap->bits = buffer;
     bitmap->length = length;
 }
 
-bool bitmap_test(Bitmap *bitmap, u32 index)
+bool bitmap_test(bitmap_t *bitmap, u32 index)
 {
     u32 bytes = index / 8;
     u8 bits = index % 8;
     return (bitmap->bits[bytes] & (1 << bits));
 }
 
-void bitmap_set(Bitmap *bitmap, u32 index, bool value)
+void bitmap_set(bitmap_t *bitmap, u32 index, bool value)
 {
     u32 bytes = index / 8;
     u32 bits = index % 8;
@@ -35,7 +35,7 @@ void bitmap_set(Bitmap *bitmap, u32 index, bool value)
     }
 }
 
-int bitmap_scan(Bitmap *bitmap, u32 count)
+int bitmap_scan(bitmap_t *bitmap, u32 count)
 {
     int start = EOF;
     u32 bits_left = bitmap->length * 8;

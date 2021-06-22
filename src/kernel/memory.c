@@ -8,6 +8,8 @@
 
 u32 memory_base;
 u32 memory_size;
+u32 total_pages;
+u32 free_pages;
 
 void init_ards(ards_t *ards, u32 count)
 {
@@ -23,5 +25,32 @@ void init_ards(ards_t *ards, u32 count)
             memory_base = ards->base;
         }
     }
-    DEBUGK("System Memory Base 0x%08X Size 0x%08X\n", memory_base, memory_size);
+
+    u32 offset = memory_base & 0xfff;
+
+    if (offset != 0)
+    {
+        memory_base = (memory_base / PAGE_SIZE + 1) * PAGE_SIZE;
+        memory_size -= offset;
+    }
+
+    total_pages = memory_size / PAGE_SIZE;
+    free_pages = total_pages;
+
+    INFOK("System Memory Base 0x%08X Size 0x%08X\n", memory_base, memory_size);
+    INFOK("System Memory Total 0x%X\n", total_pages);
+}
+
+void init_memory()
+{
+}
+
+page_table_t get_pde()
+{
+    asm volatile("movl %cr3, %eax\n");
+}
+
+void set_pde(page_table_t pde)
+{
+    asm volatile("movl %%eax, %%cr3\n" ::"a"(pde));
 }

@@ -7,6 +7,7 @@
 #define ONIX_MEMORY_H
 
 #include <onix/types.h>
+#include <onix/bitmap.h>
 
 #define PAGE_SIZE 4096 // 4KB
 #define ENTRY_SIZE (PAGE_SIZE / 4)
@@ -33,9 +34,23 @@ typedef struct
     u32 index : 20;  // index of page
 } _packed page_entry_t;
 
+typedef struct
+{
+    u32 start;
+    bitmap_t mmap;
+} vaddr_t;
+
 void init_ards(ards_t *ards, u32 count);
+void init_memory();
+
+typedef page_entry_t (*page_table_t)[ENTRY_SIZE];
 
 extern u32 memory_base;
 extern u32 memory_size;
+extern u32 free_pages;
+extern u32 total_pages;
+
+page_table_t get_pde();
+void set_pde(page_table_t pde);
 
 #endif

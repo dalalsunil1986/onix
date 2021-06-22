@@ -25,5 +25,5 @@ void init_clock()
 {
     global_ticks = 0;
     register_handler(IRQ_CLOCK, clock_handler);
-    set_request(IRQ_CLOCK, true);
+    // set_request(IRQ_CLOCK, true);
 }

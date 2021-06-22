@@ -116,5 +116,6 @@ clean:
 	rm -rf $(BUILD)/*.img
 	rm -rf $(BUILD)/*.lock
 	rm -rf $(BUILD)/*.bin
+	rm -rf $(BUILD)/*.vmdk
 	rm -rf $(BUILD)/kernel
 	rm -rf $(BUILD)/lib

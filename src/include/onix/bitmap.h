@@ -5,13 +5,13 @@
 
 #include <onix/types.h>
 
-typedef struct Bitmap
+typedef struct
 {
     u32 length;
     u8 *bits;
-} Bitmap;
+} bitmap_t;
 
-void bitmap_init(Bitmap *bitmap, char *buffer, u32 length);
-bool bitmap_test(Bitmap *bitmap, u32 index);
-void bitmap_set(Bitmap *bitmap, u32 index, bool value);
-int bitmap_scan(Bitmap *bitmap, u32 count);
+void bitmap_init(bitmap_t *bitmap, char *buffer, u32 length);
+bool bitmap_test(bitmap_t *bitmap, u32 index);
+void bitmap_set(bitmap_t *bitmap, u32 index, bool value);
+int bitmap_scan(bitmap_t *bitmap, u32 count);

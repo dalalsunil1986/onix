@@ -8,12 +8,14 @@
 #include <onix/printk.h>
 #include <onix/assert.h>
 #include <onix/global.h>
+#include <onix/memory.h>
 #include <onix/interrupt.h>
 
 int main()
 {
-    clear();
     init_gdt();
+    init_memory();
     init_interrupt();
+
     return 0;
 }

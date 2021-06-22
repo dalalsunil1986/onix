@@ -10,7 +10,7 @@ void init_gdt()
 {
     // BOCHS_MAGIC_BREAKPOINT;
 
-    DEBUGK("init GDT...\n");
+    INFOK("Initializing GDT...\n");
 
     asm volatile("sgdt gdt_ptr\n");
 
