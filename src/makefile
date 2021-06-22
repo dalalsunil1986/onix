@@ -39,6 +39,7 @@ KERNEL_C:= 	$(SRC)/kernel/main.c \
 			$(SRC)/kernel/global.c \
 			$(SRC)/kernel/memory.c \
 			$(SRC)/kernel/interrupt.c \
+			$(SRC)/kernel/clock.c \
 			
 
 KERNEL_LIB:= $(SRC)/lib/string.c \
@@ -82,6 +83,14 @@ $(BUILD)/slave.img:
 ifeq ("$(wildcard $(BUILD)/slave.img)", "")
 	bximage -q -hd=128 -mode=create -sectsize=512 -imgmode=flat $@
 endif
+
+
+$(BUILD)/master.vmdk: $(BUILD)/master.img
+	qemu-img convert -pO vmdk $< $@
+
+.PHONY:vmdk
+vmdk: $(BUILD)/master.vmdk
+	-
 
 .PHONY:image
 image: $(BUILD)/master.img $(BUILD)/slave.img

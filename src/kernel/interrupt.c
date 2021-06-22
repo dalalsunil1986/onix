@@ -5,6 +5,8 @@
 
 #include <onix/io.h>
 #include <onix/interrupt.h>
+#include <onix/clock.h>
+#include <onix/assert.h>
 #include <onix/debug.h>
 
 gate_t idt[IDT_SIZE];
@@ -25,7 +27,7 @@ static void init_pic()
     outb(PIC_S_DATA, 2);                     // ICW3: 设置从片连接到主片的IR2引脚
     outb(PIC_S_DATA, ICW4_8086);             // ICW4: 8086模式, 正常EOI
 
-    outb(PIC_M_DATA, 0b11111110);
+    outb(PIC_M_DATA, 0b11111111); // 关闭所有中断
     outb(PIC_S_DATA, 0b11111111);
 }
 
@@ -149,6 +151,34 @@ bool get_interrupt()
     return value > 0;
 }
 
+void set_request(u32 irq, bool enable)
+{
+    assert(irq >= 0 && irq < 16);
+    u16 port;
+    if (irq < 8)
+    {
+        port = PIC_M_DATA;
+    }
+    else
+    {
+        port = PIC_S_DATA;
+        irq -= 8;
+    }
+    if (enable)
+    {
+        outb(port, inb(port) & ~(1 << irq));
+    }
+    else
+    {
+        outb(port, inb(port) | (1 << irq));
+    }
+}
+
+void register_handler(u32 irq, handler_t handler)
+{
+    handler_table[ICW2_INT_VECTOR_IRQ0 + irq] = handler;
+}
+
 void interrupt_end()
 {
     outb(PIC_M_CTRL, PIC_EOI);
@@ -162,5 +192,9 @@ void init_interrupt()
     init_handler();
     init_pic();
     init_idt();
+    init_pit();
+
+    init_clock();
+
     set_interrupt(1);
 }
