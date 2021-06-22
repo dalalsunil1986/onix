@@ -16,6 +16,5 @@ int main()
     init_gdt();
     init_interrupt();
     init_memory();
-
     return 0;
 }

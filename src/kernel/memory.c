@@ -16,9 +16,11 @@ u32 memory_base;
 u32 memory_size;
 u32 total_pages;
 u32 free_pages;
+
+#define base_page (memory_base / PAGE_SIZE)
 #define used_pages (total_pages - free_pages)
 
-static bitmap_t pmap;
+static addr_t physical_addr;
 
 void init_ards(ards_t *ards, u32 count)
 {
@@ -50,6 +52,12 @@ void init_ards(ards_t *ards, u32 count)
     INFOK("System Memory Total 0x%X\n", total_pages);
 }
 
+static void init_addr(addr_t *addr, u32 start, u8 *bits, u32 length)
+{
+    addr->start = start;
+    bitmap_init(&addr->mmap, bits, length);
+}
+
 static void clean_page(void *page)
 {
     memset(page, 0, PAGE_SIZE);
@@ -65,6 +73,21 @@ static void init_entry(page_entry_t *entry, u32 index)
     entry->index = index;
 }
 
+static u32 scan_page(addr_t *addr, u32 size)
+{
+    u32 index = bitmap_scan(&addr->mmap, size);
+    if (index == EOF)
+    {
+        panic("Scan page fail!!!\n");
+    }
+
+    u32 page = addr->start + index * PAGE_SIZE;
+    free_pages -= size;
+
+    DEBUGK("scan page 0x%08X size %d\n", page, size);
+    return page;
+}
+
 static page_table_t get_pde()
 {
     return (page_table_t)(0xfffff000);
@@ -78,7 +101,9 @@ static page_table_t get_pte(u32 vaddr)
 
     if (!entry->present)
     {
-        assert(pmap.length);
+        assert(physical_addr.mmap.length);
+        u32 page = scan_page(&physical_addr, 1);
+        init_entry(entry, page >> 12);
     }
 
     page_table_t table = PDE_MASK | (didx << 12);
@@ -100,7 +125,6 @@ static void init_kernel_mmap()
     page_table_t pde = get_pde();
     page_entry_t *entry;
 
-    u32 base_page = memory_base / PAGE_SIZE;
     u32 index = 0;
 
     for (size_t i = KERNEL_BASE_PTE; i < ENTRY_SIZE; i++)
@@ -123,8 +147,8 @@ static void init_kernel_mmap()
         index++;
     }
 
-    bitmap_init(&pmap, KERNEL_BASE_PAGE, pmap_pages * PAGE_SIZE);
-    bitmap_scan(&pmap, index);
+    init_addr(&physical_addr, memory_base, KERNEL_BASE_PAGE, length);
+    bitmap_scan(&physical_addr.mmap, index);
 
     free_pages -= index;
 

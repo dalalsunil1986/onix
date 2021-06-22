@@ -19,11 +19,11 @@
 #define PAGE_SIZE 4096 // 4KB
 #define ENTRY_SIZE (PAGE_SIZE / 4)
 
-#define KERNEL_BASE_PTE     0x300
-#define KERNEL_BASE_PAGE    0xC0100000
-#define KERNEL_ADDR_MASK    0xC0000000
+#define KERNEL_BASE_PTE 0x300
+#define KERNEL_BASE_PAGE 0xC0100000
+#define KERNEL_ADDR_MASK 0xC0000000
 
-#define PDE_MASK            0xFFC00000
+#define PDE_MASK 0xFFC00000
 
 typedef struct
 {
@@ -51,7 +51,7 @@ typedef struct
 {
     u32 start;
     bitmap_t mmap;
-} vaddr_t;
+} addr_t;
 
 void init_ards(ards_t *ards, u32 count);
 void init_memory();

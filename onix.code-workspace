@@ -37,7 +37,8 @@
 			"memory.h": "c",
 			"interrupt.h": "c",
 			"debug.h": "c",
-			"io.h": "c"
+			"io.h": "c",
+			"stdlib.h": "c"
 		}
 	}
 }
