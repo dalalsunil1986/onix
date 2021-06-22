@@ -15,4 +15,5 @@ _start:
 
 halt:
     nop;
+    BMB;
     jmp halt

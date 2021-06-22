@@ -9,8 +9,21 @@
 #include <onix/types.h>
 #include <onix/bitmap.h>
 
+#define PG_P_0 0b0
+#define PG_P_1 0b1
+#define PG_RW_R 0b00
+#define PG_RW_W 0b10
+#define PG_US_S 0b000
+#define PG_US_U 0b100
+
 #define PAGE_SIZE 4096 // 4KB
 #define ENTRY_SIZE (PAGE_SIZE / 4)
+
+#define KERNEL_BASE_PTE     0x300
+#define KERNEL_BASE_PAGE    0xC0100000
+#define KERNEL_ADDR_MASK    0xC0000000
+
+#define PDE_MASK            0xFFC00000
 
 typedef struct
 {
@@ -19,7 +32,7 @@ typedef struct
     u32 type;
 } _packed ards_t;
 
-typedef struct
+typedef struct page_entry_t
 {
     u8 present : 1;  // 1 present
     u8 write : 1;    // 0 read  / 1 write
@@ -50,7 +63,7 @@ extern u32 memory_size;
 extern u32 free_pages;
 extern u32 total_pages;
 
-page_table_t get_pde();
-void set_pde(page_table_t pde);
+page_table_t get_cr3();
+void set_cr3(page_table_t pde);
 
 #endif

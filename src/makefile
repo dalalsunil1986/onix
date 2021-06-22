@@ -46,6 +46,7 @@ KERNEL_LIB:= $(SRC)/lib/string.c \
 			$(SRC)/lib/assert.c \
 			$(SRC)/lib/vsprintf.c \
 			$(SRC)/lib/bitmap.c \
+			$(SRC)/lib/stdlib.c \
 
 KERNEL_OBJECTS= $(KERNEL_ASM:$(SRC)/%.asm=$(BUILD)/%.o) \
 				$(KERNEL_C:$(SRC)/%.c=$(BUILD)/%.o) \
