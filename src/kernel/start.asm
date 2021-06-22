@@ -3,11 +3,14 @@
 [bits 32]
 section .text
 
+extern init_ards
 extern main
 
 global _start
 _start:
-    mov byte [gs:0], 'K'
+    call init_ards
+
+    mov esp, KERNEL_STACK_TOP
     call main
 
 halt:

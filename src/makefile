@@ -36,6 +36,7 @@ KERNEL_C:= 	$(SRC)/kernel/main.c \
 			$(SRC)/kernel/printk.c \
 			$(SRC)/kernel/debug.c \
 			$(SRC)/kernel/global.c \
+			$(SRC)/kernel/memory.c \
 			
 
 KERNEL_LIB:= $(SRC)/lib/string.c \

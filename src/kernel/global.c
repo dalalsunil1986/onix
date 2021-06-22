@@ -8,7 +8,7 @@ pointer_t gdt_ptr;
 
 void init_gdt()
 {
-    BOCHS_MAGIC_BREAKPOINT;
+    // BOCHS_MAGIC_BREAKPOINT;
 
     DEBUGK("init GDT...\n");
 

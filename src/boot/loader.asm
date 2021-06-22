@@ -68,11 +68,13 @@ protect_mode_start:
     call setup_page
     call load_kernel
 
-    xor ebx, ebx
-    mov bx, [ards_count]
+    xor eax, eax
+    mov ax, [ards_count]
+    push eax
 
-    xor ecx, ecx
-    mov ecx, ards_buffer
+    xor eax, eax
+    mov eax, ards_buffer
+    push eax
 
     jmp code_selector: KERNEL_BASE_ADDR
     ud2 ; 显然不可能到这里
