@@ -8,11 +8,12 @@
 #include <onix/printk.h>
 #include <onix/assert.h>
 #include <onix/global.h>
-#include <onix/bitmap.h>
+#include <onix/interrupt.h>
 
 int main()
 {
     clear();
     init_gdt();
+    init_interrupt();
     return 0;
 }

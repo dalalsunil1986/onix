@@ -17,6 +17,10 @@
 #define TI_GDT 0b000
 #define TI_LDT 0b100
 
+#define EFLAGS_IF (1 << 9)     // if为1 , 开中断
+#define EFLAGS_IOPL3 (3 << 12) // IOPL3, 用于测试用户程序在非系统调用下进行IO
+#define EFLAGS_IOPL0 (0 << 12) // IOPL0
+
 /* 存储段描述符/系统段描述符 */
 typedef struct /* 共 8 个字节 */
 {

@@ -28,7 +28,8 @@ define make_dirs
 	@mkdir -p $1
 endef
 
-KERNEL_ASM:= $(SRC)/kernel/start.asm
+KERNEL_ASM:= 	$(SRC)/kernel/start.asm \
+				$(SRC)/kernel/handler.asm \
 
 KERNEL_C:= 	$(SRC)/kernel/main.c \
 			$(SRC)/kernel/io.c \
@@ -37,6 +38,7 @@ KERNEL_C:= 	$(SRC)/kernel/main.c \
 			$(SRC)/kernel/debug.c \
 			$(SRC)/kernel/global.c \
 			$(SRC)/kernel/memory.c \
+			$(SRC)/kernel/interrupt.c \
 			
 
 KERNEL_LIB:= $(SRC)/lib/string.c \

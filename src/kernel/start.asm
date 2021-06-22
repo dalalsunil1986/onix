@@ -14,5 +14,5 @@ _start:
     call main
 
 halt:
-    xchg bx, bx;
+    nop;
     jmp halt

@@ -8,5 +8,6 @@
 
 #define BOCHS_MAGIC_BREAKPOINT asm("xchgw %bx, %bx")
 #define DEBUGK(fmt, args...) debugk(__BASE_FILE__, __LINE__, fmt, ##args)
+#define INFOK(fmt, args...) debugk(__BASE_FILE__, __LINE__, fmt, ##args)
 
 #endif

@@ -34,7 +34,10 @@
 			"global.h": "c",
 			"types.h": "c",
 			"bitmap.h": "c",
-			"memory.h": "c"
+			"memory.h": "c",
+			"interrupt.h": "c",
+			"debug.h": "c",
+			"io.h": "c"
 		}
 	}
 }
