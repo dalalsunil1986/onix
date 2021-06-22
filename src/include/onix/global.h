@@ -18,7 +18,7 @@
 #define TI_LDT 0b100
 
 /* 存储段描述符/系统段描述符 */
-typedef struct Descriptor /* 共 8 个字节 */
+typedef struct /* 共 8 个字节 */
 {
     u16 limit_low;     /* Limit 0 - 15 bit */
     u32 base_low : 24; /* Base 0 - 15 */
@@ -36,23 +36,23 @@ typedef struct Descriptor /* 共 8 个字节 */
     u8 big : 1;         // 32 bit or 16 bit;
     u8 granularity : 1; // granularity; 4KB or 1B
     u8 base_high;       /* Base */
-} _packed Descriptor;
+} _packed descriptor_t;
 
-typedef struct Selector
+typedef struct
 {
     u8 RPL : 2;
     u8 TI : 1;
     u16 index : 13;
-} Selector;
+} selector_t;
 
-typedef struct Pointer
+typedef struct
 {
     u16 limit;
     u32 base;
-} _packed Pointer;
+} _packed pointer_t;
 
-extern Pointer gdt_ptr;
-extern Descriptor gdt[GDT_SIZE];
+extern pointer_t gdt_ptr;
+extern descriptor_t gdt[GDT_SIZE];
 
 void init_gdt();
 

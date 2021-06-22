@@ -3,8 +3,8 @@
 #include <onix/string.h>
 #include <onix/debug.h>
 
-Descriptor gdt[GDT_SIZE];
-Pointer gdt_ptr;
+descriptor_t gdt[GDT_SIZE];
+pointer_t gdt_ptr;
 
 void init_gdt()
 {
@@ -17,7 +17,7 @@ void init_gdt()
     memcpy(&gdt, (void *)gdt_ptr.base, gdt_ptr.limit + 1);
 
     gdt_ptr.base = (u32)&gdt;
-    gdt_ptr.limit = sizeof(Pointer) * GDT_SIZE - 1;
+    gdt_ptr.limit = sizeof(pointer_t) * GDT_SIZE - 1;
 
     asm volatile("lgdt gdt_ptr\n");
 }
