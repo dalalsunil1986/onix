@@ -12,7 +12,7 @@ static char buf[1024];
 
 int printk(const char *fmt, ...)
 {
-    bool intr = set_interrupt(false); // TODO lock
+    bool intr = set_interrupt(false);
 
     va_list args;
     int i;
@@ -28,6 +28,5 @@ int printk(const char *fmt, ...)
     }
 
     set_interrupt(intr);
-
     return i;
 }

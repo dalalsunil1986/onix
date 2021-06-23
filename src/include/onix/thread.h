@@ -89,7 +89,7 @@ typedef struct thread_t
     u32 magic;
 } thread_t;
 
-thread_t *current_thread();
+extern thread_t *current_thread();
 
 thread_t *thread_init(thread_target_t target, int argc, char const *argv, char *name, int priority, u32 user);
 

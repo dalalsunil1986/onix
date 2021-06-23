@@ -89,8 +89,8 @@ extern handler_t entry_table[IDT_SIZE];
 extern handler_t handler_table[IDT_SIZE];
 
 void init_interrupt();
-bool set_interrupt(bool status); // 设置中断允许位，返回设置之前的值
-bool get_interrupt();            // 获取中断允许位
+extern bool set_interrupt(bool status); // 设置中断允许位，返回设置之前的值
+extern bool get_interrupt();            // 获取中断允许位
 void register_handler(u32 irq, handler_t handler);
 void set_request(u32 irq, bool enable);
 

@@ -122,43 +122,6 @@ static void init_exception()
     }
 }
 
-bool set_interrupt(bool status)
-{
-    u32 value = EFLAGS_IF;
-    asm volatile(
-        "pushf\n"
-        "cli\n"
-        "pop %%eax\n"
-        "and %%ebx, %%eax\n"
-        : "=a"(value)
-        : "b"(value));
-
-    if (status)
-    {
-        asm volatile("sti\n");
-    }
-    return value > 0;
-}
-
-bool get_interrupt()
-{
-    u32 value = EFLAGS_IF;
-    asm volatile(
-        "pushf\n"
-        "cli\n"
-        "pop %%eax\n"
-        "and %%ebx, %%eax\n"
-        : "=a"(value)
-        : "b"(value));
-
-    if (value)
-    {
-        asm volatile("sti\n");
-    }
-
-    return value > 0;
-}
-
 void set_request(u32 irq, bool enable)
 {
     assert(irq >= 0 && irq < 16);

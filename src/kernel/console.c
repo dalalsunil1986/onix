@@ -41,14 +41,13 @@ void clear()
 
 static void scroll()
 {
-    bool intr = set_interrupt(false); // TODO
-
+    bool intr = set_interrupt(false);
     int cpos = 0;
     char *dest = (char *)VGA_MEM_BASE;
     char *src = dest + (VGA_WIDTH * 2);
     memcpy(dest, src, (VGA_HEIGHT - 1) * (VGA_WIDTH * 2));
 
-    set_interrupt(intr); // TODO
+    set_interrupt(intr);
 }
 
 static inline int get_x(int cursor)
@@ -68,7 +67,7 @@ static inline int get_pos(int x, int y)
 
 void put_char(char ch)
 {
-    bool intr = set_interrupt(false); // TODO lock
+    bool intr = set_interrupt(false);
 
     u32 cursor = get_cursor();
     if (cursor >= (VGA_HEIGHT - 1) * VGA_WIDTH)
@@ -112,7 +111,7 @@ void put_char(char ch)
 
     set_cursor(cursor);
 
-    set_interrupt(intr); // TODO
+    set_interrupt(intr);
 }
 
 void blink_char(char ch, int x, int y)

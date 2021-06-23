@@ -16,7 +16,7 @@ static thread_t *idle;
 static void thread_wrapper(thread_target_t target, int argc, char const *argv)
 {
     assert(!get_interrupt());
-    set_interrupt(1);
+    set_interrupt(true);
     target(argc, argv);
     while (1)
     {
@@ -26,15 +26,14 @@ static void thread_wrapper(thread_target_t target, int argc, char const *argv)
 
 static void push_thread(thread_t *thread)
 {
-    bool status = set_interrupt(false);
+    assert(!get_interrupt());
     assert(!list_find(&thread_list, &thread->node));
     list_push(&thread_list, &thread->node);
-    set_interrupt(status);
 }
 
 static thread_t *get_thread(THREAD_STATUS status)
 {
-    bool intr = set_interrupt(false);
+    assert(!get_interrupt());
     thread_t *current = NULL;
 
     list_node_t *ptr = thread_list.tail.prev;
@@ -47,7 +46,6 @@ static thread_t *get_thread(THREAD_STATUS status)
         if (current == NULL || current->ticks < thread->ticks)
             current = thread;
     }
-    set_interrupt(intr);
     // DEBUGK("get thread size %d\n", list_size(&thread_list));
     return current;
 }
@@ -92,13 +90,6 @@ thread_t *thread_init(
     push_thread(thread);
     DEBUGK("get thread size %d\n", list_size(&thread_list));
 };
-
-thread_t *current_thread()
-{
-    asm volatile(
-        "movl %esp, %eax\n"
-        "and $0xfffff000, %eax\n");
-}
 
 void schedule()
 {

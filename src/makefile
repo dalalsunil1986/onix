@@ -31,6 +31,7 @@ endef
 KERNEL_ASM:= 	$(SRC)/kernel/start.asm \
 				$(SRC)/kernel/handler.asm \
 				$(SRC)/kernel/schedule.asm \
+				$(SRC)/kernel/system.asm \
 
 KERNEL_C:= 	$(SRC)/kernel/main.c \
 			$(SRC)/kernel/io.c \
