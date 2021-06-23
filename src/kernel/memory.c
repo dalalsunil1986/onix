@@ -139,10 +139,11 @@ static void init_kernel_mmap()
 
     u32 index = 0;
 
+    // 填充内核 页表，从 0x301 到 0x3fe 共 254 个位置
     for (size_t i = KERNEL_BASE_PTE; i < ENTRY_SIZE; i++)
     {
         entry = &(*pde)[i];
-        if (!entry->present)
+        if (!entry->present) // 这个只有 0x300 和 0x3ff 是已经存在的
         {
             init_entry(entry, base_page + index);
             index++;
@@ -151,17 +152,28 @@ static void init_kernel_mmap()
         }
     }
 
+    // 映射物理内存位图
+
+    // 计算需要物理内存位图页数
     u32 pmap_pages = round_up(total_pages, PAGE_SIZE * 8);
+
+    // 物理内存位图长度
     u32 length = pmap_pages * PAGE_SIZE;
+
+    // 将物理内存位图放在 KERNEL_BASE_PAGE 开始的地方，连续存放 pmap_pages 个页面
     for (size_t i = 0; i < pmap_pages; i++)
     {
         set_page(KERNEL_BASE_PAGE + i * PAGE_SIZE, (base_page + index) << 12);
         index++;
     }
 
+    // 初始化物理内存地址
     init_addr(&physical_addr, memory_base, KERNEL_BASE_PAGE, length);
+
+    // 将已用的内存位置置为 1，目前物理内存位图为空，直接 scan
     bitmap_scan(&physical_addr.mmap, index);
 
+    // 可用页数减去已用的数量
     free_pages -= index;
 
     DEBUGK("free pages %d used pages %d\n", free_pages, used_pages);
