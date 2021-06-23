@@ -20,8 +20,9 @@
 #define ENTRY_SIZE (PAGE_SIZE / 4)
 
 #define KERNEL_BASE_PTE 0x300
-#define KERNEL_BASE_PAGE 0xC0100000
-#define KERNEL_ADDR_MASK 0xC0000000
+#define KERNEL_BASE_PAGE 0xC0100000 // 内核可用内存起始位置
+#define KERNEL_ADDR_MASK 0xC0000000 // 内核虚拟地址起始位置
+#define KERNEL_ADDR_SIZE 0x40000000 // 内核虚拟内存长度 1G
 
 #define PDE_MASK 0xFFC00000
 

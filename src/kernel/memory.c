@@ -20,7 +20,11 @@ u32 free_pages;
 #define base_page (memory_base / PAGE_SIZE)
 #define used_pages (total_pages - free_pages)
 
+// 物理地址位图
 static addr_t physical_addr;
+
+// 内核虚拟地址位图
+static addr_t kernel_addr;
 
 void init_ards(ards_t *ards, u32 count)
 {
@@ -155,13 +159,13 @@ static void init_kernel_mmap()
     // 映射物理内存位图
 
     // 计算需要物理内存位图页数
-    u32 pmap_pages = round_up(total_pages, PAGE_SIZE * 8);
+    u32 ppages = round_up(total_pages, PAGE_SIZE * 8);
 
     // 物理内存位图长度
-    u32 length = pmap_pages * PAGE_SIZE;
+    u32 length = ppages * PAGE_SIZE;
 
-    // 将物理内存位图放在 KERNEL_BASE_PAGE 开始的地方，连续存放 pmap_pages 个页面
-    for (size_t i = 0; i < pmap_pages; i++)
+    // 将物理内存位图放在 KERNEL_BASE_PAGE 开始的地方，连续存放 ppages 个页面
+    for (size_t i = 0; i < ppages; i++)
     {
         set_page(KERNEL_BASE_PAGE + i * PAGE_SIZE, (base_page + index) << 12);
         index++;
@@ -175,6 +179,28 @@ static void init_kernel_mmap()
 
     // 可用页数减去已用的数量
     free_pages -= index;
+    DEBUGK("free pages %d used pages %d\n", free_pages, used_pages);
+
+    // 内核虚拟内存位图起始地址
+    u32 vstart = KERNEL_BASE_PAGE + length;
+
+    // 内核虚拟内存页数
+    u32 vpages = KERNEL_ADDR_SIZE / PAGE_SIZE;
+
+    // 内核虚拟内存位图需要的页数
+    u32 vmap_pages = round_up(vpages, PAGE_SIZE * 8);
+
+    for (size_t i = 0; i < vmap_pages; i++)
+    {
+        u32 paddr = scan_page(&physical_addr, 1);
+        set_page(vstart + i * PAGE_SIZE, paddr);
+    }
+
+    // 初始化内核虚拟内存地址
+    init_addr(&kernel_addr, KERNEL_BASE_PAGE, vstart, vmap_pages * PAGE_SIZE);
+
+    // 将已用的虚拟位置置为 1，目前物理内存位图为空，直接 scan
+    bitmap_scan(&kernel_addr.mmap, ppages + vmap_pages);
 
     DEBUGK("free pages %d used pages %d\n", free_pages, used_pages);
 }
