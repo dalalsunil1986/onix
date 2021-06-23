@@ -87,7 +87,10 @@ static u32 scan_page(addr_t *addr, u32 size)
     }
 
     u32 page = addr->start + index * PAGE_SIZE;
-    free_pages -= size;
+    if (addr == &physical_addr)
+    {
+        free_pages -= size;
+    }
 
     DEBUGK("scan page 0x%08X size %d\n", page, size);
     return page;
@@ -102,6 +105,11 @@ static u32 reset_page(addr_t *addr, u32 page, u32 size)
     {
         bitmap_set(&addr->mmap, index + i, 0);
     }
+
+    if (addr == &physical_addr)
+    {
+        free_pages += size;
+    }
 }
 
 static page_table_t get_pde()
@@ -109,11 +117,16 @@ static page_table_t get_pde()
     return (page_table_t)(0xfffff000);
 }
 
-static page_table_t get_pte(u32 vaddr)
+static page_table_t get_pte(u32 vaddr, bool create)
 {
     page_table_t pde = get_pde();
     u32 didx = DIDX(vaddr);
     page_entry_t *entry = &(*pde)[didx];
+
+    if (!create)
+    {
+        assert(entry->present);
+    }
 
     if (!entry->present)
     {
@@ -128,7 +141,7 @@ static page_table_t get_pte(u32 vaddr)
 
 static void set_page(u32 vaddr, u32 paddr)
 {
-    page_table_t pte = get_pte(vaddr);
+    page_table_t pte = get_pte(vaddr, true);
     u32 idx = TIDX(vaddr);
     page_entry_t *entry = &(*pte)[idx];
     init_entry(entry, paddr >> 12);
@@ -205,18 +218,6 @@ static void init_kernel_mmap()
     DEBUGK("free pages %d used pages %d\n", free_pages, used_pages);
 }
 
-void init_memory()
-{
-    INFOK("Initializing Memory Management System...\n");
-    init_kernel_mmap();
-    u32 page;
-    for (size_t i = 1; i < 10; i++)
-    {
-        page = scan_page(&physical_addr, i);
-        reset_page(&physical_addr, page, i);
-    }
-}
-
 page_table_t get_cr3()
 {
     asm volatile("movl %cr3, %eax\n");
@@ -225,4 +226,44 @@ page_table_t get_cr3()
 void set_cr3(page_table_t pde)
 {
     asm volatile("movl %%eax, %%cr3\n" ::"a"(pde));
+}
+
+u32 get_paddr(u32 vaddr)
+{
+    page_table_t pte = get_pte(vaddr, false);
+
+    u32 idx = TIDX(vaddr);
+    page_entry_t *entry = &(*pte)[idx];
+    assert(entry->present);
+
+    u32 paddr = ((u32)entry->index << 12) | vaddr & 0xfff;
+    return paddr;
+}
+
+u32 kalloc_page(u32 size)
+{
+    assert(size < free_pages);
+    u32 paddr = scan_page(&physical_addr, size);
+    u32 vaddr = scan_page(&kernel_addr, size);
+    for (size_t i = 0; i < size; i++)
+    {
+        set_page(vaddr + i * PAGE_SIZE, paddr + i * PAGE_SIZE);
+    }
+    DEBUGK("free pages %d used pages %d\n", free_pages, used_pages);
+    return vaddr;
+}
+
+void kfree_page(u32 vaddr, u32 size)
+{
+    assert(size > 0);
+    u32 paddr = get_paddr(vaddr);
+    reset_page(&physical_addr, paddr, size);
+    reset_page(&kernel_addr, vaddr, size);
+    DEBUGK("free pages %d used pages %d\n", free_pages, used_pages);
+}
+
+void init_memory()
+{
+    INFOK("Initializing Memory Management System...\n");
+    init_kernel_mmap();
 }

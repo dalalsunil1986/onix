@@ -67,4 +67,8 @@ extern u32 total_pages;
 page_table_t get_cr3();
 void set_cr3(page_table_t pde);
 
+u32 get_paddr(u32 vaddr);
+u32 kalloc_page(u32 size);
+void kfree_page(u32 vaddr, u32 size);
+
 #endif
