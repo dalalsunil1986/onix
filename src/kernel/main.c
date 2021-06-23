@@ -10,12 +10,13 @@
 #include <onix/global.h>
 #include <onix/memory.h>
 #include <onix/interrupt.h>
+#include <onix/thread.h>
 
 int main()
 {
     init_gdt();
     init_interrupt();
     init_memory();
-
+    init_thread();
     return 0;
 }

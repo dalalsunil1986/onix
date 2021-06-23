@@ -39,7 +39,9 @@
 			"debug.h": "c",
 			"io.h": "c",
 			"stdlib.h": "c",
-			"list.h": "c"
+			"list.h": "c",
+			"thread.h": "c",
+			"*.inc": "c"
 		}
 	}
 }

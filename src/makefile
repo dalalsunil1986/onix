@@ -30,6 +30,7 @@ endef
 
 KERNEL_ASM:= 	$(SRC)/kernel/start.asm \
 				$(SRC)/kernel/handler.asm \
+				$(SRC)/kernel/schedule.asm \
 
 KERNEL_C:= 	$(SRC)/kernel/main.c \
 			$(SRC)/kernel/io.c \
@@ -40,6 +41,7 @@ KERNEL_C:= 	$(SRC)/kernel/main.c \
 			$(SRC)/kernel/memory.c \
 			$(SRC)/kernel/interrupt.c \
 			$(SRC)/kernel/clock.c \
+			$(SRC)/kernel/thread.c \
 			
 
 KERNEL_LIB:= $(SRC)/lib/string.c \
