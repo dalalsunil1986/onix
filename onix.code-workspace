@@ -41,7 +41,8 @@
 			"stdlib.h": "c",
 			"list.h": "c",
 			"thread.h": "c",
-			"*.inc": "c"
+			"*.inc": "c",
+			"cmath": "c"
 		}
 	}
 }

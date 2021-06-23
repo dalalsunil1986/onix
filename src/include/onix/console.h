@@ -35,5 +35,6 @@ void set_cursor(u16 cursor);
 
 void put_char(char ch);
 void clear();
+void blink_char(char ch, int x, int y);
 
 #endif

@@ -15,8 +15,8 @@
 int main()
 {
     init_gdt();
-    init_interrupt();
     init_memory();
     init_thread();
+    init_interrupt();
     return 0;
 }

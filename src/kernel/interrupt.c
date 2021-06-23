@@ -204,5 +204,5 @@ void init_interrupt()
 
     init_clock();
 
-    set_interrupt(1);
+    set_interrupt(true);
 }

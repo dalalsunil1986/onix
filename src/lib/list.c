@@ -70,6 +70,7 @@ bool list_find(list_t *list, list_node_t *node)
     }
     return false;
 }
+
 bool list_remove(list_node_t *node)
 {
     node->prev->next = node->next;

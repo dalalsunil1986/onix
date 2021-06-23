@@ -1,3 +1,6 @@
+; (C) Copyright 2021 Steven;
+; @author: Steven kangweibaby@163.com
+; @date: 2021-06-23
 
 [bits 32]
 
@@ -17,6 +20,7 @@ thread_switch:
     mov [eax], esp
 
     ; 以上保存当前线程信息
+    ; xchg bx, bx
     ; 以下恢复目标线程信息
 
     mov esp, [ecx]

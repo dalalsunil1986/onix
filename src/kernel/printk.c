@@ -6,11 +6,14 @@
 #include <onix/stdarg.h>
 #include <onix/vsprintf.h>
 #include <onix/console.h>
+#include <onix/interrupt.h>
 
 static char buf[1024];
 
 int printk(const char *fmt, ...)
 {
+    bool intr = set_interrupt(false); // TODO lock
+
     va_list args;
     int i;
 
@@ -23,5 +26,8 @@ int printk(const char *fmt, ...)
     {
         put_char(buf[i - n - 1]);
     }
+
+    set_interrupt(intr);
+
     return i;
 }

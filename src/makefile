@@ -42,6 +42,7 @@ KERNEL_C:= 	$(SRC)/kernel/main.c \
 			$(SRC)/kernel/interrupt.c \
 			$(SRC)/kernel/clock.c \
 			$(SRC)/kernel/thread.c \
+			$(SRC)/kernel/task.c \
 			
 
 KERNEL_LIB:= $(SRC)/lib/string.c \

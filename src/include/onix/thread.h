@@ -8,10 +8,25 @@
 
 #include <onix/types.h>
 #include <onix/memory.h>
+#include <onix/list.h>
 
 #define THREAD_MAGIC 0x20210623
 
+#define KERNEL_USER 0
+
 typedef u32 thread_target_t(int argc, char const *argv[]);
+
+typedef enum THREAD_STATUS
+{
+    INIT,
+    RUNNING,
+    READY,
+    BLOCKED,
+    WAITING,
+    FORKING,
+    HANGING,
+    DIED,
+} THREAD_STATUS;
 
 typedef struct intr_frame_t
 {
@@ -62,6 +77,9 @@ typedef struct thread_args_t
 typedef struct thread_t
 {
     u32 *stack;
+    list_node_t node;
+
+    u8 status;
     u32 priority;
     u32 ticks;
     char name[32];
@@ -76,6 +94,7 @@ thread_t *current_thread();
 thread_t *thread_init(thread_target_t target, int argc, char const *argv, char *name, int priority, u32 user);
 
 extern void thread_switch(thread_t *thread);
+void schedule();
 
 void init_thread();
 
