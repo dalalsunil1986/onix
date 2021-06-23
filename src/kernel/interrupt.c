@@ -94,6 +94,14 @@ static void exception_handler(
     printk("    EIP     : 0x%08X\n", eip);
     printk("    CS      : 0x%02X\n", cs);
 
+    if (vector == 0x0E) // page fault
+    {
+        u32 cr2 = 0;
+        asm volatile("movl %%cr2, %%eax"
+                     : "=a"(cr2));
+        printk("    CR2     : 0x%08X\n", cr2);
+    }
+
     while (true)
         ;
 }

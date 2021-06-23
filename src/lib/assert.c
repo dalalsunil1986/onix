@@ -27,7 +27,7 @@ void spin(char *name)
 void assertion_failure(char *exp, char *file, char *base_file, int line)
 {
     assert_print(
-        "%c \n--> assert(%s) failed!!!\n"
+        "\n %c \n--> assert(%s) failed!!!\n"
         "--> file: %s \n"
         "--> base_file: %s, \n"
         "--> line %d\n\0",
