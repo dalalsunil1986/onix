@@ -41,11 +41,11 @@ BIOS_PRINT_FUNCTION
 prepare_protect_mode:
     cli; 关中断
 
-    lgdt [gdt_ptr]
-
     in al, 0x92
     or al, 0b0000_0010
     out 0x92, al; 打开 a20 
+
+    lgdt [gdt_ptr]
 
     mov eax, cr0
     or eax, 1
@@ -171,7 +171,7 @@ data_limit equ (0x100000 - 1)
 
 gdt_ptr:
     dw (gdt_end - gdt_base - 1); limit
-    dw gdt_base
+    dd gdt_base
 
 gdt_base:
     ; 第零号描述符
