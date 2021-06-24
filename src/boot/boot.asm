@@ -21,6 +21,7 @@ load_loader:
     mov bx, LOADER_BASE_ADDR
     mov cx, LOADER_SECTOR_SIZE ; 2KB
     call read_disk
+    ret
 
 BIOS_PRINT_FUNCTION
 READ_DISK_FUNCTION
