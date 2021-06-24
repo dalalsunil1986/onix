@@ -116,13 +116,12 @@ bochs: image
 gdb: image
 	cd $(BUILD) && $(BOCHSGDB) -q -f bochsrc.gdb -unlock
 
-
 .PHONY:qemu
-qemu: image
+qemu: $(BUILD)/master.img
 	qemu-system-i386 \
 	-no-reboot \
 	-boot c \
-	-hda $(BUILD)/master.img \
+	-drive file=$<,format=raw,index=0,media=disk \
 	-m 32 \
 	-d cpu_reset,int \
 	-monitor stdio \

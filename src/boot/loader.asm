@@ -82,9 +82,9 @@ protect_mode_start:
     ud2 ; 显然不可能到这里
 
 load_kernel:
-    mov eax, KERNEL_SECTOR_START
-    mov ebx, KERNEL_LOAD_ADDR
-    mov ecx, KERNEL_SECTOR_SIZE
+    mov ecx, KERNEL_SECTOR_START
+    mov edi, KERNEL_LOAD_ADDR
+    mov bl, KERNEL_SECTOR_SIZE
     call read_disk
     ret
 

@@ -49,70 +49,89 @@ bios_print:
 %macro READ_DISK_FUNCTION 0
 %ifndef READ_DISK_FUNCTION
 %define READ_DISK_FUNCTION
-read_disk: 
-    ;从硬盘读取一个逻辑扇区
-    ; EAX = 逻辑扇区号
-    ; DS: EBX = 目标缓冲区地址
-    ; CX, 读取的扇区数量
-        pushad
+read_disk:
+    ; 读取硬盘
+    ; edi - 存储内存位置
+    ; ecx - 存储起始的扇区位置
+    ; bl - 存储扇区数量
+    pushad; ax, cx, dx, bx, sp, bp, si, di
+    ; pushad; ax, cx, dx, bx, sp, bp, si, di
 
-        push eax
+    mov dx, 0x1f1
+    mov al, 0
+    out dx, al;
 
-        ; 设置需要读取的扇区数
-        mov dx, 0x1f2
-        mov al, cl
-        out dx, al
+    mov dx, 0x1f2
+    mov al, bl
+    out dx, al; 设置扇区数量
 
-        pop eax
+    mov al, cl
+    inc dx; 0x1f3
+    out dx, al; 起始扇区位置低八位
 
-        ; 写入 LBA地址 7 ~ 0
-        inc dx  ;0x1f3
-        out dx, al;
+    shr ecx, 8
+    mov al, cl
+    inc dx; 0x1f4
+    out dx, al; 起始扇区位置中八位
 
-        ; 写入 LBA地址 15 ~ 8
-        inc dx ;0x1f4
-        shr eax, 8
-        out dx, al
+    shr ecx, 8
+    mov al, cl
+    inc dx; 0x1f5
+    out dx, al; 起始扇区位置高八位
 
-        ; 写入 LBA地址 23 ~ 16
-        inc dx ;0x1f5
-        shr eax, 8
-        out dx, al
+    shr ecx, 8
+    and cl, 0b1111
 
-        ; 写入 第一硬盘  LBA地址27~24
-        inc dx ;0x1f6
-        shr eax, 8
-        and al, 0x0f
-        or al, 0xe0
-        out dx,al
+    inc dx; 0x1f6
+    mov al, 0b1110_0000
+    or al, cl
+    out dx, al
 
-        ; 写入读命令
-        inc dx ;0x1f7
-        mov al, 0x20
-        out dx,al
+    inc dx; 0x1f7
+    mov al, 0x20; 读硬盘
+    out dx, al
 
-    .waits:
-        in al,dx
-        and al,0x88
-        cmp al,0x08
-        jnz .waits ; 不忙，且硬盘已准备好数据传输 
+    xor ecx, ecx
+    mov cl, bl
 
-        mov ax, cx
-        mov dx, 256 ;总共要读取的字数
-        mul dx
-        mov cx, ax
-        mov dx, 0x1f0 ; 读取端口号
-        ; xchg bx, bx
+    .read:
+        push cx
+        call .waits
+        call .reads
+        pop cx
+        loop .read
+
+    popad
+    ; popa
+    ret
+
+.waits:
+    mov dx, 0x1f7
+    .check:
+        nop
+        nop
+        nop ; 一点延迟
+
+        in al, dx
+        and al, 0b1000_1000
+        cmp al, 0b0000_1000
+        jnz .check
+    ret
+
+.reads:
+    mov dx, 0x1f0
+    mov cx, 256
     .readw:
-        in ax,dx ; 读取输入
-        mov [ebx], ax ; 转移到内存
-        add ebx , 2; 一次读取两个字节
+        nop
+        nop
+        nop
+
+        in ax, dx
+        mov [edi], ax
+        add edi, 2
 
         loop .readw
-        ; xchg bx,bx 
-        popad
-
-        ret
+    ret
 %endif
 %endmacro
 

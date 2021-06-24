@@ -17,9 +17,9 @@ section boot vstart=BOOT_BASE_ADDR
     ud2; should never here
 
 load_loader:
-    mov eax, LOADER_SECTOR_START
-    mov bx, LOADER_BASE_ADDR
-    mov cx, LOADER_SECTOR_SIZE ; 2KB
+    mov ecx, LOADER_SECTOR_START
+    mov edi, LOADER_BASE_ADDR
+    mov bl, LOADER_SECTOR_SIZE ; 2KB
     call read_disk
     ret
 
