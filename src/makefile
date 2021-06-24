@@ -83,7 +83,7 @@ endif
 # 将 loader.bin 写入硬盘
 	dd if=$(BUILD)/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 # 将 kernel.bin 写入磁盘
-	dd if=$(BUILD)/kernel.bin of=$@ bs=512 seek=100 count=200 conv=notrunc
+	dd if=$(BUILD)/kernel.bin of=$@ bs=512 count=200 seek=10 conv=notrunc
 
 $(BUILD)/slave.img:
 ifeq ("$(wildcard $(BUILD)/slave.img)", "")
