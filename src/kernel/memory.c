@@ -28,6 +28,7 @@ static addr_t kernel_addr;
 
 void init_ards(ards_t *ards, u32 count)
 {
+    INFOK("Machine ARDS count %d\n", count);
     memory_base = 0;
     memory_size = 0;
     for (size_t i = 0; i < count; i++, ards++)

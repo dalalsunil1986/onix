@@ -12,4 +12,6 @@
 
 #define BMB BOCHS_MAGIC_BREAKPOINT
 
+extern void hang();
+
 #endif

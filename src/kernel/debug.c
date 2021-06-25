@@ -1,5 +1,12 @@
+#include <onix/types.h>
 #include <onix/printk.h>
 #include <onix/stdarg.h>
+
+void hang()
+{
+    while (true)
+        ;
+}
 
 void debugk(char *file, int line, const char *fmt, ...)
 {
