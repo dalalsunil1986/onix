@@ -123,10 +123,10 @@ qemu: $(BUILD)/master.img
 	-boot c \
 	-drive file=$<,format=raw,index=0,media=disk \
 	-m 32 \
-	-d cpu_reset,int \
-	-monitor stdio \
-	-S	\
-	-gdb tcp::1234 \
+	# -d cpu_reset,int \
+	# -monitor stdio \
+	# -S	\
+	# -gdb tcp::1234 \
 
 .PHONY:clean
 clean:
