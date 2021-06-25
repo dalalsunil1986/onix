@@ -5,6 +5,10 @@ section boot vstart=BOOT_BASE_ADDR
     mov ax, 3
     int 0x10; clean screen
 
+    mov ax, 0
+    mov es, ax
+    mov ds, ax
+    mov ss, ax
     mov sp, BOOT_BASE_ADDR
 
     mov si, message

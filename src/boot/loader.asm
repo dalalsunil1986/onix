@@ -153,13 +153,6 @@ message_memory_error db "Onix Loader Check Memory Error!!!", 13, 10, 0
 
 ; ------------------------------------------------
 
-ards_count:
-    dw 0
-ards_buffer:
-    times 20 * 10 db 0
-
-; ------------------------------------------------
-
 code_selector equ (1 << 3)
 data_selector equ (2 << 3)
 
@@ -196,3 +189,7 @@ gdt_data:
     db (data_base >> 24) & 0xff; 段基地址 31 ~ 24
 
 gdt_end:
+
+ards_count:
+    dw 0
+ards_buffer:
